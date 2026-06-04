@@ -7,9 +7,6 @@ import "./globals.css";
   FONTS:
   - Geist: Used for body text (clean, modern)
   - Libre Baskerville: Used for nav links (elegant, italic serif)
-  
-  next/font loads these fonts at BUILD time, not at runtime.
-  This means: no flash of unstyled text, no layout shift, faster page load.
 */
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,9 +57,6 @@ export const metadata: Metadata = {
 
 /*
   ROOT LAYOUT:
-  This wraps EVERY page on the website.
-  The Navbar is placed here so it automatically shows on all pages.
-  No need to add it to each page individually.
 */
 export default function RootLayout({
   children,
@@ -74,10 +68,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${libreBaskerville.variable} ${poppins.variable} ${inter.variable} ${plusJakartaSans.variable} ${montserrat.variable} ${dmSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col m-0 p-0">
         <Navbar />
-        {/* pt-[115px] pushes content below the navbar since navbar is position:absolute */}
-        <main className="flex-1 pt-[115px]">{children}</main>
+        {/* FIX: Removed pt-[115px]. The Hero section now handles its own overlap padding to prevent gaps. */}
+        <main className="flex-1 w-full m-0 p-0">{children}</main>
       </body>
     </html>
   );

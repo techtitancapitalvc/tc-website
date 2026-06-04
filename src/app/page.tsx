@@ -11,6 +11,7 @@ import Footer from "@/components/sections/Footer";
 export default function Home() {
   return (
     <>
+    <main className="relative w-full p-0 m-0">
       <Hero />
       <BackedBefore />
       <WhatFoundersGet />
@@ -20,6 +21,7 @@ export default function Home() {
       <IndicornsSpotlight />
       <FounderTestimonial />
       <Footer />
+      </main>
     </>
   );
 }

@@ -69,9 +69,6 @@ export default function FeaturedFounderStory() {
     }
   };
 
-  // =========================================
-  // HEADING PROPAGATION VARIANTS
-  // =========================================
   const text1Variants: Variants = {
     hidden: { opacity: 0, y: 40 },
     visible: { 
@@ -85,7 +82,7 @@ export default function FeaturedFounderStory() {
     hidden: { scaleX: 0 },
     visible: { 
       scaleX: 1,
-      transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 } // Runs after text finishes sliding
+      transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 }
     }
   };
 
@@ -94,58 +91,59 @@ export default function FeaturedFounderStory() {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut", delay: 1.1 } // Runs after highlight finishes sweeping
+      transition: { duration: 0.6, ease: "easeOut", delay: 1.1 }
     }
   };
 
   return (
-    <section className="ffs">
-      {/* =========================================
-          STRICT 1-2-3 ORCHESTRATED HEADING
-          ========================================= */}
-      {/* By handling the viewport trigger here, children variants run flawlessly */}
+    <section className="flex w-full flex-col items-center justify-start gap-6 bg-white px-5 py-6">
+      {/* Reduced py and gap to condense the vertical height */}
+      
+      {/* 1. Heading */}
       <motion.div 
-        className="ffs__heading flex flex-col items-center justify-center text-center"
+        className="mx-auto flex w-full max-w-[828px] flex-col items-center justify-center text-center"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
-        {/* STEP 1: Text container slides up */}
-        <motion.h2 className="ffs__title-highlight" variants={text1Variants}>
+        <motion.h2 
+          className="m-0 text-center font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-bold italic leading-[1.2] text-[#001A4D]" 
+          variants={text1Variants}
+        >
           <span 
-            className="ffs__highlight-box relative overflow-hidden inline-block" 
+            className="relative inline-block overflow-hidden px-2.5 py-0" 
             style={{ background: "transparent" }} 
           >
-            {/* STEP 2: The Blue Highlight sweeps left-to-right safely */}
             <motion.span
-              className="absolute inset-0 z-0" 
-              style={{ backgroundColor: "#d3e2ff", transformOrigin: "left" }}
+              className="absolute inset-0 z-0 bg-[#D3E2FF]" 
+              style={{ transformOrigin: "left" }}
               variants={highlightVariants}
             />
-            <span className="relative z-10">Their Stories,</span>
+            <span className="relative z-10">Their stories,</span>
           </span>
         </motion.h2>
 
-        {/* STEP 3: Bottom Line Slides Up */}
-        <motion.h2 className="ffs__title mt-2" variants={text2Variants}>
+        <motion.h2 
+          className="m-0 mt-1 text-center font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-semibold leading-[1.2] text-[#001A4D]" 
+          variants={text2Variants}
+        >
           our credentials
         </motion.h2>
       </motion.div>
 
-      {/* 2. TV Wrapper */}
-      <div className="ffs__tv-wrapper relative">
+      {/* 2. TV Wrapper - slightly scaled down max-width to save vertical space */}
+      <div className="relative w-full max-w-[650px]">
         <Image
           src="/images/misc/television.png"
           alt="Television frame"
           width={800}
           height={500}
-          className="ffs__tv-img relative z-0 pointer-events-none"
+          className="pointer-events-none relative z-0 block h-auto w-full"
           sizes="(max-width: 1317px) 100vw, 1317px"
           priority 
         />
         
-        <div className="ffs__tv-screen absolute inset-0 z-10 overflow-hidden">
-          
+        <div className="absolute left-[8%] top-[13%] z-10 flex h-[72%] w-[58%] items-center overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div 
               key={current} 
@@ -153,14 +151,16 @@ export default function FeaturedFounderStory() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="ffs__slide w-full h-full flex"
+              className="relative h-full w-full"
             >
-              
-              {/* Left Side: Info & Logo */}
-              <div className="ffs__slide-info">
-                <h3 className="ffs__slide-name whitespace-pre-line">{slide.name}</h3>
-                <p className="ffs__slide-role">{slide.role}</p>
-                <div className="ffs__slide-logo">
+              <div className="absolute left-[10px] top-1/2 z-20 flex w-[60%] -translate-y-1/2 flex-col gap-2 md:left-5 md:w-1/2 md:gap-3">
+                <h3 className="m-0 whitespace-pre-wrap font-['Libre_Baskerville',_serif] text-[clamp(18px,3vw,32px)] font-semibold leading-[1.1] text-black">
+                  {slide.name}
+                </h3>
+                <p className="m-0 font-sans text-[clamp(12px,1.5vw,14px)] font-normal leading-[1.4] text-[#333]">
+                  {slide.role}
+                </p>
+                <div className="mt-1 md:mt-[clamp(10px,2vw,24px)]">
                   <Image 
                     src={slide.logo} 
                     alt="Company logo" 
@@ -169,15 +169,14 @@ export default function FeaturedFounderStory() {
                     style={{ 
                       objectFit: "contain", 
                       objectPosition: "left", 
-                      width: "160px",  
-                      height: "48px"   
+                      width: "140px",  
+                      height: "40px"   
                     }} 
                   />
                 </div>
               </div>
 
-              {/* Right Side: Founder Cutout Image */}
-              <div className="ffs__slide-photo relative">
+              <div className="absolute bottom-0 right-[-50px] z-10 h-[160%] w-full md:bottom-[-10px] md:right-[-170px] md:h-[215%] md:w-[145%]">
                 <Image
                   src={slide.image}
                   alt={slide.name.replace('\n', ' ')}
@@ -189,7 +188,6 @@ export default function FeaturedFounderStory() {
                   }}
                 />
               </div>
-              
             </motion.div>
           </AnimatePresence>
         </div>
@@ -203,21 +201,27 @@ export default function FeaturedFounderStory() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="ffs__text"
+          className="m-0 mx-auto w-full max-w-[640px] text-center font-['Poppins',sans-serif] text-[16px] font-normal leading-[1.5] text-black md:text-[20px]"
         >
           {slide.text}
         </motion.p>
       </AnimatePresence>
 
-      {/* 4. CTA Button */}
-      <button className="ffs__cta">Read full story</button>
+      {/* 4. CTA Button - Reduced height to 60px to save space */}
+      <button className="flex h-[60px] w-full max-w-[280px] cursor-pointer items-center justify-center rounded-lg border-none bg-[#001A4D] font-['Libre_Baskerville',_serif] text-[22px] font-semibold text-white transition-opacity hover:opacity-90">
+        Read full story
+      </button>
 
       {/* 5. Pagination Dots */}
-      <div className="ffs__dots">
+      <div className="flex items-center gap-3">
         {slides.map((_, i) => (
           <button
             key={i}
-            className={`ffs__dot ${current === i ? "ffs__dot--active" : ""}`}
+            className={`cursor-pointer border-none p-0 transition-all duration-300 ease-in-out ${
+              current === i 
+                ? "h-[12px] w-8 rounded-[10px] bg-[#001A4D]" 
+                : "h-[12px] w-[12px] rounded-full bg-[#D3E2FF]"
+            }`}
             onClick={() => setCurrent(i)}
             aria-label={`Go to slide ${i + 1}`}
           />

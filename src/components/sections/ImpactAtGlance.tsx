@@ -38,9 +38,10 @@ const CarouselItem = ({
     return `${Math.sin(diff * angleMultiplier) * radius}px`;
   });
 
+  // ANIMATION LAYOUT FIX: Changed from plus to minus to curve the items UPWARD on the sides
   const y = useTransform(progress, (p) => {
     const diff = getDiff(p);
-    return `${(diff * diff) * 20}px`; 
+    return `${- (diff * diff) * 45}px`; 
   });
 
   const scale = useTransform(progress, (p) => {
@@ -59,12 +60,12 @@ const CarouselItem = ({
   return (
     <motion.div
       style={{ x, y, scale, opacity, zIndex }}
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center w-[600px]"
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center w-[90%] max-w-[600px]"
     >
-      <span className="text-[128px] font-bold text-[#001A4D] font-libre leading-none mb-6 drop-shadow-sm tracking-tight">
+      <span className="text-[64px] md:text-[128px] font-bold text-[#001A4D] font-libre leading-none mb-4 md:mb-6 tracking-tight">
         {data.num}
       </span>
-      <span className="text-[44px] font-semibold text-[#001A4D] font-libre drop-shadow-sm leading-tight">
+      <span className="text-[24px] md:text-[44px] font-semibold text-[#001A4D] font-libre leading-tight">
         {data.label}
       </span>
     </motion.div>
@@ -80,61 +81,64 @@ export default function ImpactAtGlance() {
   });
 
   return (
-    <section ref={containerRef} className="impact !block !h-[300vh] !p-0 !overflow-visible w-full bg-[#FBF7F0]">
-      
-      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden pt-20">
+    <section 
+      ref={containerRef} 
+      className="block relative w-full h-[300vh] p-0 m-0 overflow-visible"
+    >
+      <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden pt-[40px] md:pt-[80px]">
         
-       {/* =========================================
-            STRICT 1-2-3 ANIMATED HEADING
+      {/* =========================================
+            ANIMATED HEADING SEQUENCE
             ========================================= */}
-        <div className="impact__heading flex flex-col items-center justify-center mb-auto pt-10 z-50">
-          
-          {/* Main Title Row */}
-          <div className="flex items-center justify-center mb-8">
+        <div className="flex flex-col items-center justify-center w-full px-4 mb-auto pt-[40px] md:pt-[70px] z-50">
+          <motion.div 
+            className="flex flex-col md:flex-row items-center justify-center text-center gap-2 md:gap-0 w-full max-w-[1280px] mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.5 }}
+          >
             
-            {/* STEP 1: The word "Impact" slides up (0.0s to 0.6s) */}
+            {/* STEP 1 & 2: "Impact" and its Highlight Box */}
             <motion.span 
-              className="impact__title relative overflow-hidden inline-block mr-4 text-[96px] text-[#001A4D] font-libre font-semibold !bg-transparent"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.8 }}
-              transition={{ duration: 0.6, ease: "easeOut" }} 
+              className="relative overflow-hidden inline-block md:mr-4 p-[6px_16px] text-[40px] md:text-[80px] text-[#001A4D] font-libre font-semibold bg-transparent"
+              variants={{
+                hidden: { opacity: 0, y: 40 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+              }}
             >
-              {/* STEP 2: The Blue Highlight sweeps left-to-right INDEPENDENTLY (0.6s to 1.1s) */}
               <motion.span
-                className="absolute inset-0 bg-[#d3e2ff] z-0" 
-                initial={{ scaleX: 0 }} 
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true, amount: 0.8 }}
-                transition={{ duration: 0.5, ease: "easeInOut", delay: 0.6 }} 
+                className="absolute inset-0 bg-[#D3E2FF] z-0" 
                 style={{ transformOrigin: "left" }} 
+                variants={{
+                  hidden: { scaleX: 0 },
+                  visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.5 } }
+                }}
               />
-              <span className="relative z-10">Impact</span>
+              <span className="relative z-10 italic leading-[120%]">Impact</span>
             </motion.span>
             
-            {/* STEP 3: "at glance" slides up (1.1s to 1.7s) */}
+            {/* STEP 3: "at glance" */}
             <motion.span 
-              className="impact__title-highlight px-4 text-[96px] text-[#001A4D] font-libre font-bold italic"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.8 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 1.1 }} 
+              className="px-4 text-[40px] md:text-[80px] text-[#001A4D] font-libre font-semibold"
+              variants={{
+                hidden: { opacity: 0, y: 40 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.9 } }
+              }}
             >
               at glance
             </motion.span>
-          </div>
+          </motion.div>
         </div>
 
         {/* =========================================
             SPHERICAL INFINITE GLOBE CAROUSEL
             ========================================= */}
-        {/* Adjusted spacing slightly to center the sphere in the remaining space */}
-        <div className="relative w-full flex-1 flex items-center justify-center -mt-20">
+        <div className="relative w-full flex-1 flex items-center justify-center -mt-10 md:-mt-20">
           
-          {/* THE PERMANENT CENTER GRADIENT BLOB */}
-          <div className="absolute inset-0 m-auto w-[600px] h-[600px] bg-[#d3e2ff] opacity-70 blur-[100px] rounded-full pointer-events-none z-0" />
+          {/* CENTER GRADIENT BLOB */}
+          <div className="absolute inset-0 m-auto w-[240px] h-[240px] md:w-[400px] md:h-[400px] bg-[#D3E2FF] opacity-30 md:opacity-100 blur-[60px] md:blur-[100px] rounded-full pointer-events-none z-0" />
 
-          {/* THE 6 SCROLLING RAW TEXT ITEMS */}
+          {/* INFINITE CAROUSEL ITEMS */}
           {impactData.map((item, i) => (
             <CarouselItem 
               key={i} 
@@ -144,14 +148,9 @@ export default function ImpactAtGlance() {
             />
           ))}
 
-          {/* =========================================
-              STATIC OVERLAY DESCRIPTION
-              ========================================= */}
-          {/* Positioned absolutely from the center of the screen, shifted down by 220px 
-            so it perfectly overlaps the bottom fade of the 600px blue gradient blob. 
-          */}
+          {/* STATIC OVERLAY DESCRIPTION */}
           <motion.p 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[220px] text-[#323232] font-poppins text-[22px] text-center w-full max-w-2xl leading-relaxed z-50 pointer-events-none"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[170px] md:translate-y-[270px] text-[#323232] font-poppins text-[10px] md:text-[12px] text-center w-[50%] max-w-2xl leading-relaxed z-50 pointer-events-none"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.8 }}

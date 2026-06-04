@@ -28,7 +28,7 @@ const row2Companies = [
   { name: "Supertails", logoSrc: "/images/logos/Supertails.png", scaleClass: "scale-[1.4]" }, 
   { name: "Zingbus", logoSrc: "/images/logos/zingbus.webp", scaleClass: "" },
   { name: "Anveshan", logoSrc: "/images/logos/anveshan.webp", scaleClass: "" },
-  { name: "Kutumb", logoSrc: "/images/logos/Kutumb.webp", scaleClass: "" },
+  { name: "Kutumb", logoSrc: "/images/logos/Kutumb.webp", scaleClass: "scale-[1.4]" },
   { name: "Magma", logoSrc: "/images/logos/magma factory.webp", scaleClass: "scale-[2.4]" },
   { name: "Mekr", logoSrc: "/images/logos/mekr.webp", scaleClass: "" },
   { name: "Powerhouse 91", logoSrc: "/images/logos/powerhouse.webp", scaleClass: "scale-[1.4]" },
@@ -40,25 +40,24 @@ export default function BackedBefore() {
   const loopPoolRow2 = [...row2Companies, ...row2Companies, ...row2Companies];
 
   return (
-    <section className="backed">
+    <section className="flex flex-col items-center gap-[30px] md:gap-[45px] self-stretch py-[50px] md:py-[70px] overflow-hidden w-full bg-white">
       
       {/* =========================================
           ANIMATED SCROLL HEADING SEQUENCE
           ========================================= */}
-      <div className="backed__heading flex flex-col items-center mb-8">
+      <div className="flex flex-col items-center w-full max-w-[1009px] px-4 mb-4 md:mb-8 mx-auto">
         
-        {/* Parent container triggering the sequence when 80% visible */}
         <motion.h2 
-          className="backed__title-italic"
+          className="text-[#001A4D] text-center font-libre text-[40px] md:text-[80px] italic font-semibold leading-[120%]"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.8 }}
         >
-          {/* 1. The Text Container sliding in from Left to Right */}
-          <motion.span 
-            className="backed__highlight relative overflow-hidden !bg-transparent inline-flex"
+          {/* FIX: Parent gets relative and a positive z-index (z-10) to trap the child layers */}
+          <motion.div 
+            className="relative z-10 flex w-full max-w-[320px] md:max-w-[554px] p-[10px] justify-center items-center gap-[10px] mx-auto bg-transparent"
             variants={{
-              hidden: { opacity: 0, x: -80 }, // Starts invisible and 80px to the left
+              hidden: { opacity: 0, x: -80 },
               visible: { 
                 opacity: 1, 
                 x: 0, 
@@ -66,46 +65,43 @@ export default function BackedBefore() {
               }
             }}
           >
-            {/* 2. The Blue Highlight sweeping from Left to Right */}
-            <motion.span
-              className="absolute inset-0 bg-[#d3e2ff] z-[-1]"
+            {/* FIX: Highlight gets z-0 (positive, but behind text) so it never falls behind the white section background */}
+            <motion.div
+              className="absolute inset-0 bg-[#d3e2ff] z-0"
+              style={{ transformOrigin: "left" }} 
               variants={{
                 hidden: { scaleX: 0 },
                 visible: { 
                   scaleX: 1, 
-                  transition: { duration: 0.9, ease: "easeInOut", delay: 0.35 } // Sweeps right after text arrives
+                  transition: { duration: 0.9, ease: "easeInOut", delay: 0.35 }
                 }
               }}
-              style={{ transformOrigin: "left" }} 
             />
-            
-            {/* The actual text */}
-            <span className="relative z-10">Backed before</span>
-          </motion.span>
+            {/* FIX: Text gets z-20 to stay clearly on top of the blue box */}
+            <span className="relative z-20 whitespace-nowrap">Backed before</span>
+          </motion.div>
         </motion.h2>
 
-        {/* 3. "anyone else did" sliding up from the bottom */}
         <motion.h2 
-          className="backed__title mt-2"
-          initial={{ opacity: 0, y: 40 }} // Starts lower down
+          className="self-stretch text-[#001A4D] text-center font-libre text-[40px] md:text-[80px] font-semibold leading-[120%] mt-2 md:mt-0"
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.8 }}
-          transition={{ duration: 0.9, ease: "easeOut", delay: 0.7 }} // Triggers as the highlight finishes
+          transition={{ duration: 0.9, ease: "easeOut", delay: 0.7 }}
         >
           anyone else did
         </motion.h2>
       </div>
 
-
       {/* =========================================
           TRACK ONE: Left to Right
           ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-6 mt-6">
-        <div className="flex w-max gap-20 pr-20 items-center animate-[marquee-right_30s_linear_infinite] group-hover:[animation-play-state:paused]">
+      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-6">
+        <div className="flex w-max gap-[40px] md:gap-[60px] pr-[40px] md:pr-[60px] items-center animate-[marquee-right_30s_linear_infinite] group-hover:[animation-play-state:paused]">
           {loopPoolRow1.map((company, i) => (
             <motion.div
               key={`row1-${company.name}-${i}`}
-              className="relative flex shrink-0 items-center justify-center h-[45px] w-[140px] select-none cursor-pointer"
+              className="relative flex shrink-0 items-center justify-center h-[40px] w-[120px] md:h-[59px] md:w-[182px] select-none cursor-pointer"
               whileHover={{ scale: 1.15, filter: "brightness(1.08)" }}
               transition={{ type: "spring", stiffness: 400, damping: 18 }}
             >
@@ -115,7 +111,7 @@ export default function BackedBefore() {
                   alt={company.name}
                   fill
                   style={{ objectFit: "contain" }}
-                  sizes="140px"
+                  sizes="(max-width: 768px) 120px, 182px"
                   priority={i < 10}
                 />
               </div>
@@ -127,12 +123,12 @@ export default function BackedBefore() {
       {/* =========================================
           TRACK TWO: Right to Left
           ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-6 mt-2">
-        <div className="flex w-max gap-20 pr-20 items-center animate-[marquee-left_35s_linear_infinite] group-hover:[animation-play-state:paused]">
+      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-0 md:-mt-4">
+        <div className="flex w-max gap-[40px] md:gap-[60px] pr-[40px] md:pr-[60px] items-center animate-[marquee-left_35s_linear_infinite] group-hover:[animation-play-state:paused]">
           {loopPoolRow2.map((company, i) => (
             <motion.div
               key={`row2-${company.name}-${i}`}
-              className="relative flex shrink-0 items-center justify-center h-[45px] w-[140px] select-none cursor-pointer"
+              className="relative flex shrink-0 items-center justify-center h-[40px] w-[120px] md:h-[59px] md:w-[182px] select-none cursor-pointer"
               whileHover={{ scale: 1.15, filter: "brightness(1.08)" }}
               transition={{ type: "spring", stiffness: 400, damping: 18 }}
             >
@@ -142,7 +138,7 @@ export default function BackedBefore() {
                   alt={company.name}
                   fill
                   style={{ objectFit: "contain" }}
-                  sizes="140px"
+                  sizes="(max-width: 768px) 120px, 182px"
                 />
               </div>
             </motion.div>
