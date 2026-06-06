@@ -38,12 +38,14 @@
   --black: #000;
 
   /*
-    Shared fluid nav height — single source of truth.
-    Hero and any other section that needs to know the nav height reads this
-    variable, so they stay perfectly in sync when the nav shrinks on smaller
-    screens. 77px is the design (Figma) value; 5.34vw = 77/1440.
+    Shared fluid nav height — single source of truth, height- AND width-aware.
+    - 77px is the design (Figma) value
+    - 5.34vw = 77/1440 (width-relative)
+    - 7.84vh = 77/982  (height-relative)
+    - min() picks whichever axis is tighter, so on short Windows screens the
+      nav shrinks too — giving the hero more vertical room.
   */
-  --nav-height: clamp(60px, 5.34vw, 77px);
+  --nav-height: clamp(60px, min(5.34vw, 7.84vh), 77px);
 }
 
 body {

@@ -79,15 +79,23 @@
     /*
       Each entry: [label, cssWidth, cssHeight].
       For Windows scaling, the CSS viewport = physical resolution ÷ scale factor.
-      E.g. 1920×1080 @ 125% → 1920/1.25 × 1080/1.25 = 1536 × 864.
+      Sorted from tightest (height-stressed) to most spacious so problem cases
+      show up first.
     */
     const SIZES = [
-      ["Tight laptop",              1366, 768],
-      ["MacBook 13\"",              1512, 982],
-      ["Windows 1920×1080 @ 90%",   2133, 1200],
-      ["Windows 1920×1080 @ 100%",  1920, 1080],
-      ["Windows 1920×1080 @ 125%",  1536, 864],
-      ["Windows 1920×1080 @ 150%",  1280, 720],
+      // ── Worst cases for vertical height (Windows defaults on small laptops) ──
+      ["Windows FHD @ 150%",          1280, 720],   // 1920×1080 ÷ 1.5
+      ["Dell XPS / ThinkPad @ 150%",  1280, 800],   // 1920×1200 ÷ 1.5 — very common
+      ["Tight legacy laptop @ 100%",  1366, 768],
+      // ── Mid-tier laptops ──
+      ["Windows 1440×900 @ 100%",     1440, 900],
+      ["Surface Laptop @ 150%",       1504, 1003],  // 2256×1504 ÷ 1.5
+      ["MacBook 13\" (reference)",    1512, 982],
+      ["Windows FHD @ 125% (default)", 1536, 864],  // most common Windows config
+      // ── Spacious laptops & desktops ──
+      ["Windows 1600×900 @ 100%",     1600, 900],
+      ["Windows FHD @ 100%",          1920, 1080],
+      ["Windows FHD @ 90%",           2133, 1200],  // power user, more screen estate
     ];
 
     // Width of the visible tile (CSS px). Iframe gets scaled to fit this.
