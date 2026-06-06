@@ -26,6 +26,10 @@ export default function Hero() {
   const { frameRef, scale, ready } = useScaleToFit<HTMLDivElement>({
     designWidth: DESIGN_WIDTH,
     reservedHeight: NAV_HEIGHT,
+    // Cap growth at the MacBook's own scale (1512 / 1440 = 1.05). On wider
+    // screens the content stays MacBook-sized and the extra width becomes
+    // side padding, instead of the cards ballooning to fill 1920+.
+    maxScale: 1.05,
   });
 
   useEffect(() => {

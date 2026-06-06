@@ -13,7 +13,11 @@ type Options = {
   reservedHeight?: number;
   /** Never scale below this. Keeps content legible on very short screens. */
   minScale?: number;
-  /** Never scale above this. Stops the frame ballooning on huge / ultrawide screens. */
+  /**
+   * Never scale above this. Stops the frame ballooning on huge / ultrawide
+   * screens — the content caps at this size and extra width becomes side
+   * padding. Set it to your reference screen's scale (designWidth / refWidth).
+   */
   maxScale?: number;
 };
 
