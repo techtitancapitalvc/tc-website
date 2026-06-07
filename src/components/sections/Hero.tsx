@@ -36,11 +36,11 @@ const founderSlots = [
 const cs = (n: number) => `calc(var(--lw) * ${(n / 278).toFixed(5)})`;
 
 export default function Hero() {
-  const [currentIndices, setCurrentIndices] = useState([0, 0, 0, 0, 0]);
+  const [currentIndices, setCurrentIndices] = useState(() => founderSlots.map(() => 0));
 
   useEffect(() => {
     const triggerStaggeredFlip = async () => {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < founderSlots.length; i++) {
         await new Promise((resolve) => setTimeout(resolve, 200));
         setCurrentIndices((prev) => { const next = [...prev]; next[i] = (next[i] + 1) % founderSlots[i].pool.length; return next; });
       }
@@ -68,24 +68,18 @@ export default function Hero() {
             so "Founders" is the SAME size as the italic headings in WhatWeBelieve /
             BackedBefore / FoundersTestimonial. */}
         <h1
-          className="relative z-10 mx-auto w-full text-center font-['Libre_Baskerville',_serif] font-normal leading-[110%] text-black"
-          style={{
-            maxWidth: "640px",
-            fontSize: "calc(var(--heading-xl) * 0.875)", // 56/64
-          }}
+          className="relative z-10 mx-auto w-full text-center font-['Libre_Baskerville',_serif] font-normal leading-[110%] text-black text-[clamp(32px,10vw,48px)] lg:text-[length:calc(var(--heading-xl)_*_0.875)]"
+          style={{ maxWidth: "640px" }}
         >
           300+ bets. All on
-          <span
-            className="block font-semibold italic leading-[120%] text-[#001A4D]"
-            style={{ fontSize: "var(--heading-xl)" }}
-          >
+          <span className="block font-semibold italic leading-[120%] text-[#001A4D] text-[clamp(40px,13.5vw,60px)] lg:text-[length:var(--heading-xl)]">
             Founders
           </span>
         </h1>
 
         {/* SUBHEAD — bigger (caps at 20px / Figma), wider box (726px Figma) */}
         <p
-          className="hero-sub relative z-10 mx-auto w-full text-center font-['Poppins',_sans-serif] font-normal leading-[150%] text-[#323232]"
+          className="hero-sub relative z-10 mx-auto hidden w-full text-center font-['Poppins',_sans-serif] font-normal leading-[150%] text-[#323232] lg:block"
           style={{
             maxWidth: "726px",
             fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)",
@@ -98,9 +92,9 @@ export default function Hero() {
           journey.
         </p>
 
-       {/* BUTTONS */}
+       {/* BUTTONS — extra top gap on mobile (subtext is hidden there) */}
        <div
-          className="relative z-20 flex flex-row items-center justify-center"
+          className="relative z-20 mt-[clamp(36px,12vw,64px)] flex flex-row items-center justify-center lg:mt-0"
           style={{
             gap: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
             marginBottom: "clamp(16px, min(2.9vw, 4.28vh), 42px)",
@@ -148,7 +142,7 @@ export default function Hero() {
            At MacBook 14" --lw caps at 278px → pixel-identical to the approved
            design. */}
         <div
-          className="hero-cards-overlap relative z-0 w-full"
+          className="hero-cards-overlap relative z-0 hidden w-full lg:block"
           style={{
             marginTop: "clamp(-72px, max(-6.67vw, -9.78vh), -24px)",
             // single source of truth for the whole card cluster.
@@ -168,7 +162,7 @@ export default function Hero() {
             className="mx-auto flex w-full items-end justify-center"
             style={{ gap: cs(17) }}
           >
-            {founderSlots.map((slot, i) => {
+            {founderSlots.slice(0, 5).map((slot, i) => {
               const currentFounder = slot.pool[currentIndices[i]];
               const isLarge = slot.size === "large";
 
@@ -229,6 +223,52 @@ export default function Hero() {
               );
             })}
           </div>
+        </div>
+
+        {/* ── MOBILE CARDS — 3×2 grid (shown below lg), same flip animation ── */}
+        <div
+          className="grid w-full grid-cols-3 lg:hidden"
+          style={{
+            gap:       "clamp(8px, 2.8vw, 16px)",
+            marginTop: "clamp(4px, 2vw, 16px)",
+          }}
+        >
+          {founderSlots.map((slot, i) => {
+            const f = slot.pool[currentIndices[i]];
+            return (
+              <div key={i} style={{ perspective: "1000px" }}>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentIndices[i]}
+                    initial={{ rotateY: -90, opacity: 0, scale: 0.95 }}
+                    animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                    exit={{ rotateY: 90, opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    style={{ transformStyle: "preserve-3d" }}
+                    className="flex w-full flex-col items-start rounded-[12px] bg-white p-[clamp(6px,2vw,10px)] shadow-[0_4px_14.8px_0_rgba(101,101,101,0.25)]"
+                  >
+                    <div className="relative w-full aspect-[211/223] overflow-hidden rounded-[6px]">
+                      <Image
+                        src={f.image}
+                        alt={f.name}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        sizes="33vw"
+                      />
+                    </div>
+                    <div className="w-full pt-[clamp(4px,1.5vw,8px)]">
+                      <p className="w-full font-['Libre_Baskerville',_serif] font-bold leading-[119%] text-black text-[clamp(10px,3vw,14px)]">
+                        {f.name}
+                      </p>
+                      <p className="mt-[2px] w-full font-['Poppins',_sans-serif] font-light leading-[120%] text-black text-[clamp(8px,2.3vw,11px)]">
+                        {f.role}
+                      </p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

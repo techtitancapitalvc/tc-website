@@ -171,29 +171,46 @@ export default function WhatFoundersGet() {
     <section className="relative m-0 flex min-h-[100dvh] w-full flex-col items-center overflow-hidden pb-[20px] pt-[23px] lg:pt-[50px]">
       
       {/* HEADER SECTION */}
-      <div className="z-10 mx-auto flex w-full max-w-[1280px] flex-row flex-wrap items-center justify-center lg:justify-start gap-[clamp(10px,1.5vw,20px)] px-4 md:px-10 lg:px-0">
+      <motion.div 
+        className="z-10 mx-auto flex w-full max-w-[1280px] flex-row items-center justify-center lg:justify-start px-4 md:px-10 lg:px-0"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+      >
+        {/* PLAIN TEXT: "How We" - Using mr-2/mr-3 as the spacebar gap, and leading-none to lock the baseline */}
         <motion.h2 
-          className="m-0 text-center font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold not-italic leading-[100%] text-[var(--Primary-Color,#001A4D)] whitespace-nowrap"
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
+          className="m-0 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold not-italic leading-none text-[var(--Primary-Color,#001A4D)] mr-2 md:mr-3 whitespace-nowrap"
+          variants={{
+            hidden: { opacity: 0, x: -40 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.9, ease: "easeOut" } }
+          }}
         >
           How We
         </motion.h2>
 
+        {/* HIGHLIGHT: "Show Up" - Using inline-flex and exact px/py padding for a thick, aligned highlight */}
         <motion.div 
-          className="relative flex items-center justify-center bg-[#D3E2FF] px-[clamp(8px,1vw,16px)] py-[clamp(2px,0.5vw,8px)]"
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }}
+          className="relative inline-flex items-center justify-center overflow-hidden px-[2px] py-[8px] md:px-[4px] md:py-[10px] bg-transparent"
+          variants={{
+            hidden: { opacity: 0, x: -40 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.9, ease: "easeOut", delay: 0.2 } }
+          }}
         >
-          <span className="whitespace-nowrap text-center font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold italic leading-[150%] text-[var(--Primary-Color,#001A4D)]">
+          {/* Sweeping background animation perfectly synced to match "What We believe" */}
+          <motion.span
+            className="absolute inset-0 z-0 bg-[#D3E2FF] h-full w-full"
+            style={{ transformOrigin: "left" }} 
+            variants={{
+              hidden: { scaleX: 0 },
+              visible: { scaleX: 1, transition: { duration: 0.6, ease: "easeInOut", delay: 0.7 } }
+            }}
+          />
+          
+          <span className="relative z-10 whitespace-nowrap font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold italic leading-none text-[var(--Primary-Color,#001A4D)]">
             Show Up
           </span>
         </motion.div>
-      </div>
+      </motion.div>
       {/* FLOWCHART SECTION */}
       <div className="z-0 flex h-[400px] w-full justify-center overflow-hidden sm:h-[450px] md:h-[550px] sm:mt-[-50px] md:mt-[-50px] lg:mt-[-50px] lg:h-[650px] xl:h-[750px]">
         <motion.div 

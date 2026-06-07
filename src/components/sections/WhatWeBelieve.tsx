@@ -77,13 +77,14 @@ export default function WhatWeBelieve() {
           STRICT 1-2-3 ANIMATED HEADING
           ========================================= */}
       <motion.div 
-        className="z-20 flex flex-wrap items-center justify-center gap-x-[clamp(8px,1.5vw,16px)] text-center"
+        className="z-20 flex flex-row items-center justify-center text-center w-full"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.8 }}
       >
+        {/* PLAIN TEXT: "What" - Using mr-2/mr-3 as the spacebar gap, and leading-none to lock the baseline */}
         <motion.span 
-          className="m-0 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold not-italic leading-[120%] text-[var(--Primary-Color,#001A4D)]" 
+          className="m-0 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold not-italic leading-none text-[#001A4D] mr-2 md:mr-3" 
           variants={{
             hidden: { opacity: 0, y: 40 },
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
@@ -92,14 +93,15 @@ export default function WhatWeBelieve() {
           What
         </motion.span>
         
-        <motion.div 
-          className="relative inline-flex items-center justify-center overflow-hidden bg-transparent px-[clamp(8px,1.5vw,16px)] py-[clamp(4px,0.8vw,8px)]" 
+        {/* HIGHLIGHT: "We believe" - Using inline-flex and exact px/py padding for thick, aligned highlight */}
+        <motion.span 
+          className="relative inline-flex items-center justify-center overflow-hidden px-[4px] py-[8px] md:px-[6px] md:py-[10px] bg-transparent" 
           variants={{
             hidden: { opacity: 0, x: -80 },
             visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.3 } }
           }}
         >
-          <motion.div
+          <motion.span
             className="absolute inset-0 z-0 bg-[#D3E2FF] h-full w-full"
             style={{ transformOrigin: "left" }} 
             variants={{
@@ -108,10 +110,10 @@ export default function WhatWeBelieve() {
             }}
           />
           
-          <span className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold italic leading-[120%] text-[var(--Primary-Color,#001A4D)]">
+          <span className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold italic leading-none text-[#001A4D]">
             We believe
           </span>
-        </motion.div>
+        </motion.span>
       </motion.div>
 
       {/* =========================================
@@ -125,7 +127,7 @@ export default function WhatWeBelieve() {
       >
         {beliefs.map((belief, i) => (
           <motion.div 
-            className="relative flex aspect-[16/23] w-full max-w-[323px] shrink-0 flex-col items-center justify-center" 
+            className="relative flex aspect-[16/23] w-full max-w-[320px] shrink-0 flex-col items-center justify-center" 
             key={i}
             variants={getCardVariants(i)}
           >
@@ -138,18 +140,15 @@ export default function WhatWeBelieve() {
               priority
             />
             
-            {/* FIXED: Added symmetric fluid horizontal padding (px-[6%]) inside the content wrapper 
-                to push both the title and description cleanly inward from the left and right card edges. */}
             <motion.div 
               className="absolute left-[12.05%] top-[25.55%] z-10 flex w-[77.95%] flex-col items-start gap-[5.3%] text-left px-[6%]"
               variants={textVariants}
             >
-              {/* SUBTITLE: Perfectly aligns with the description bounding box via inner adjustments */}
-              <h3 className="m-0 self-stretch shrink-0 font-['Libre_Baskerville',_serif] text-[clamp(15px,2.5vw,21make px)] font-semibold not-italic leading-[155%] text-[var(--Primary-Color,#001A4D)] px-[4.1%]">
+              {/* FIXED TYPO: Changed 21make px to 21px */}
+              <h3 className="m-0 self-stretch shrink-0 font-['Libre_Baskerville',_serif] text-[clamp(15px,2.5vw,21px)] font-semibold not-italic leading-[155%] text-[var(--Primary-Color,#001A4D)] px-[4.1%]">
                 {belief.title}
               </h3>
               
-              {/* DESCRIPTION WRAPPER: Matches width properties with standard fluid padding */}
               <div className="flex w-full items-center justify-center p-[4.1%]">
                 <p className="m-0 flex-1 font-['Poppins',_sans-serif] text-[clamp(12px,1.2vw,14px)] font-normal leading-[140%] text-[#323232]">
                   {belief.description}

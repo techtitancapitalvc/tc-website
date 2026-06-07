@@ -48,12 +48,22 @@ interface CarouselItemProps {
   progress: MotionValue<number>;
 }
 
+const DWELL = 0.55; 
+const steppedCenter = (t: number, steps: number) => {
+  const raw = Math.max(0, Math.min(steps, t * steps));
+  const i = Math.min(steps - 1, Math.floor(raw));
+  const frac = raw - i;
+  if (frac <= DWELL) return i;                  
+  const x = (frac - DWELL) / (1 - DWELL);       
+  return i + x * x * (3 - 2 * x);               
+};
+
 /* ── SUB-COMPONENT: CAROUSEL ITEM ── */
 const CarouselItem = ({ data, index, progress }: CarouselItemProps) => {
   const getDiff = (p: number) => {
     const totalItems = impactData.length;
     const adjustedProgress = Math.min(1, p / 0.5);
-    const center = adjustedProgress * totalItems;
+    const center = steppedCenter(adjustedProgress, totalItems);
     let diff = ((index - center) % totalItems + totalItems) % totalItems;
     if (diff > 3) diff -= totalItems;
     return diff;
@@ -63,7 +73,7 @@ const CarouselItem = ({ data, index, progress }: CarouselItemProps) => {
   const radius = 650;
 
   const x = useTransform(progress, (p: number) => `${Math.sin(getDiff(p) * spread) * radius}px`);
-  const y = useTransform(progress, (p: number) => `${-(getDiff(p) * getDiff(p)) * 20}px`);
+  const y = useTransform(progress, (p: number) => `${50 - (getDiff(p) * getDiff(p)) * 75}px`);
   const scale = useTransform(progress, (p: number) => Math.max(0.4, Math.cos(getDiff(p) * 0.8)));
   
   const opacity = useTransform(progress, (p: number) => {
@@ -123,21 +133,16 @@ export default function ImpactAndStories() {
     offset: ["start start", "end end"],
   });
 
-  // Structural translate window curve
   const contentY = useTransform(scrollYProgress, [0.45, 1], ["0px", "-580px"]);
 
   const blobScale = useTransform(scrollYProgress, (p: number) => {
     if (p > 0.5) return 0;
     const adjusted = p / 0.5;
-    const currentPosition = adjusted * impactData.length;
+    const currentPosition = steppedCenter(adjusted, impactData.length);
     const dist = Math.abs(currentPosition - Math.round(currentPosition));
     return Math.max(0, Math.cos(dist * Math.PI));
   });
   const blobOpacity = useTransform(blobScale, [0, 1], [0.4, 1.0]);
-
-  const headingY = useTransform(scrollYProgress, [0, 0.20, 0.33, 1], [40, 40, 0, 0]);
-  const headingOpacity = useTransform(scrollYProgress, [0, 0.20, 0.30, 1], [0, 0, 1, 1]);
-  const highlightScaleX = useTransform(scrollYProgress, [0, 0.24, 0.36, 1], [0, 0, 1, 1]);
 
   const tvGlitch: Variants = {
     initial: { opacity: 0, filter: "brightness(0%) grayscale(100%)", scaleY: 0.01 },
@@ -163,14 +168,20 @@ export default function ImpactAndStories() {
             style={{ paddingTop: "clamp(80px, min(8vw, 12vh), 120px)" }}
           >
             <div className="relative flex flex-col items-center justify-center w-full px-4 z-10 shrink-0">
-              <div className="flex flex-col md:flex-row items-center justify-center text-center gap-2 md:gap-0 w-full max-w-[1280px] mx-auto">
-                <span className="relative overflow-hidden inline-block md:mr-4 p-[6px_16px] text-[length:var(--heading-xl)] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold italic bg-transparent">
+              {/* The parent container uses flex-row and items-center to force perfect vertical alignment */}
+              <div className="flex flex-row items-center justify-center text-center w-full max-w-[1280px] mx-auto">
+                
+                {/* HIGHLIGHT: Restored vertical padding (py-[8px]) and switched to inline-flex */}
+                <span className="relative inline-flex items-center justify-center overflow-hidden px-[4px] py-[8px] md:px-[6px] md:py-[10px] text-[length:var(--heading-xl)] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold italic bg-transparent">
                   <span className="absolute inset-0 bg-[#D3E2FF] z-0" />
-                  <span className="relative z-10 leading-[120%]">Impact</span>
+                  <span className="relative z-10 leading-none">Impact</span>
                 </span>
-                <span className="text-[length:var(--heading-xl)] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold not-italic leading-[120%]">
+                
+                {/* PLAIN TEXT: ml-3 provides the exact spacebar gap without breaking alignment */}
+                <span className="text-[length:var(--heading-xl)] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold not-italic leading-none ml-3">
                   at glance
                 </span>
+                
               </div>
             </div>
 
@@ -197,27 +208,44 @@ export default function ImpactAndStories() {
               paddingRight:  "var(--section-px-wide)",
             }}
           >
-            <div className="mx-auto flex w-full max-w-[828px] flex-col items-center justify-center text-center">
+            
+            {/* FIXED HEADING ANIMATION: Grouped inside a motion.div to control synced variants securely */}
+            <motion.div 
+              className="mx-auto flex w-full max-w-[828px] flex-col items-center justify-center text-center"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.4 }}
+            >
               <motion.h2
-                style={{ y: headingY, opacity: headingOpacity }}
+                variants={{
+                  hidden: { opacity: 0, y: 40 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                }}
                 className="m-0 text-center font-['Libre_Baskerville',_serif] font-bold italic leading-[1.2] text-[#001A4D] text-[length:var(--heading-xl)]"
               >
                 <span className="relative inline-block overflow-hidden px-2.5">
-                  <motion.span 
-                    style={{ scaleX: highlightScaleX, transformOrigin: "left" }}
-                    className="absolute inset-0 z-0 bg-[#D3E2FF]" 
+                  <motion.span
+                    variants={{
+                      hidden: { scaleX: 0 },
+                      visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.4 } }
+                    }}
+                    style={{ transformOrigin: "left" }}
+                    className="absolute inset-0 z-0 bg-[#D3E2FF]"
                   />
                   <span className="relative z-10">Their stories,</span>
                 </span>
               </motion.h2>
 
               <motion.h2
-                style={{ y: headingY, opacity: headingOpacity }}
+                variants={{
+                  hidden: { opacity: 0, y: 40 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.5 } }
+                }}
                 className="m-0 mt-1 text-center font-['Libre_Baskerville',_serif] font-semibold leading-[1.2] text-[#001A4D] text-[length:var(--heading-xl)]"
               >
                 our credentials
               </motion.h2>
-            </div>
+            </motion.div>
 
             <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center gap-[clamp(28px,min(4.8vw,7vh),68px)] lg:flex-row lg:items-center lg:justify-center mt-[clamp(24px,min(3.5vw,5vh),48px)]">
               
