@@ -16,11 +16,11 @@ export default function Home() {
       <BackedBefore />
       <WhatFoundersGet />
       <WhatWeBelieve />
-      {/* <ImpactAtGlance />
+      <ImpactAtGlance />
       <FeaturedFounderStory />
       <IndicornsSpotlight />
       <FounderTestimonial />
-      <Footer /> */}
+      <Footer />
       </main>
     </>
   );

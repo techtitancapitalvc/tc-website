@@ -5,6 +5,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, Variants, useInView } from "framer-motion";
 
+/*
+  RESPONSIVE STRATEGY — clamp(MIN, min(vw-fluid, vh-fluid), MAX)
+  Design ref: 1440 × 982.
+
+  TITLE (Figma):
+    "What our"      → 64px / 600 / Libre Baskerville / lh 120%
+    "founders say"   → 64px / 700 / italic / lh 120%
+    Container width: 429px
+
+  CARDS (Figma):
+    311.424 × 370.703px, border-radius 12px
+    Gradient: linear-gradient(180deg, rgba(217,217,217,0) 0.05%, #000 99.95%)
+    blend-mode: multiply
+
+  ARROW BUTTONS: 77×77 at design, scale down fluidly.
+
+  "We're listening" section: same fluid pattern.
+*/
+
 const testimonials = [
   {
     id: 1,
@@ -18,287 +37,401 @@ const testimonials = [
     name: "Disha Singh",
     role: "Cofounder, Zouk",
     image: "/images/Testimonials/disha-singh.avif",
-    text: "“Titan Capital has been an invaluable partner in our journey to build Zouk. Kunal and Rohit have consistently provided invaluable guidance on cultivating a long-lasting business with strong brand loyalty. Their counsel has been instrumental in guiding our focus on critical areas such as efficient working capital management, deep category penetration, and developing a sustainable competitive advantage. Furthermore, they have emphasized the importance of closely monitoring Net Promoter Score (NPS) as a key indicator of brand love.”",
+    text: "“Titan Capital has been an invaluable partner in our journey to build Zouk. Kunal and Rohit have consistently provided invaluable guidance on cultivating a long-lasting business with strong brand loyalty. Their counsel has been instrumental in guiding our focus on critical areas such as efficient working capital management, deep category penetration, and developing a sustainable competitive advantage.”",
   },
   {
     id: 3,
     name: "Rishabh Goel",
     role: "Cofounder, Credgenics",
     image: "/images/Testimonials/Rishabh.jpeg",
-    text: "“Titan Capital has been more than just an investor for Credgenics - they’ve been our first partner in this journey. Our early conversations made it clear that they weren’t your typical investors. Despite us venturing into a relatively complex and niche segment of debt collections, they backed us with insights and shared perspectives that reshaped how we approached the key challenges. Their belief in Credgenics wasn’t just about the numbers; it was about the vision and the potential to make an impact towards the financial health of the country.”",
+    text: "“Titan Capital has been more than just an investor for Credgenics - they’ve been our first partner in this journey. Our early conversations made it clear that they weren’t your typical investors. Despite us venturing into a relatively complex and niche segment of debt collections, they backed us with insights and shared perspectives that reshaped how we approached the key challenges.”",
   },
   {
     id: 4,
     name: "Raghu Ravinutala",
     role: "Cofounder, Yellow.ai",
-    image: "/images/Testimonials/Raghu-Ravinutala.webp", 
-    text: "“Titan Capital is truly ‘founder only’. From the first interaction, I was very overwhelmed with their focus on making the founder successful beyond anything. They were always there as a great sounding board whenever we had to make critical decisions. I always felt Titan Capital had our back whatever is the situation and that's a great support an early-stage founder can have.”",
+    image: "/images/Testimonials/Raghu-Ravinutala.webp",
+    text: "“Titan Capital is truly ‘founder only’. From the first interaction, I was very overwhelmed with their focus on making the founder successful beyond anything. They were always there as a great sounding board whenever we had to make critical decisions. I always felt Titan Capital had our back whatever is the situation and that’s a great support an early-stage founder can have.”",
   },
   {
     id: 5,
     name: "Aarti Gill",
     role: "Cofounder, OZiva",
-    image: "/images/Testimonials/Aarti Gill.png", 
-    text: "“When I first met Kunal, I wasn’t even considering raising equity capital - but that one conversation completely changed my perspective. Partnering with Titan Capital was one of the best decisions we made at OZiva. With Kunal’s guidance, I learned not just business strategies like fundraising, negotiation, and stakeholder management, but also invaluable life lessons about balancing family and work. Thanks to Kunal, Rohit, and the Titan team.”",
+    image: "/images/Testimonials/Aarti Gill.png",
+    text: "“When I first met Kunal, I wasn’t even considering raising equity capital - but that one conversation completely changed my perspective. Partnering with Titan Capital was one of the best decisions we made at OZiva. With Kunal’s guidance, I learned not just business strategies like fundraising, negotiation, and stakeholder management, but also invaluable life lessons.”",
+  },
+  {
+    id: 6,
+    name: "Anand Yadav",
+    role: "Cofounder, OZiva",
+    image: "/images/Testimonials/Anand_yadav.png",
+    text: "“Titan Capital was among the first to believe in what we were building at Mekr and backed us when it mattered most. Since then, they have gone beyond capital - offering strategic guidance, opening doors through their network, and supporting us through every stage of our journey. Their founder-first mindset makes them the kind of partner every founder hopes to have by their side.”",
   },
 ];
 
 export default function FounderTestimonial() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [maxScroll, setMaxScroll] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
 
-  // Refs for determining boundaries & intersections
   const sectionRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // Trigger when the section scrolls into view
   const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
 
-  // 1. Calculate max scroll to clamp the track to the right edge
-  useEffect(() => {
-    const updateMaxScroll = () => {
-      if (containerRef.current && trackRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        const trackWidth = trackRef.current.scrollWidth;
-        setMaxScroll(Math.max(0, trackWidth - containerWidth));
-      }
-    };
+  /*
+    VIEWPORT-BASED SCROLLING — each click shifts by exactly one card width.
+    We measure card step from the DOM (getBoundingClientRect difference between
+    the first two cards), then add/subtract that step from the current translateX.
+    Clamped to [0, maxScroll] so we never over-scroll.
+    This guarantees every button press produces visible movement.
+  */
+  const getCardStep = (): number => {
+    if (!trackRef.current) return 300;
+    const cards = trackRef.current.children;
+    if (cards.length < 2) return 300;
+    const r0 = (cards[0] as HTMLElement).getBoundingClientRect();
+    const r1 = (cards[1] as HTMLElement).getBoundingClientRect();
+    return r1.left - r0.left; // card width + gap
+  };
 
-    updateMaxScroll();
-    // Small delay ensures images/fonts have loaded for accurate width calculation
-    const timer = setTimeout(updateMaxScroll, 250); 
-    window.addEventListener("resize", updateMaxScroll);
-    
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", updateMaxScroll);
+  const getMaxScroll = (): number => {
+    if (!trackRef.current || !containerRef.current) return 0;
+    return Math.max(0, trackRef.current.scrollWidth - containerRef.current.clientWidth);
+  };
+
+  // Recalculate on resize (clamp translateX if viewport changed)
+  useEffect(() => {
+    const onResize = () => {
+      setTranslateX((prev) => {
+        const max = getMaxScroll();
+        return Math.min(prev, max);
+      });
     };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // 2. Auto-scroll when the section comes into view
+  // Auto-scroll to the end when section enters viewport (left → right animation)
   useEffect(() => {
     if (isInView) {
       const timer = setTimeout(() => {
-        setCurrentIndex(testimonials.length - 1);
+        requestAnimationFrame(() => {
+          setTranslateX(getMaxScroll());
+        });
       }, 600);
       return () => clearTimeout(timer);
     }
   }, [isInView]);
 
-  // 3. Navigation bounded by the first and last card
   const nextSlide = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, testimonials.length - 1));
+    const step = getCardStep();
+    const max = getMaxScroll();
+    setTranslateX((prev) => Math.min(prev + step, max));
   };
-  
+
   const prevSlide = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    const step = getCardStep();
+    setTranslateX((prev) => Math.max(prev - step, 0));
   };
 
-  // Determine if we've already scrolled as far right as possible
-  const isAtEnd = currentIndex === testimonials.length - 1 || (currentIndex * 335.424) >= maxScroll;
+  const isAtStart = translateX <= 0;
+  // Guard: getMaxScroll() returns 0 before refs are ready; don't disable the
+  // right button in that case (0 >= 0 would be true and permanently lock it).
+  const maxScroll = getMaxScroll();
+  const isAtEnd = maxScroll > 0 && translateX >= maxScroll;
 
-  // =========================================
-  // HEADING VARIANTS
-  // =========================================
-  const text1Variants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-  };
-
-  const text2Variants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } }
-  };
-
-  const highlightVariants: Variants = {
-    hidden: { scaleX: 0 },
-    visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 1.1 } }
-  };
+  /* ── Heading animations ── */
+  const t1: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
+  const t2: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } } };
+  const hl: Variants = { hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 1.1 } } };
 
   return (
-    <section ref={sectionRef} className="flex flex-col overflow-hidden bg-white pt-[clamp(50px,8vw,100px)]">
-      {/* Top Header Row */}
-      <div className="mx-auto mb-10 flex w-full max-w-[1440px] flex-col items-start justify-between gap-6 px-5 md:mb-16 md:flex-row md:items-end md:px-10">   
-        <motion.div 
-          className="flex flex-col items-start gap-1 md:gap-2"
+    <section
+      ref={sectionRef}
+      className="flex flex-col overflow-hidden bg-white"
+      style={{ paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)" }}
+    >
+
+      {/* ── Header row: title + arrows ── */}
+      <div
+        className="mx-auto flex w-full max-w-[1440px] flex-col items-start justify-between gap-6 md:flex-row md:items-end"
+        style={{
+          paddingLeft:   "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          paddingRight:  "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          marginBottom:  "clamp(24px, min(4.44vw, 6.52vh), 64px)",
+        }}
+      >
+        {/* Title — Figma: 429px wide, 64px / Libre Baskerville */}
+        <motion.div
+          className="flex flex-col items-start"
+          style={{
+            width: "clamp(250px, min(29.79vw, 43.69vh), 429px)",
+            gap:   "clamp(2px, min(0.27vw, 0.41vh), 4px)",
+          }}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <motion.h2 
-            className="m-0 font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-semibold leading-[1.2] text-[#001A4D]" 
-            variants={text1Variants}
+          {/* "What our" — 64px / 600 / normal */}
+          <motion.h2
+            className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D]"
+            style={{
+              fontSize:   "clamp(24px, min(4.44vw, 6.52vh), 64px)",
+              fontWeight: 600,
+              fontStyle:  "normal",
+              lineHeight: "120%",
+            }}
+            variants={t1}
           >
             What our
           </motion.h2>
-          
-          <motion.h2 
-            className="m-0 font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-semibold italic leading-[1.2] text-[#001A4D]" 
-            variants={text2Variants}
+
+          {/* "founders say" — 64px / 700 / italic + highlight */}
+          <motion.h2
+            className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D]"
+            style={{
+              fontSize:   "clamp(24px, min(4.44vw, 6.52vh), 64px)",
+              fontWeight: 700,
+              fontStyle:  "italic",
+              lineHeight: "120%",
+            }}
+            variants={t2}
           >
-            <span className="relative inline-block overflow-hidden px-2 md:px-4" style={{ background: "transparent" }}>
+            <span className="relative inline-block overflow-hidden px-2" style={{ background: "transparent" }}>
               <motion.span
                 className="absolute inset-0 z-0 bg-[#D3E2FF]"
                 style={{ transformOrigin: "left" }}
-                variants={highlightVariants}
+                variants={hl}
               />
               <span className="relative z-10">founders say</span>
             </span>
           </motion.h2>
         </motion.div>
 
-        {/* Carousel Arrow Buttons */}
-        <div className="flex items-center gap-4 md:mb-4">
-          <button 
+        {/* Arrow buttons — 77px at design, fluid */}
+        <div className="flex items-center" style={{ gap: "clamp(12px, min(1.11vw, 1.63vh), 16px)", marginBottom: "clamp(8px, min(0.97vw, 1.43vh), 14px)" }}>
+          <button
             onClick={prevSlide}
-            className={`flex h-[60px] w-[60px] items-center justify-center rounded-full border-none transition md:h-[77px] md:w-[77px] ${currentIndex === 0 ? "bg-[#E5EEFF] opacity-50 cursor-not-allowed" : "bg-[#D3E2FF] cursor-pointer hover:opacity-80"}`}
+            disabled={isAtStart}
+            className={`flex shrink-0 items-center justify-center rounded-full border-none transition ${
+              isAtStart ? "bg-[#E5EEFF] opacity-50 cursor-not-allowed" : "bg-[#D3E2FF] cursor-pointer hover:opacity-80"
+            }`}
+            style={{
+              width:  "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+              height: "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+            }}
             aria-label="Previous slide"
-            disabled={currentIndex === 0}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 md:h-auto md:w-auto" width="59" height="59" viewBox="0 0 59 59" fill="none">
+            <svg xmlns="http://www.w3.org/2000/svg" style={{ width: "60%", height: "60%" }} viewBox="0 0 59 59" fill="none">
               <path d="M27.1151 20.9695C27.2962 20.8007 27.4415 20.5972 27.5423 20.371C27.6431 20.1448 27.6973 19.9007 27.7016 19.6531C27.706 19.4056 27.6605 19.1597 27.5677 18.9301C27.475 18.7005 27.337 18.492 27.1619 18.3169C26.9868 18.1418 26.7783 18.0038 26.5487 17.911C26.3191 17.8183 26.0732 17.7728 25.8256 17.7771C25.5781 17.7815 25.3339 17.8357 25.1078 17.9365C24.8816 18.0372 24.6781 18.1825 24.5093 18.3637L14.6759 28.197C14.3307 28.5427 14.1367 29.0113 14.1367 29.4999C14.1367 29.9885 14.3307 30.4571 14.6759 30.8028L24.5093 40.6362C24.6781 40.8173 24.8816 40.9626 25.1078 41.0634C25.3339 41.1642 25.5781 41.2183 25.8256 41.2227C26.0732 41.2271 26.3191 41.1815 26.5487 41.0888C26.7783 40.9961 26.9868 40.8581 27.1619 40.683C27.337 40.5079 27.475 40.2994 27.5677 40.0698C27.6605 39.8402 27.706 39.5943 27.7016 39.3467C27.6973 39.0992 27.6431 38.855 27.5423 38.6289C27.4415 38.4027 27.2962 38.1991 27.1151 38.0303L20.4284 31.3437H44.2497C44.7387 31.3437 45.2076 31.1494 45.5534 30.8037C45.8992 30.4579 46.0934 29.9889 46.0934 29.4999C46.0934 29.0109 45.8992 28.542 45.5534 28.1962C45.2076 27.8504 44.7387 27.6562 44.2497 27.6562H20.4284L27.1151 20.9695Z" fill="black"/>
             </svg>
           </button>
-          
-          <button 
+
+          <button
             onClick={nextSlide}
-            className={`flex h-[60px] w-[60px] items-center justify-center rounded-full border-none transition md:h-[77px] md:w-[77px] ${isAtEnd ? "bg-[#E5EEFF] opacity-50 cursor-not-allowed" : "bg-[#D3E2FF] cursor-pointer hover:opacity-80"}`}
-            aria-label="Next slide"
             disabled={isAtEnd}
+            className={`flex shrink-0 items-center justify-center rounded-full border-none transition ${
+              isAtEnd ? "bg-[#E5EEFF] opacity-50 cursor-not-allowed" : "bg-[#D3E2FF] cursor-pointer hover:opacity-80"
+            }`}
+            style={{
+              width:  "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+              height: "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+            }}
+            aria-label="Next slide"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 rotate-180 md:h-auto md:w-auto" width="59" height="59" viewBox="0 0 59 59" fill="none">
+            <svg xmlns="http://www.w3.org/2000/svg" style={{ width: "60%", height: "60%", transform: "rotate(180deg)" }} viewBox="0 0 59 59" fill="none">
               <path d="M27.1151 20.9695C27.2962 20.8007 27.4415 20.5972 27.5423 20.371C27.6431 20.1448 27.6973 19.9007 27.7016 19.6531C27.706 19.4056 27.6605 19.1597 27.5677 18.9301C27.475 18.7005 27.337 18.492 27.1619 18.3169C26.9868 18.1418 26.7783 18.0038 26.5487 17.911C26.3191 17.8183 26.0732 17.7728 25.8256 17.7771C25.5781 17.7815 25.3339 17.8357 25.1078 17.9365C24.8816 18.0372 24.6781 18.1825 24.5093 18.3637L14.6759 28.197C14.3307 28.5427 14.1367 29.0113 14.1367 29.4999C14.1367 29.9885 14.3307 30.4571 14.6759 30.8028L24.5093 40.6362C24.6781 40.8173 24.8816 40.9626 25.1078 41.0634C25.3339 41.1642 25.5781 41.2183 25.8256 41.2227C26.0732 41.2271 26.3191 41.1815 26.5487 41.0888C26.7783 40.9961 26.9868 40.8581 27.1619 40.683C27.337 40.5079 27.475 40.2994 27.5677 40.0698C27.6605 39.8402 27.706 39.5943 27.7016 39.3467C27.6973 39.0992 27.6431 38.855 27.5423 38.6289C27.4415 38.4027 27.2962 38.1991 27.1151 38.0303L20.4284 31.3437H44.2497C44.7387 31.3437 45.2076 31.1494 45.5534 30.8037C45.8992 30.4579 46.0934 29.9889 46.0934 29.4999C46.0934 29.0109 45.8992 28.542 45.5534 28.1962C45.2076 27.8504 44.7387 27.6562 44.2497 27.6562H20.4284L27.1151 20.9695Z" fill="black"/>
             </svg>
           </button>
         </div>
       </div>
 
-      {/* =========================================
-          AUTO-CAROUSEL TRACK WITH 3D FLIP CARDS
-          ========================================= */}
-      <div 
+      {/* ── Carousel track ── */}
+      <div
         ref={containerRef}
-        className="mx-auto w-full max-w-[1440px] px-5 pb-10 md:px-10 overflow-visible"
+        className="mx-auto w-full max-w-[1440px] overflow-visible"
+        style={{
+          paddingLeft:   "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          paddingRight:  "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          paddingBottom: "clamp(24px, min(2.77vw, 4.07vh), 40px)",
+        }}
       >
-        <motion.div 
+        <motion.div
           ref={trackRef}
-          className="flex w-max gap-6"
-          animate={{ x: -Math.min(currentIndex * 335.424, maxScroll) }}
-          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="flex w-max"
+          style={{ gap: "clamp(16px, min(1.66vw, 2.44vh), 24px)" }}
+          animate={{ x: -translateX }}
+          transition={{ type: "spring", stiffness: 180, damping: 28 }}
         >
-          {testimonials.map((item) => {
-            return (
-              <div 
-                key={item.id} 
-                className="relative h-[370.703px] w-[311.424px] shrink-0" 
-                style={{ perspective: "1000px" }}
+          {testimonials.map((item) => (
+            <div
+              key={item.id}
+              className="relative shrink-0"
+              style={{
+                /* Card: 311.424 × 370.703 at design, fluid down on small screens */
+                width:  "clamp(200px, min(21.62vw, 31.72vh), 311.424px)",
+                height: "clamp(238px, min(25.74vw, 37.75vh), 370.703px)",
+                perspective: "1000px",
+              }}
+            >
+              <motion.div
+                className="relative h-full w-full cursor-pointer"
+                style={{ transformStyle: "preserve-3d" }}
+                initial={{ rotateY: 0 }}
+                whileHover={{ rotateY: 180 }}
+                whileTap={{ rotateY: 180 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
               >
-                <motion.div
-                  className="relative h-full w-full cursor-pointer"
-                  style={{ transformStyle: "preserve-3d" }}
-                  initial={{ rotateY: 0 }}
-                  whileHover={{ rotateY: 180 }}
-                  whileTap={{ rotateY: 180 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
+
+                {/* ── FRONT: Photo + gradient + name ── */}
+                <div
+                  className="absolute inset-0 flex h-full w-full flex-col justify-end overflow-hidden"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
+                  }}
                 >
-                  
-                  {/* --- FRONT SIDE (IMAGE) --- */}
-                  <div 
-                    className="absolute inset-0 flex h-full w-full flex-col justify-end overflow-hidden rounded-[12px]"
-                    style={{ backfaceVisibility: "hidden" }}
+                  <Image
+                    src={item.image || ""}
+                    alt={item.name}
+                    fill
+                    sizes="(max-width: 1440px) 22vw, 311px"
+                    className="object-cover"
+                  />
+                  {/* Figma gradient overlay */}
+                  <div
+                    className="absolute inset-0 z-[5]"
+                    style={{
+                      background: "linear-gradient(180deg, rgba(217, 217, 217, 0.00) 0.05%, #000 99.95%)",
+                      backgroundBlendMode: "multiply",
+                    }}
+                  />
+                  <div
+                    className="relative z-10 flex flex-col drop-shadow-md"
+                    style={{ padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)" }}
                   >
-                    <Image
-                      src={item.image || ""}
-                      alt={item.name}
-                      fill
-                      sizes="311px"
-                      className="object-cover"
-                    />
-                    <div 
-                      className="absolute inset-0 z-[5]" 
-                      style={{ 
-                        background: "linear-gradient(180deg, rgba(217, 217, 217, 0.00) 0.05%, #000 99.95%)",
-                        mixBlendMode: "multiply"
-                      }}
-                    />
-                    
-                    <div className="relative z-10 flex flex-col p-6 drop-shadow-md">
-                      <p className="m-0 font-['Libre_Baskerville',_serif] text-xl font-bold text-white">{item.name}</p>
-                      <p className="m-0 mt-1 font-['Poppins',_sans-serif] text-[13px] font-light text-white">{item.role}</p>
-                    </div>
-                  </div>
-
-                  {/* --- BACK SIDE (QUOTE) --- */}
-                  <div 
-                    className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-hidden rounded-[12px] bg-[#C8DBFF] p-6 shadow-lg"
-                    style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-                  >
-                    <p className="m-0 font-['Inter',_sans-serif] text-[12px] font-medium leading-[1.6] text-[#001A4D]">
-                      {item.text}
+                    <p
+                      className="m-0 font-['Libre_Baskerville',_serif] font-bold text-white"
+                      style={{ fontSize: "clamp(14px, min(1.38vw, 2.04vh), 20px)" }}
+                    >
+                      {item.name}
                     </p>
-                    <div className="flex flex-col pt-4">
-                      <p className="m-0 font-['Libre_Baskerville',_serif] text-lg font-bold text-[#001A4D]">{item.name}</p>
-                      <p className="m-0 mt-1 font-['Poppins',_sans-serif] text-[12px] font-medium text-[#001A4D]">{item.role}</p>
-                    </div>
+                    <p
+                      className="m-0 mt-1 font-['Poppins',_sans-serif] font-light text-white"
+                      style={{ fontSize: "clamp(10px, min(0.9vw, 1.32vh), 13px)" }}
+                    >
+                      {item.role}
+                    </p>
                   </div>
+                </div>
 
-                </motion.div>
-              </div>
-            );
-          })}
+                {/* ── BACK: Quote text ── */}
+                <div
+                  className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-hidden bg-[#C8DBFF] shadow-lg"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)",
+                    borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
+                    padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
+                  }}
+                >
+                  <p
+                    className="m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D]"
+                    style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
+                  >
+                    {item.text}
+                  </p>
+                  <div className="flex flex-col pt-4">
+                    <p
+                      className="m-0 font-['Libre_Baskerville',_serif] font-bold text-[#001A4D]"
+                      style={{ fontSize: "clamp(12px, min(1.25vw, 1.83vh), 18px)" }}
+                    >
+                      {item.name}
+                    </p>
+                    <p
+                      className="m-0 mt-1 font-['Poppins',_sans-serif] font-medium text-[#001A4D]"
+                      style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
+                    >
+                      {item.role}
+                    </p>
+                  </div>
+                </div>
+
+              </motion.div>
+            </div>
+          ))}
+          {/* Right-edge spacer — keeps last card from sticking to screen edge */}
+          <div className="shrink-0" style={{ width: "clamp(20px, min(2.77vw, 4.07vh), 40px)" }} aria-hidden />
         </motion.div>
       </div>
 
-      {/* =========================================
-          ANIMATED HEADING 2: We're listening
-          ========================================= */}
-      <div className="mt-8 flex w-full flex-col items-center justify-center gap-8 rounded-t-[40px] bg-[#FBF7F0] px-5 py-12 md:mt-12 md:gap-10 md:px-10 md:py-24">
-        
-        <motion.div 
+      {/* ── "We're listening" section ── */}
+      <div
+        className="flex w-full flex-col items-center justify-center"
+        style={{
+          marginTop:       "clamp(24px, min(3.33vw, 4.89vh), 48px)",
+          gap:             "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          borderRadius:    "0",
+          background:      "#FBF7F0",
+          backgroundImage: [
+            "linear-gradient(to right, rgba(0,0,0,0.045) 1px, transparent 1px)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.045) 1px, transparent 1px)",
+            "linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            "linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          ].join(", "),
+          backgroundSize:     "40px 40px",
+          backgroundPosition: "0 0, 0 0, 1px 1px, 1px 1px",
+          paddingLeft:     "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          paddingRight:    "clamp(20px, min(2.77vw, 4.07vh), 40px)",
+          paddingTop:      "clamp(40px, min(6.66vw, 9.77vh), 96px)",
+          paddingBottom:   "clamp(40px, min(6.66vw, 9.77vh), 96px)",
+        }}
+      >
+        <motion.div
           className="flex flex-col items-center justify-center text-center"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <motion.h2 
-            className="m-0 text-center font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-bold italic leading-[1.19] text-[#001A4D]" 
-            variants={{
-              hidden: { opacity: 0, y: 40 },
-              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-            }}
+          <motion.h2
+            className="m-0 text-center font-['Libre_Baskerville',_serif] font-bold italic leading-[1.19] text-[#001A4D]"
+            style={{ fontSize: "clamp(24px, min(4.44vw, 6.52vh), 64px)" }}
+            variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}
           >
-            <span className="relative inline-block overflow-hidden px-2 md:px-6" style={{ background: "transparent" }}>
-               <motion.span 
-                 className="absolute inset-0 z-0 bg-[#D3E2FF]" 
-                 style={{ transformOrigin: "left" }} 
-                 variants={{
-                   hidden: { scaleX: 0 },
-                   visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 } }
-                 }} 
-               />
-               <span className="relative z-10">We're listening.</span>
+            <span className="relative inline-block overflow-hidden px-2" style={{ background: "transparent" }}>
+              <motion.span
+                className="absolute inset-0 z-0 bg-[#D3E2FF]"
+                style={{ transformOrigin: "left" }}
+                variants={{ hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 } } }}
+              />
+              <span className="relative z-10">We&apos;re listening.</span>
             </span>
           </motion.h2>
-          
-          <motion.h2 
-            className="m-0 mt-2 w-full max-w-[699px] text-center font-['Libre_Baskerville',_serif] text-[clamp(40px,6vw,80px)] font-bold leading-[1.19] text-[#001A4D]" 
-            variants={{
-              hidden: { opacity: 0, y: 40 },
-              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 1.1 } }
+
+          <motion.h2
+            className="m-0 mt-2 w-full text-center font-['Libre_Baskerville',_serif] font-bold leading-[1.19] text-[#001A4D]"
+            style={{
+              fontSize: "clamp(24px, min(4.44vw, 6.52vh), 64px)",
+              maxWidth: "clamp(350px, min(48.54vw, 71.18vh), 699px)",
             }}
+            variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 1.1 } } }}
           >
-            Tell us what you're building.
+            Tell us what you&apos;re building.
           </motion.h2>
         </motion.div>
 
-        <Link 
-          href="/get-investment" 
-          className="group relative m-0 flex h-[54px] w-[221px] shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[9px] bg-[#001A4D] p-[10px] font-['Libre_Baskerville',_serif] text-[16px] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
+        <Link
+          href="/get-investment"
+          className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
+          style={{
+            height:       "clamp(40px, min(3.75vw, 5.5vh), 54px)",
+            width:        "clamp(160px, min(15.35vw, 22.51vh), 221px)",
+            fontSize:     "clamp(12px, min(1.11vw, 1.63vh), 16px)",
+            borderRadius: "clamp(7px, min(0.625vw, 0.92vh), 9px)",
+            padding:      "clamp(6px, 0.69vw, 10px)",
+          }}
         >
-          {/* Smooth transition hover gradient using standard circle syntax to prevent warping */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_40%,#003CB3_0%,#012469_50%,#001A4D_100%)] opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-          
           <span className="relative z-10">Get Investment</span>
         </Link>
       </div>

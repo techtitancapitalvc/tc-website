@@ -5,32 +5,14 @@ import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 /*
-  LAYOUT (matches reference screenshot):
-
-  ┌──────────────────────────────────────────────────────┐
-  │ TV FRAME                                              │
-  │  ┌─────────────────────────────────────┐  ┌──────┐  │
-  │  │ SCREEN AREA (overflow-hidden)        │  │dials │  │
-  │  │                                      │  │      │  │
-  │  │  ┌─ Name (top-left)                  │  │      │  │
-  │  │  │                                   │  │      │  │
-  │  │  │  Role (below name)        ┌─────┐ │  │      │  │
-  │  │  │                           │photo│ │  │      │  │
-  │  │  │                           │ on  │ │  │      │  │
-  │  │  │                           │right│ │  │      │  │
-  │  │  │  Logo (bottom-left)       └─────┘ │  │      │  │
-  │  │  └───────────────────────────────────┘  └──────┘  │
-  │  └──────────────────────────────────────┘            │
-  └──────────────────────────────────────────────────────┘
-
-  Everything (photo + name + role + logo) is INSIDE the screen area with
-  overflow-hidden — nothing bleeds into the dials column, nothing gets
-  obscured by the TV bezel. The TV SVG sits at a LOWER z-index than the
-  content so the screen cutout shows through cleanly.
-
   Z-ORDER:
-    z-[0]   TV SVG (frame + bezel + dials + transparent screen)
-    z-[10]  Screen content (photo + text + logo) — all clipped by screen area
+    z-[5]   Photo + Logo — BEHIND TV (cutout images, never cropped)
+    z-[10]  TV SVG — frame/bezel/dials overlap the photo bleed
+    z-[15]  Name + Role — ABOVE TV (always legible)
+
+  RESPONSIVE: all sizes use clamp(MIN, min(vw-fluid, vh-fluid), MAX)
+  so they scale with whichever axis is tighter.
+  Design ref: 1440 × 982.
 */
 
 const slides = [
@@ -69,14 +51,12 @@ export default function FeaturedFounderStory() {
 
   const slide = slides[current];
 
-  /* ── TV glitch ── */
   const tvGlitch: Variants = {
     initial: { opacity: 0, filter: "brightness(0%) grayscale(100%)", scaleY: 0.01 },
     animate: { opacity: 1, filter: "brightness(100%) grayscale(0%)", scaleY: 1, transition: { duration: 0.35, ease: "easeOut" } },
     exit:    { opacity: 0, filter: "brightness(0%) grayscale(100%)", scaleY: 0.01, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  /* ── Heading entrance ── */
   const h1v: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
   const hlv: Variants = { hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 } } };
   const h2v: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 1.1 } } };
@@ -122,62 +102,100 @@ export default function FeaturedFounderStory() {
 
       {/* ── 2. TV wrapper ── */}
       <div
-        className="relative w-full"
+        className="relative w-full overflow-hidden"
         style={{ maxWidth: "clamp(280px, min(45.13vw, 66.19vh), 650px)" }}
       >
 
-        {/* ── 2a. TV SVG — base layer (z-0) ── */}
-        <Image
-          src="/images/misc/television.svg"
-          alt="Television frame"
-          width={800}
-          height={500}
-          className="pointer-events-none relative z-0 block h-auto w-full"
-          sizes="(max-width: 1440px) min(45vw, 66vh), 650px"
-          priority
-        />
-
-        {/* ── 2b. Screen area — overflow-hidden, ALL content clipped to screen ──
-            Percentages match the TV SVG screen cutout: left 8%, top 13%,
-            width 58%, height 72%.
+        {/* ── LAYER 1: Photo + Logo — z-[5], BEHIND TV ──
+            Screen-area coordinates (left 8%, top 13%, w 58%, h 72%).
+            No overflow-hidden so the cutout image can bleed into the dials
+            column — the TV SVG at z-[10] will cover that bleed.
+            objectFit: "contain" — cutout images are NEVER cropped.
         ── */}
-        <div className="absolute left-[8%] top-[13%] z-[10] h-[72%] w-[58%] overflow-hidden">
+        <div className="absolute left-[8%] top-[13%] z-[5] h-[72%] w-[58%]">
           <AnimatePresence mode="wait">
             <motion.div
-              key={`slide-${current}`}
+              key={`photo-${current}`}
               variants={tvGlitch}
               initial="initial"
               animate="animate"
               exit="exit"
               className="relative h-full w-full"
             >
-
-              {/* Founder photo — right side, fills full height (cropped via cover) */}
+              {/* Founder photo — source images are 1878×1056 landscape cutouts.
+                  cover fills the screen area; objectPosition "right center"
+                  keeps the founder (right side of the frame) visible and only
+                  crops the empty left portion of the landscape. */}
               <div
                 className="absolute"
-                style={{
-                  right:  "0%",
-                  top:    "0%",
-                  bottom: "0%",
-                  width:  "45%",
-                }}
+                style={{ top: "0%", bottom: "0%", right: "-50%", width: "140%" }}
               >
                 <Image
                   src={slide.image}
                   alt={slide.name.replace("\n", " ")}
                   fill
-                  sizes="(max-width: 1440px) 20vw, 290px"
-                  style={{ objectFit: "cover", objectPosition: "center top" }}
+                  sizes="(max-width: 1440px) 30vw, 400px"
+                  style={{ objectFit: "cover", objectPosition: "bottom right" }}
                 />
               </div>
 
+              {/* Company logo — bottom-left of screen area */}
+              <div
+                className="absolute"
+                style={{ bottom: "20%", left: "12%" }}
+              >
+                <Image
+                  src={slide.logo}
+                  alt="Company logo"
+                  width={148}
+                  height={52}
+                  style={{
+                    objectFit:      "contain",
+                    objectPosition: "left",
+                    width:          "clamp(50px, min(8.61vw, 12.63vh), 124px)",
+                    height:         "clamp(18px, min(3.02vw,  4.43vh),  44px)",
+                    aspectRatio:    "37/13",
+                  }}
+                />
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* ── LAYER 2: TV SVG — z-[10] ──
+            Transparent screen cutout shows through to z-[5] content.
+            Opaque bezel + dials cover the photo bleed.
+        ── */}
+        <Image
+          src="/images/misc/television.svg"
+          alt="Television frame"
+          width={800}
+          height={500}
+          className="pointer-events-none relative z-[10] block h-auto w-full"
+          sizes="(max-width: 1440px) min(45vw, 66vh), 650px"
+          priority
+        />
+
+        {/* ── LAYER 3: Name + Role — z-[15], ABOVE TV ──
+            Same screen-area coordinates. overflow-hidden clips text to screen.
+        ── */}
+        <div className="absolute left-[8%] top-[13%] z-[15] flex h-[72%] w-[58%] items-start overflow-hidden pointer-events-none">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${current}`}
+              variants={tvGlitch}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="relative h-full w-full"
+            >
               {/* Name — top-left */}
               <h3
                 className="absolute m-0 font-['Libre_Baskerville',_serif] text-black"
                 style={{
-                  top:             "15%",
-                  left:            "6%",
-                  width:           "55%",
+                  top:             "29%",
+                  left:            "12%",
+                  width:           "50%",
                   fontSize:        "clamp(11px, min(1.38vw, 2.04vh), 20px)",
                   fontWeight:      700,
                   lineHeight:      "100%",
@@ -195,9 +213,9 @@ export default function FeaturedFounderStory() {
               <p
                 className="absolute m-0 font-['Poppins',_sans-serif] text-black"
                 style={{
-                  top:             "36%",
-                  left:            "6%",
-                  width:           "50%",
+                  top:             "44%",
+                  left:            "12%",
+                  width:           "45%",
                   fontSize:        "clamp(9px, min(0.83vw, 1.22vh), 12px)",
                   fontWeight:      300,
                   lineHeight:      "119%",
@@ -209,30 +227,6 @@ export default function FeaturedFounderStory() {
               >
                 {slide.role}
               </p>
-
-              {/* Logo — bottom-left */}
-              <div
-                className="absolute"
-                style={{
-                  bottom: "12%",
-                  left:   "6%",
-                }}
-              >
-                <Image
-                  src={slide.logo}
-                  alt="Company logo"
-                  width={148}
-                  height={52}
-                  style={{
-                    objectFit:      "contain",
-                    objectPosition: "left",
-                    width:          "clamp(50px, min(8.61vw, 12.63vh), 124px)",
-                    height:         "clamp(18px, min(3.02vw,  4.43vh),  44px)",
-                    aspectRatio:    "37/13",
-                  }}
-                />
-              </div>
-
             </motion.div>
           </AnimatePresence>
         </div>
