@@ -157,7 +157,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
         </motion.div>
 
         {/* INCREASED FONT SIZE: Changed from 14px to a fluid clamp(16px to 18px) */}
-        <motion.p variants={descVariants} className="m-0 max-w-[370px] font-['Poppins',_sans-serif] text-[clamp(16px,1.5vw,18px)] font-normal leading-[150%] text-[#333]">
+        <motion.p variants={descVariants} className="m-0 max-w-[370px] font-['Poppins',_sans-serif] text-[clamp(14px,1.5vw,16px)] font-normal leading-[150%] text-[#333]">
           {feature.desc}
         </motion.p>
 
@@ -168,7 +168,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
 
 export default function WhatFoundersGet() {
   return (
-    <section className="relative m-0 flex min-h-[100dvh] w-full flex-col items-center overflow-hidden pb-[20px] pt-[53px] lg:pt-[50px]">
+    <section className="relative m-0 flex min-h-[100dvh] w-full flex-col items-center overflow-hidden pb-[20px] pt-[23px] lg:pt-[50px]">
       
       {/* HEADER SECTION */}
       <div className="z-10 mx-auto flex w-full max-w-[1280px] flex-row flex-wrap items-center justify-center lg:justify-start gap-[clamp(10px,1.5vw,20px)] px-4 md:px-10 lg:px-0">

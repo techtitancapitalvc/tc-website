@@ -17,7 +17,7 @@ export default function Home() {
       <WhatFoundersGet />
       <WhatWeBelieve />
       <ImpactAtGlance />
-      <FeaturedFounderStory />
+      {/* <FeaturedFounderStory /> */}
       <IndicornsSpotlight />
       <FounderTestimonial />
       <Footer />

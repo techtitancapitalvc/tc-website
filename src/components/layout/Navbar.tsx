@@ -53,15 +53,20 @@ export default function Navbar() {
 
   return (
     <>
+     {/* =========================================
+          MAIN TOP NAVBAR (Closed State)
+          ========================================= */}
+      {/* 100% FIXED SIZING: Hardcoded to 80px height and 62px padding. No fluid variables. */}
       {/* =========================================
           MAIN TOP NAVBAR (Closed State)
           ========================================= */}
-      <nav className="fixed left-0 top-0 z-[40] flex h-[var(--nav-height)] w-full items-center justify-between bg-[linear-gradient(90deg,#001A4D_0%,#001A4D_58.17%,#003C82_74.52%,#06C_89.42%,#001A4D_100%)] px-[clamp(16px,4.3vw,62px)]">
+      {/* FLUID BUT TIGHT: Height stays between 65px and 80px */}
+      <nav className="fixed left-0 top-0 z-[40] flex h-[clamp(65px,min(5.5vw,7vh),80px)] w-full items-center justify-between bg-[linear-gradient(90deg,#001A4D_0%,#001A4D_58.17%,#003C82_74.52%,#06C_89.42%,#001A4D_100%)] px-[clamp(32px,4.3vw,62px)]">
         
-        {/* FLUID TOGGLE WITH SPOTLIGHT */}
+        {/* FLUID TOGGLE: Stays between 36px and 41px */}
         <button
           onClick={() => setIsMenuOpen(true)}
-          className="group relative flex h-[clamp(36px,2.84vw,41px)] w-[clamp(36px,2.84vw,41px)] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white p-[clamp(8px,0.9vw,13px)] transition-all"
+          className="group relative flex h-[clamp(36px,2.84vw,41px)] w-[clamp(36px,2.84vw,41px)] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white p-[clamp(8px,0.9vw,10px)] transition-all"
           aria-label="Open Menu"
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
@@ -85,6 +90,7 @@ export default function Navbar() {
         </button>
 
         <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          {/* FLUID LOGO: Stays between 100px and 127px */}
           <Image
             src="/images/logos/titancapitallogo.svg"
             alt="Titan Capital"
@@ -95,10 +101,10 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* CTA BUTTON WITH SPOTLIGHT */}
+        {/* FLUID CTA BUTTON: Stays between 145px and 187px */}
         <Link
           href="/get-investment"
-          className="group relative flex h-[clamp(40px,3.26vw,47px)] w-[clamp(140px,12.98vw,187px)] shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[9px] bg-white p-[clamp(8px,0.69vw,10px)] text-center font-['Libre_Baskerville',_serif] text-[clamp(14px,1.11vw,16px)] font-semibold leading-[107%] text-[#001A4D]"
+          className="group relative flex h-[clamp(40px,3.26vw,47px)] w-[clamp(145px,12.98vw,187px)] shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[9px] bg-white p-[clamp(8px,0.69vw,10px)] text-center font-['Libre_Baskerville',_serif] text-[clamp(13px,1.11vw,16px)] font-semibold leading-[107%] text-[#001A4D]"
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -116,7 +122,6 @@ export default function Navbar() {
           <span className="relative z-10">Get Investment</span>
         </Link>
       </nav>
-
      {/* =========================================
           FULL-SCREEN MENU OVERLAY (Open State)
           ========================================= */}
@@ -140,13 +145,13 @@ export default function Navbar() {
         >
 
           {/* Inner top navbar */}
-          <div className="flex h-[var(--nav-height)] w-full shrink-0 items-center justify-between bg-[#001A4D] px-[clamp(24px,4.3vw,62px)]">
+          <div className="flex h-[var(--nav-height)] w-full shrink-0 items-center justify-between bg-[#001A4D] px-[62px]">
             <button
               onClick={() => setIsMenuOpen(false)}
               className="cursor-pointer transition-opacity hover:opacity-70"
               aria-label="Close Menu"
             >
-              <svg className="h-[clamp(24px,1.94vw,28px)] w-[clamp(24px,1.94vw,28px)]" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="h-[28px] w-[28px]" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M14 16l-4-4 4-4" fill="white" />
               </svg>
@@ -158,20 +163,20 @@ export default function Navbar() {
                 alt="Titan Capital"
                 width={127}
                 height={42}
-                className="h-[clamp(33px,2.91vw,42px)] w-[clamp(100px,8.81vw,127px)] object-cover brightness-0 invert"
+                className="h-[42px] w-[127px] object-cover brightness-0 invert"
               />
             )}
           </div>
 
           <div className="flex flex-1 overflow-hidden bg-transparent">
 
-            {/* LEFT PANEL — REDUCED WIDTH & FONT SIZES */}
-            <div className="flex h-full w-[clamp(280px,32vw,480px)] shrink-0 flex-col overflow-y-auto bg-[#001A4D] pt-[clamp(16px,1.38vw,20px)] pb-[clamp(60px,6.8vw,98px)]">
-              <div className="mb-[clamp(16px,1.38vw,20px)] px-[clamp(24px,2.5vw,36px)]">
+            {/* LEFT PANEL — FIXED WIDTH (480px) & SIZES */}
+            <div className="flex h-full w-[480px] shrink-0 flex-col overflow-y-auto bg-[#001A4D] pt-[20px] pb-[98px]">
+              <div className="mb-[20px] px-[36px]">
                 <Link
                   href="/"
                   onClick={() => setIsMenuOpen(false)}
-                  className="font-['Libre_Baskerville',_serif] text-[clamp(12px,0.9vw,14px)] font-medium tracking-wide text-white transition-opacity hover:opacity-80"
+                  className="font-['Libre_Baskerville',_serif] text-[14px] font-medium tracking-wide text-white transition-opacity hover:opacity-80"
                 >
                   HOME
                 </Link>
@@ -179,17 +184,15 @@ export default function Navbar() {
 
               <div className="flex w-full flex-col">
                 {menuData.map((item) => (
-                  // Conditional rendering: If the item has subItems, make it a toggle button.
-                  // If it doesn't (like Portfolio), make it a direct Link!
                   item.subItems.length > 0 ? (
                     <button
                       key={item.id}
                       onClick={() => setActiveSubMenu(item.id === activeSubMenu ? null : item.id)}
-                      className={`flex w-full cursor-pointer items-center justify-between px-[clamp(24px,2.5vw,36px)] py-[clamp(12px,1.11vw,16px)] transition-colors duration-200 ${
+                      className={`flex w-full cursor-pointer items-center justify-between px-[36px] py-[16px] transition-colors duration-200 ${
                         activeSubMenu === item.id ? "bg-[#002868]" : "hover:bg-[#002868]/40"
                       }`}
                     >
-                      <span className="font-['Libre_Baskerville',_serif] text-[clamp(18px,2vw,28px)] font-medium leading-[150%] text-white">
+                      <span className="font-['Libre_Baskerville',_serif] text-[28px] font-medium leading-[150%] text-white">
                         {item.title}
                       </span>
 
@@ -202,9 +205,9 @@ export default function Navbar() {
                       key={item.id}
                       href={`/${item.id}`}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex w-full cursor-pointer items-center justify-between px-[clamp(24px,2.5vw,36px)] py-[clamp(12px,1.11vw,16px)] transition-colors duration-200 hover:bg-[#002868]/40"
+                      className="flex w-full cursor-pointer items-center justify-between px-[36px] py-[16px] transition-colors duration-200 hover:bg-[#002868]/40"
                     >
-                      <span className="font-['Libre_Baskerville',_serif] text-[clamp(18px,2vw,28px)] font-medium leading-[150%] text-white">
+                      <span className="font-['Libre_Baskerville',_serif] text-[28px] font-medium leading-[150%] text-white">
                         {item.title}
                       </span>
                     </Link>
@@ -213,15 +216,15 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* RIGHT PANEL — REDUCED WIDTH & FONT SIZES */}
+            {/* RIGHT PANEL — FIXED WIDTH (400px) & SIZES */}
             <div
               className={`h-full shrink-0 overflow-hidden bg-[#FBF7F0] transition-[width] duration-500 ease-in-out ${
-                activeSubMenu ? "w-[clamp(220px,26vw,400px)]" : "w-0"
+                activeSubMenu ? "w-[400px]" : "w-0"
               }`}
               aria-hidden={!activeSubMenu}
             >
-              <div className="flex h-full w-[clamp(220px,26vw,400px)] flex-col overflow-y-auto">
-                <div className="flex flex-col items-start gap-[clamp(12px,1.38vw,20px)] px-[clamp(24px,2.77vw,40px)] pt-[clamp(16px,4.16vw,60px)]">
+              <div className="flex h-full w-[400px] flex-col overflow-y-auto">
+                <div className="flex flex-col items-start gap-[20px] px-[40px] pt-[60px]">
                   {menuData
                     .find((m) => m.id === activeSubMenu)
                     ?.subItems.map((subItem, idx) => (
@@ -229,7 +232,7 @@ export default function Navbar() {
                         key={idx}
                         href={`/${subItem.toLowerCase().replace(/\s+/g, "-")}`}
                         onClick={() => setIsMenuOpen(false)}
-                        className="font-['Poppins',_sans-serif] text-[clamp(16px,1.4vw,20px)] font-normal leading-[150%] text-[#0E0E0E] transition-colors hover:text-[#001A4D]"
+                        className="font-['Poppins',_sans-serif] text-[20px] font-normal leading-[150%] text-[#0E0E0E] transition-colors hover:text-[#001A4D]"
                       >
                         {subItem}
                       </Link>

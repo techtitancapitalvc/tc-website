@@ -22,15 +22,15 @@ export default function Footer() {
   return (
     <footer
       className="relative flex w-full flex-col items-center overflow-hidden bg-white shadow-[0_-3px_27.6px_0_rgba(178,178,178,0.25)]"
-      style={{ paddingTop: "clamp(20px, min(2.78vw, 4.07vh), 40px)" }}
+      style={{ paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)" }}
     >
 
       {/* Inner Content Wrapper */}
       <div
         className="relative z-10 flex w-full max-w-[1440px] flex-col"
         style={{
-          paddingLeft:  "var(--section-px)",
-          paddingRight: "var(--section-px)",
+          paddingLeft:  "var(--section-px-wide)",
+          paddingRight: "var(--section-px-wide)",
         }}
       >
 

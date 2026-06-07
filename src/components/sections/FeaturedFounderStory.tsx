@@ -63,13 +63,15 @@ export default function FeaturedFounderStory() {
 
   return (
     <section
-      className="flex w-full flex-col items-center justify-start bg-white"
+      // MAGIC FIX 1: 'relative z-30' ensures this section slides cleanly OVER the previous section's overflow.
+      className="relative z-30 flex w-full flex-col items-center justify-start bg-white"
       style={{
         gap:           "clamp(10px, min(1.66vw, 2.44vh), 24px)",
-        paddingTop:    "clamp(24px, min(3.33vw, 4.89vh), 48px)",
-        paddingBottom: "clamp(24px, min(3.33vw, 4.89vh), 48px)",
-        paddingLeft:   "var(--section-px)",
-        paddingRight:  "var(--section-px)",
+        // MAGIC FIX 2: Increased padding to match the exact mathematical rhythm of your other sections.
+        paddingTop:    "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingLeft:   "var(--section-px-wide)",
+        paddingRight:  "var(--section-px-wide)",
       }}
     >
 
@@ -100,199 +102,173 @@ export default function FeaturedFounderStory() {
         </motion.h2>
       </motion.div>
 
-      {/* ── 2. TWO-COLUMN ROW: TV (left) · quote + button (right) ──
-          Stacks vertically on mobile (TV on top); side-by-side from lg up,
-          TV pinned left and the text column pinned right (justify-between). */}
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col items-center justify-center gap-[clamp(28px,min(4.8vw,7vh),68px)] lg:flex-row lg:items-center lg:justify-center">
+      {/* ── 2. TWO-COLUMN ROW: TV (left) · quote + button (right) ── */}
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col items-center justify-center gap-[clamp(28px,min(4.8vw,7vh),68px)] lg:flex-row lg:items-center lg:justify-center mt-[clamp(24px,min(3.5vw,5vh),48px)]">
 
-      {/* ── 2a. TV wrapper ── */}
-      <div
-        className="relative w-full shrink-0 overflow-hidden"
-        style={{ maxWidth: "clamp(280px, min(45.13vw, 66.19vh), 650px)" }}
-      >
-
-        {/* ── LAYER 1: Photo + Logo — z-[5], BEHIND TV ──
-            Screen-area coordinates (left 8%, top 13%, w 58%, h 72%).
-            No overflow-hidden so the cutout image can bleed into the dials
-            column — the TV SVG at z-[10] will cover that bleed.
-            objectFit: "contain" — cutout images are NEVER cropped.
-        ── */}
-        <div className="absolute left-[8%] top-[13%] z-[5] h-[72%] w-[58%]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`photo-${current}`}
-              variants={tvGlitch}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="relative h-full w-full"
-            >
-              {/* Founder photo — source images are 1878×1056 landscape cutouts.
-                  cover fills the screen area; objectPosition "right center"
-                  keeps the founder (right side of the frame) visible and only
-                  crops the empty left portion of the landscape. */}
-              <div
-                className="absolute"
-                style={{ top: "0%", bottom: "0%", right: "-50%", width: "140%" }}
+        {/* ── 2a. TV wrapper ── */}
+        <div
+          className="relative w-full shrink-0 overflow-hidden"
+          style={{ maxWidth: "clamp(280px, min(45.13vw, 66.19vh), 650px)" }}
+        >
+          {/* ── LAYER 1: Photo + Logo — z-[5], BEHIND TV ── */}
+          <div className="absolute left-[8%] top-[13%] z-[5] h-[72%] w-[58%]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`photo-${current}`}
+                variants={tvGlitch}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="relative h-full w-full"
               >
-                <Image
-                  src={slide.image}
-                  alt={slide.name.replace("\n", " ")}
-                  fill
-                  sizes="(max-width: 1440px) 30vw, 400px"
-                  style={{ objectFit: "cover", objectPosition: "bottom right" }}
-                />
-              </div>
+                <div
+                  className="absolute"
+                  style={{ top: "0%", bottom: "0%", right: "-50%", width: "140%" }}
+                >
+                  <Image
+                    src={slide.image}
+                    alt={slide.name.replace("\n", " ")}
+                    fill
+                    sizes="(max-width: 1440px) 30vw, 400px"
+                    style={{ objectFit: "cover", objectPosition: "bottom right" }}
+                  />
+                </div>
+                <div
+                  className="absolute"
+                  style={{ bottom: "20%", left: "12%" }}
+                >
+                  <Image
+                    src={slide.logo}
+                    alt="Company logo"
+                    width={148}
+                    height={52}
+                    style={{
+                      objectFit:      "contain",
+                      objectPosition: "left",
+                      width:          "clamp(50px, min(8.61vw, 12.63vh), 124px)",
+                      height:         "clamp(18px, min(3.02vw,  4.43vh),  44px)",
+                      aspectRatio:    "37/13",
+                    }}
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-              {/* Company logo — bottom-left of screen area */}
-              <div
-                className="absolute"
-                style={{ bottom: "20%", left: "12%" }}
+          {/* ── LAYER 2: TV SVG — z-[10] ── */}
+          <Image
+            src="/images/misc/television.svg"
+            alt="Television frame"
+            width={800}
+            height={500}
+            className="pointer-events-none relative z-[10] block h-auto w-full"
+            sizes="(max-width: 1440px) min(45vw, 66vh), 650px"
+            priority
+          />
+
+          {/* ── LAYER 3: Name + Role — z-[15], ABOVE TV ── */}
+          <div className="absolute left-[8%] top-[13%] z-[15] flex h-[72%] w-[58%] items-start overflow-hidden pointer-events-none">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`text-${current}`}
+                variants={tvGlitch}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="relative h-full w-full"
               >
-                <Image
-                  src={slide.logo}
-                  alt="Company logo"
-                  width={148}
-                  height={52}
+                <h3
+                  className="absolute m-0 font-['Libre_Baskerville',_serif] text-black"
                   style={{
-                    objectFit:      "contain",
-                    objectPosition: "left",
-                    width:          "clamp(50px, min(8.61vw, 12.63vh), 124px)",
-                    height:         "clamp(18px, min(3.02vw,  4.43vh),  44px)",
-                    aspectRatio:    "37/13",
+                    top:             "29%",
+                    left:            "12%",
+                    width:           "50%",
+                    fontSize:        "clamp(11px, min(1.38vw, 2.04vh), 20px)",
+                    fontWeight:      700,
+                    lineHeight:      "100%",
+                    whiteSpace:      "pre-wrap",
+                    display:         "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow:        "hidden",
                   }}
-                />
-              </div>
-            </motion.div>
-          </AnimatePresence>
+                >
+                  {slide.name}
+                </h3>
+                <p
+                  className="absolute m-0 font-['Poppins',_sans-serif] text-black"
+                  style={{
+                    top:             "44%",
+                    left:            "12%",
+                    width:           "45%",
+                    fontSize:        "clamp(9px, min(0.83vw, 1.22vh), 12px)",
+                    fontWeight:      300,
+                    lineHeight:      "119%",
+                    display:         "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow:        "hidden",
+                  }}
+                >
+                  {slide.role}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* ── LAYER 2: TV SVG — z-[10] ──
-            Transparent screen cutout shows through to z-[5] content.
-            Opaque bezel + dials cover the photo bleed.
-        ── */}
-        <Image
-          src="/images/misc/television.svg"
-          alt="Television frame"
-          width={800}
-          height={500}
-          className="pointer-events-none relative z-[10] block h-auto w-full"
-          sizes="(max-width: 1440px) min(45vw, 66vh), 650px"
-          priority
-        />
-
-        {/* ── LAYER 3: Name + Role — z-[15], ABOVE TV ──
-            Same screen-area coordinates. overflow-hidden clips text to screen.
-        ── */}
-        <div className="absolute left-[8%] top-[13%] z-[15] flex h-[72%] w-[58%] items-start overflow-hidden pointer-events-none">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`text-${current}`}
-              variants={tvGlitch}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="relative h-full w-full"
-            >
-              {/* Name — top-left */}
-              <h3
-                className="absolute m-0 font-['Libre_Baskerville',_serif] text-black"
-                style={{
-                  top:             "29%",
-                  left:            "12%",
-                  width:           "50%",
-                  fontSize:        "clamp(11px, min(1.38vw, 2.04vh), 20px)",
-                  fontWeight:      700,
-                  lineHeight:      "100%",
-                  whiteSpace:      "pre-wrap",
-                  display:         "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow:        "hidden",
-                }}
-              >
-                {slide.name}
-              </h3>
-
-              {/* Role — directly under name */}
-              <p
-                className="absolute m-0 font-['Poppins',_sans-serif] text-black"
-                style={{
-                  top:             "44%",
-                  left:            "12%",
-                  width:           "45%",
-                  fontSize:        "clamp(9px, min(0.83vw, 1.22vh), 12px)",
-                  fontWeight:      300,
-                  lineHeight:      "119%",
-                  display:         "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow:        "hidden",
-                }}
-              >
-                {slide.role}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-      </div>
-
-      {/* ── 2b. RIGHT COLUMN: quote + button (description size matches the
-              hero subtext: clamp(14px, min(1.6vw, 2.35vh), 20px)) ── */}
-      <div
-        className="flex w-full flex-col items-center text-center"
-        style={{
-          maxWidth: "clamp(280px, min(33vw, 48.4vh), 475px)",
-          gap:      "clamp(20px, min(2.6vw, 3.81vh), 36px)",
-        }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={current}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="m-0 w-full text-center font-['Poppins',sans-serif] font-normal leading-[1.5] text-black"
-            style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}
-          >
-            {slide.text}
-          </motion.p>
-        </AnimatePresence>
-
-        <button
-          className="group relative flex shrink-0 cursor-pointer items-center justify-center gap-[10px] overflow-hidden rounded-[9px] border-none bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold text-white transition-all duration-300 ease-in-out"
+        {/* ── 2b. RIGHT COLUMN: quote + button ── */}
+        <div
+          className="flex w-full flex-col items-center text-center"
           style={{
-            height:   "clamp(38px, min(3.75vw, 5.5vh),  54px)",
-            width:    "clamp(130px, min(12.6vw, 18.5vh), 181px)",
-            fontSize: "clamp(11px, min(1.04vw, 1.53vh),  15px)",
-            padding:  "clamp(6px, 0.69vw, 10px)",
-          }}
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
-            e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+            maxWidth: "clamp(280px, min(33vw, 48.4vh), 475px)",
+            gap:      "clamp(20px, min(2.6vw, 3.81vh), 36px)",
           }}
         >
-          {/* The Dynamic Spotlight Layer (Bright blue glow for dark button) */}
-          <div 
-            className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" 
-            style={{ 
-              background: 'radial-gradient(circle 80px at var(--mouse-x, 50%) var(--mouse-y, 50%), #003CB3 0%, transparent 100%)' 
-            }} 
-          />
-          
-          <span className="relative z-10 text-center">Read Full Story</span>
-        </button>
-      </div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={current}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="m-0 w-full text-center font-['Poppins',sans-serif] font-normal leading-[1.5] text-black"
+              style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}
+            >
+              {slide.text}
+            </motion.p>
+          </AnimatePresence>
+
+          <button
+            className="group relative flex shrink-0 cursor-pointer items-center justify-center gap-[10px] overflow-hidden rounded-[9px] border-none bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold text-white transition-all duration-300 ease-in-out"
+            style={{
+              height:   "clamp(38px, min(3.75vw, 5.5vh),  54px)",
+              width:    "clamp(130px, min(12.6vw, 18.5vh), 181px)",
+              fontSize: "clamp(11px, min(1.04vw, 1.53vh),  15px)",
+              padding:  "clamp(6px, 0.69vw, 10px)",
+            }}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+            }}
+          >
+            <div 
+              className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" 
+              style={{ 
+                background: 'radial-gradient(circle 80px at var(--mouse-x, 50%) var(--mouse-y, 50%), #003CB3 0%, transparent 100%)' 
+              }} 
+            />
+            <span className="relative z-10 text-center">Read Full Story</span>
+          </button>
+        </div>
 
       </div>
 
       {/* ── 5. Pagination dots ── */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mt-[clamp(24px,min(3.5vw,5vh),48px)]">
         {slides.map((_, i) => (
           <button
             key={i}

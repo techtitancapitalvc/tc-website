@@ -6,23 +6,8 @@ import Image from "next/image";
 /*
   RESPONSIVE STRATEGY — clamp(MIN, min(vw-fluid, vh-fluid), MAX)
   Design ref: 1440 × 982.
-
-  FIGMA SPECS:
-    Section gradient: radial-gradient(197.93% 77.97% at 24.55% 26.31%, #003CB3, #001A4D)
-    Left block:  left 63px, top 50px, max-width 695px
-    Right quote:  right 112px, top 81px, width 475px
-                  Poppins / 20px / italic / 300 / lh 126% / #FFF
-    Citation:     Poppins / 16px / normal / 400 / #FFF80
 */
 
-/*
-  Logo rendering on dark background:
-    - "transparent" logos (SVGs, PNGs/webp with alpha): brightness(0) invert(1) → white silhouette
-    - "opaqueBg" logos (webp with white background, no alpha): invert(1) brightness(5) + mix-blend-mode:screen
-      → white bg inverts to black, dark text inverts to light, brightness cranks to pure white,
-        screen blend makes black transparent on the dark section background.
-    - "white" logos: already white, no filter needed.
-*/
 const indicornLogos: { src: string; alt: string; mode: "transparent" | "opaqueBg" | "white"; scale: number }[] = [
   { src: "/images/logos/Razorpay.webp",       alt: "Razorpay",   mode: "opaqueBg",    scale: 1.6 },
   { src: "/images/logos/Shadowfax.svg",       alt: "Shadowfax",  mode: "transparent", scale: 1.0 },
@@ -50,23 +35,25 @@ export default function IndicornsSpotlight() {
       style={{
         background:    "radial-gradient(197.93% 77.97% at 24.55% 26.31%, #003CB3 0%, #001A4D 100%)",
         minHeight:     "clamp(250px, min(27.85vw, 40.84vh), 401px)",
-        paddingTop:    "clamp(24px, min(3.47vw, 5.09vh), 50px)",
-        paddingBottom: "clamp(24px, min(3.47vw, 5.09vh), 50px)",
+        paddingTop:    "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
         paddingLeft:   "var(--section-px-wide)",
         paddingRight:  "var(--section-px-wide)",
       }}
     >
-      {/* Centered bounding wrapper — capped at the shared 1280 content column
-          (same as WhatFoundersGet) so the left text aligns to the exact same
-          gutter as every other section. items-start aligns both columns to top. */}
+      {/* THE MAGIC FIX: 
+        Switched to 'grid grid-cols-1 md:grid-cols-2'. 
+        This draws a perfect invisible line down the exact middle of the screen. 
+        The right content will start IMMEDIATELY from that line.
+      */}
       <div
-        className="relative mx-auto flex w-full max-w-[1280px] items-start"
+        className="relative mx-auto grid w-full max-w-[1280px] grid-cols-1 md:grid-cols-2 items-center"
         style={{ gap: "clamp(24px, min(3.33vw, 4.89vh), 48px)" }}
       >
 
         {/* ── LEFT SIDE CONTENT ── */}
         <div
-          className="flex shrink-0 flex-col items-start"
+          className="flex flex-col items-start"
           style={{
             maxWidth: "clamp(380px, min(48.26vw, 70.77vh), 695px)",
             gap:      "clamp(12px, min(1.67vw, 2.44vh), 24px)",
@@ -196,18 +183,11 @@ export default function IndicornsSpotlight() {
           </div>
         </div>
 
-        {/* ── RIGHT SIDE QUOTE ──
-            Figma: right 112px from section edge, top 81px, width 475px.
-            Using marginLeft:auto + fluid marginRight to maintain ratio.
-            112/1440 = 7.78vw, 112/982 = 11.41vh
-        */}
+        {/* ── RIGHT SIDE QUOTE ── */}
         <div
           className="flex flex-col items-start"
           style={{
-            width:       "clamp(260px, min(32.99vw, 48.37vh), 475px)",
-            flexShrink:  0,
-            marginLeft:  "auto",
-            marginRight: "clamp(30px, min(7.78vw, 11.41vh), 112px)",
+            maxWidth:    "clamp(260px, min(32.99vw, 48.37vh), 475px)",
             gap:         "clamp(6px, min(0.83vw, 1.22vh), 12px)",
           }}
         >
@@ -225,7 +205,7 @@ export default function IndicornsSpotlight() {
             className="m-0 font-['Poppins',_sans-serif] font-normal tracking-wide text-white/80"
             style={{ fontSize: "clamp(10px, min(1.11vw, 1.63vh), 16px)" }}
           >
-            - Kunal Bahl
+            - Titan Capital
           </p>
         </div>
 

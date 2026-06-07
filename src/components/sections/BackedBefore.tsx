@@ -21,7 +21,7 @@ const row1Companies = [
 // ROW 2: 13 Companies
 const row2Companies = [
   { name: "Giva", logoSrc: "/images/logos/GIVA.webp", scaleClass: "scale-[0.8]" },
-  { name: "Boba Bhai", logoSrc: "/images/logos/bobaBhai.webp", scaleClass: "" },
+  { name: "Boba Bhai", logoSrc: "/images/logos/bobabhai.webp", scaleClass: "" },
   { name: "Invideo", logoSrc: "/images/logos/invideo.svg", scaleClass: "scale-[0.8]" },
   { name: "Park+", logoSrc: "/images/logos/Park+.webp", scaleClass: "scale-[1.3]" },
   { name: "Renee", logoSrc: "/images/logos/RENEE.svg", scaleClass: "scale-[0.7]" }, 
@@ -40,7 +40,7 @@ export default function BackedBefore() {
   const loopPoolRow2 = [...row2Companies, ...row2Companies, ...row2Companies];
 
   return (
-    <section className="flex flex-col items-center gap-[30px] md:gap-[45px] self-stretch py-[50px] md:py-[70px] overflow-hidden w-full bg-white">
+    <section className="flex flex-col items-center gap-[30px] md:gap-[45px] self-stretch overflow-hidden w-full bg-white" style={{ paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingLeft: "var(--section-px-wide)", paddingRight: "var(--section-px-wide)" }}>
       
       {/* =========================================
           ANIMATED SCROLL HEADING SEQUENCE
@@ -95,7 +95,7 @@ export default function BackedBefore() {
       {/* =========================================
           TRACK ONE: Left to Right
           ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-6">
+      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-6" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
         <div className="flex w-max gap-[36px] md:gap-[54px] pr-[36px] md:pr-[54px] items-center animate-[marquee-right_30s_linear_infinite] group-hover:[animation-play-state:paused]">
           {loopPoolRow1.map((company, i) => (
             <motion.div
@@ -122,7 +122,7 @@ export default function BackedBefore() {
       {/* =========================================
           TRACK TWO: Right to Left
           ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-0 md:-mt-4">
+      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-0 md:-mt-4" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
         <div className="flex w-max gap-[36px] md:gap-[54px] pr-[36px] md:pr-[54px] items-center animate-[marquee-left_35s_linear_infinite] group-hover:[animation-play-state:paused]">
           {loopPoolRow2.map((company, i) => (
             <motion.div

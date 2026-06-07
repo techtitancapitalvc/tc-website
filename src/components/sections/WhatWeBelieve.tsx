@@ -68,7 +68,10 @@ export default function WhatWeBelieve() {
   };
 
   return (
-    <section className="relative m-0 flex min-h-[100dvh] w-full flex-col items-center overflow-hidden bg-[#FBF7F0] px-4 pb-[60px] pt-[80px] xl:h-[763px] xl:min-h-max xl:px-[83px] xl:pb-[67px] xl:pt-[88px] gap-[30px] xl:gap-[48px]">
+    <section
+      className="relative m-0 flex min-h-[100dvh] w-full flex-col items-center overflow-hidden bg-[#FBF7F0] xl:h-[763px] xl:min-h-max gap-[30px] xl:gap-[48px]"
+      style={{ paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingLeft: "var(--section-px-wide)", paddingRight: "var(--section-px-wide)" }}
+    >
       
      {/* =========================================
           STRICT 1-2-3 ANIMATED HEADING
@@ -79,8 +82,6 @@ export default function WhatWeBelieve() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.8 }}
       >
-        
-        {/* "What" - Normal font, Clamped to 64px */}
         <motion.span 
           className="m-0 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] font-semibold not-italic leading-[120%] text-[var(--Primary-Color,#001A4D)]" 
           variants={{
@@ -91,7 +92,6 @@ export default function WhatWeBelieve() {
           What
         </motion.span>
         
-        {/* "We believe" - Italic font + Highlight, Clamped to 64px */}
         <motion.div 
           className="relative inline-flex items-center justify-center overflow-hidden bg-transparent px-[clamp(8px,1.5vw,16px)] py-[clamp(4px,0.8vw,8px)]" 
           variants={{
@@ -99,7 +99,6 @@ export default function WhatWeBelieve() {
             visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.3 } }
           }}
         >
-          {/* Highlight Background Fix (Using Variants) */}
           <motion.div
             className="absolute inset-0 z-0 bg-[#D3E2FF] h-full w-full"
             style={{ transformOrigin: "left" }} 
@@ -126,7 +125,6 @@ export default function WhatWeBelieve() {
       >
         {beliefs.map((belief, i) => (
           <motion.div 
-            // 323px Max Width 
             className="relative flex aspect-[16/23] w-full max-w-[323px] shrink-0 flex-col items-center justify-center" 
             key={i}
             variants={getCardVariants(i)}
@@ -140,17 +138,19 @@ export default function WhatWeBelieve() {
               priority
             />
             
+            {/* FIXED: Added symmetric fluid horizontal padding (px-[6%]) inside the content wrapper 
+                to push both the title and description cleanly inward from the left and right card edges. */}
             <motion.div 
-              className="absolute left-[14.05%] top-[25.55%] z-10 flex w-[77.95%] flex-col items-start gap-[5.3%] text-left"
+              className="absolute left-[12.05%] top-[25.55%] z-10 flex w-[77.95%] flex-col items-start gap-[5.3%] text-left px-[6%]"
               variants={textVariants}
             >
-              {/* SUBTITLE: Slight fluid clamp (18px -> 24px) to ensure no wrapping if card shrinks */}
-              <h3 className="m-0 self-stretch shrink-0 pl-[4.1%] font-['Libre_Baskerville',_serif] text-[clamp(18px,2.5vw,24px)] font-semibold not-italic leading-[155%] text-[var(--Primary-Color,#001A4D)]">
+              {/* SUBTITLE: Perfectly aligns with the description bounding box via inner adjustments */}
+              <h3 className="m-0 self-stretch shrink-0 font-['Libre_Baskerville',_serif] text-[clamp(15px,2.5vw,21make px)] font-semibold not-italic leading-[155%] text-[var(--Primary-Color,#001A4D)] px-[4.1%]">
                 {belief.title}
               </h3>
               
-              <div className="flex w-[89.7%] items-center justify-center p-[4.1%]">
-                {/* DESC: Slight fluid clamp (12px -> 14px) */}
+              {/* DESCRIPTION WRAPPER: Matches width properties with standard fluid padding */}
+              <div className="flex w-full items-center justify-center p-[4.1%]">
                 <p className="m-0 flex-1 font-['Poppins',_sans-serif] text-[clamp(12px,1.2vw,14px)] font-normal leading-[140%] text-[#323232]">
                   {belief.description}
                 </p>

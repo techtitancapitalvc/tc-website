@@ -55,10 +55,10 @@ export default function Hero() {
       style={{
         marginTop: "var(--nav-height)",
         minHeight: "calc(100svh - var(--nav-height))",
-        paddingTop: "clamp(16px, 3.5vh, 44px)",
-        paddingBottom: "clamp(16px, 3vh, 40px)",
-        paddingLeft: "var(--section-px)",
-        paddingRight: "var(--section-px)",
+        paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingLeft: "var(--section-px-wide)",
+        paddingRight: "var(--section-px-wide)",
       }}
     >
       <div className="relative flex w-full max-w-[1440px] flex-col items-center">

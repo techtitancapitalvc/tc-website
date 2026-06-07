@@ -5,31 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, Variants, useInView } from "framer-motion";
 
-/*
-  RESPONSIVE STRATEGY — clamp(MIN, min(vw-fluid, vh-fluid), MAX)
-  Design ref: 1440 × 982.
-
-  TITLE (Figma):
-    "What our"      → 64px / 600 / Libre Baskerville / lh 120%
-    "founders say"   → 64px / 700 / italic / lh 120%
-    Container width: 429px
-
-  CARDS (Figma):
-    311.424 × 370.703px, border-radius 12px
-    Gradient: linear-gradient(180deg, rgba(217,217,217,0) 0.05%, #000 99.95%)
-    blend-mode: multiply
-
-  ARROW BUTTONS: 77×77 at design, scale down fluidly.
-
-  "We're listening" section: same fluid pattern.
-*/
-
 const testimonials = [
   {
     id: 1,
     name: "Abhiraj Bahl",
     role: "Cofounder, Urban Company",
-    image: "/images/hero_founders_images/abhiraj_bahl.jpeg",
+    image: "/images/hero_founders_images/abhiraj_bahl.png",
     text: "“Kunal and Rohit were the first investors to believe in Urban Company, even before we launched the platform or decided on the name. Their unwavering support has been a constant throughout our journey, guiding us through ups and downs. As Founders, we deeply value their mentorship and friendship. An early-stage company couldn’t ask for better partners than Titan Capital.”",
   },
   {
@@ -69,6 +50,110 @@ const testimonials = [
   },
 ];
 
+/* ISOLATED CARD COMPONENT:
+  Handles its own hover state via React, completely eliminating the Framer Motion 
+  mid-flip glitch when the cursor accidentally slips off the edge.
+*/
+function TestimonialCard({ item }: { item: typeof testimonials[0] }) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  return (
+    <div
+      className="relative shrink-0"
+      style={{
+        width:  "clamp(200px, min(21.62vw, 31.72vh), 311.424px)",
+        height: "clamp(238px, min(25.74vw, 37.75vh), 370.703px)",
+        perspective: "1000px",
+      }}
+      onMouseEnter={() => setIsFlipped(true)}
+      onMouseLeave={() => setIsFlipped(false)}
+      // Added a click toggle for mobile users who don't have a cursor to "hover"
+      onClick={() => setIsFlipped(!isFlipped)} 
+    >
+      <motion.div
+        className="relative h-full w-full cursor-pointer"
+        style={{ transformStyle: "preserve-3d" }}
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+      >
+        {/* ── FRONT: Photo + gradient + name ── */}
+        <div
+          className="absolute inset-0 flex h-full w-full flex-col justify-end overflow-hidden"
+          style={{
+            backfaceVisibility: "hidden",
+            borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
+          }}
+        >
+          <Image
+            src={item.image || ""}
+            alt={item.name}
+            fill
+            sizes="(max-width: 1440px) 22vw, 311px"
+            className="object-cover"
+          />
+          <div
+            className="absolute inset-0 z-[5]"
+            style={{
+              background: "linear-gradient(180deg, rgba(217, 217, 217, 0.00) 0.05%, #000 99.95%)",
+              backgroundBlendMode: "multiply",
+            }}
+          />
+          <div
+            className="relative z-10 flex flex-col drop-shadow-md"
+            style={{ padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)" }}
+          >
+            <p
+              className="m-0 font-['Libre_Baskerville',_serif] font-bold text-white"
+              style={{ fontSize: "clamp(14px, min(1.38vw, 2.04vh), 20px)" }}
+            >
+              {item.name}
+            </p>
+            <p
+              className="m-0 mt-1 font-['Poppins',_sans-serif] font-light text-white"
+              style={{ fontSize: "clamp(10px, min(0.9vw, 1.32vh), 13px)" }}
+            >
+              {item.role}
+            </p>
+          </div>
+        </div>
+
+        {/* ── BACK: Quote text ── */}
+        <div
+          className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-hidden bg-[#C8DBFF] shadow-lg"
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
+            padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
+          }}
+        >
+          <p
+            className="m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D]"
+            style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
+          >
+            {item.text}
+          </p>
+          <div className="flex flex-col pt-4">
+            <p
+              className="m-0 font-['Libre_Baskerville',_serif] font-bold text-[#001A4D]"
+              style={{ fontSize: "clamp(12px, min(1.25vw, 1.83vh), 18px)" }}
+            >
+              {item.name}
+            </p>
+            <p
+              className="m-0 mt-1 font-['Poppins',_sans-serif] font-medium text-[#001A4D]"
+              style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
+            >
+              {item.role}
+            </p>
+          </div>
+        </div>
+
+      </motion.div>
+    </div>
+  );
+}
+
 export default function FounderTestimonial() {
   const [translateX, setTranslateX] = useState(0);
 
@@ -78,20 +163,13 @@ export default function FounderTestimonial() {
 
   const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
 
-  /*
-    VIEWPORT-BASED SCROLLING — each click shifts by exactly one card width.
-    We measure card step from the DOM (getBoundingClientRect difference between
-    the first two cards), then add/subtract that step from the current translateX.
-    Clamped to [0, maxScroll] so we never over-scroll.
-    This guarantees every button press produces visible movement.
-  */
   const getCardStep = (): number => {
     if (!trackRef.current) return 300;
     const cards = trackRef.current.children;
     if (cards.length < 2) return 300;
     const r0 = (cards[0] as HTMLElement).getBoundingClientRect();
     const r1 = (cards[1] as HTMLElement).getBoundingClientRect();
-    return r1.left - r0.left; // card width + gap
+    return r1.left - r0.left; 
   };
 
   const getMaxScroll = (): number => {
@@ -99,7 +177,6 @@ export default function FounderTestimonial() {
     return Math.max(0, trackRef.current.scrollWidth - containerRef.current.clientWidth);
   };
 
-  // Recalculate on resize (clamp translateX if viewport changed)
   useEffect(() => {
     const onResize = () => {
       setTranslateX((prev) => {
@@ -111,7 +188,6 @@ export default function FounderTestimonial() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Auto-scroll to the end when section enters viewport (left → right animation)
   useEffect(() => {
     if (isInView) {
       const timer = setTimeout(() => {
@@ -135,12 +211,9 @@ export default function FounderTestimonial() {
   };
 
   const isAtStart = translateX <= 0;
-  // Guard: getMaxScroll() returns 0 before refs are ready; don't disable the
-  // right button in that case (0 >= 0 would be true and permanently lock it).
   const maxScroll = getMaxScroll();
   const isAtEnd = maxScroll > 0 && translateX >= maxScroll;
 
-  /* ── Heading animations ── */
   const t1: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } };
   const t2: Variants = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } } };
   const hl: Variants = { hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 1.1 } } };
@@ -161,7 +234,6 @@ export default function FounderTestimonial() {
           marginBottom:  "clamp(24px, min(4.44vw, 6.52vh), 64px)",
         }}
       >
-        {/* Title — Figma: 429px wide, 64px / Libre Baskerville */}
         <motion.div
           className="flex flex-col items-start"
           style={{
@@ -172,7 +244,6 @@ export default function FounderTestimonial() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          {/* "What our" — 64px / 600 / normal */}
           <motion.h2
             className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D]"
             style={{
@@ -186,7 +257,6 @@ export default function FounderTestimonial() {
             What our
           </motion.h2>
 
-          {/* "founders say" — 64px / 700 / italic + highlight */}
           <motion.h2
             className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D]"
             style={{
@@ -208,10 +278,7 @@ export default function FounderTestimonial() {
           </motion.h2>
         </motion.div>
 
-        {/* Arrow buttons — 77px at design, fluid */}
         <div className="flex items-center" style={{ gap: "clamp(12px, min(1.11vw, 1.63vh), 16px)", marginBottom: "clamp(8px, min(0.97vw, 1.43vh), 14px)" }}>
-          
-          {/* PREV BUTTON WITH SPOTLIGHT */}
           <button
             onClick={prevSlide}
             disabled={isAtStart}
@@ -243,7 +310,6 @@ export default function FounderTestimonial() {
             </svg>
           </button>
 
-          {/* NEXT BUTTON WITH SPOTLIGHT */}
           <button
             onClick={nextSlide}
             disabled={isAtEnd}
@@ -295,103 +361,8 @@ export default function FounderTestimonial() {
           transition={{ type: "spring", stiffness: 180, damping: 28 }}
         >
           {testimonials.map((item) => (
-            <div
-              key={item.id}
-              className="relative shrink-0"
-              style={{
-                /* Card: 311.424 × 370.703 at design, fluid down on small screens */
-                width:  "clamp(200px, min(21.62vw, 31.72vh), 311.424px)",
-                height: "clamp(238px, min(25.74vw, 37.75vh), 370.703px)",
-                perspective: "1000px",
-              }}
-            >
-              <motion.div
-                className="relative h-full w-full cursor-pointer"
-                style={{ transformStyle: "preserve-3d" }}
-                initial={{ rotateY: 0 }}
-                whileHover={{ rotateY: 180 }}
-                whileTap={{ rotateY: 180 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-              >
-
-                {/* ── FRONT: Photo + gradient + name ── */}
-                <div
-                  className="absolute inset-0 flex h-full w-full flex-col justify-end overflow-hidden"
-                  style={{
-                    backfaceVisibility: "hidden",
-                    borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
-                  }}
-                >
-                  <Image
-                    src={item.image || ""}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 1440px) 22vw, 311px"
-                    className="object-cover"
-                  />
-                  {/* Figma gradient overlay */}
-                  <div
-                    className="absolute inset-0 z-[5]"
-                    style={{
-                      background: "linear-gradient(180deg, rgba(217, 217, 217, 0.00) 0.05%, #000 99.95%)",
-                      backgroundBlendMode: "multiply",
-                    }}
-                  />
-                  <div
-                    className="relative z-10 flex flex-col drop-shadow-md"
-                    style={{ padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)" }}
-                  >
-                    <p
-                      className="m-0 font-['Libre_Baskerville',_serif] font-bold text-white"
-                      style={{ fontSize: "clamp(14px, min(1.38vw, 2.04vh), 20px)" }}
-                    >
-                      {item.name}
-                    </p>
-                    <p
-                      className="m-0 mt-1 font-['Poppins',_sans-serif] font-light text-white"
-                      style={{ fontSize: "clamp(10px, min(0.9vw, 1.32vh), 13px)" }}
-                    >
-                      {item.role}
-                    </p>
-                  </div>
-                </div>
-
-                {/* ── BACK: Quote text ── */}
-                <div
-                  className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-hidden bg-[#C8DBFF] shadow-lg"
-                  style={{
-                    backfaceVisibility: "hidden",
-                    transform: "rotateY(180deg)",
-                    borderRadius: "clamp(8px, min(0.83vw, 1.22vh), 12px)",
-                    padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
-                  }}
-                >
-                  <p
-                    className="m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D]"
-                    style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
-                  >
-                    {item.text}
-                  </p>
-                  <div className="flex flex-col pt-4">
-                    <p
-                      className="m-0 font-['Libre_Baskerville',_serif] font-bold text-[#001A4D]"
-                      style={{ fontSize: "clamp(12px, min(1.25vw, 1.83vh), 18px)" }}
-                    >
-                      {item.name}
-                    </p>
-                    <p
-                      className="m-0 mt-1 font-['Poppins',_sans-serif] font-medium text-[#001A4D]"
-                      style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
-                    >
-                      {item.role}
-                    </p>
-                  </div>
-                </div>
-
-              </motion.div>
-            </div>
+            <TestimonialCard key={item.id} item={item} />
           ))}
-          {/* Right-edge spacer — keeps last card from sticking to screen edge */}
           <div className="shrink-0" style={{ width: "clamp(20px, min(2.77vw, 4.07vh), 40px)" }} aria-hidden />
         </motion.div>
       </div>
@@ -451,7 +422,6 @@ export default function FounderTestimonial() {
           </motion.h2>
         </motion.div>
 
-        {/* CTA BUTTON WITH SPOTLIGHT */}
         <Link
           href="/get-investment"
           className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
@@ -470,7 +440,6 @@ export default function FounderTestimonial() {
             e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
           }}
         >
-          {/* Dynamic Spotlight Layer */}
           <div 
             className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" 
             style={{ 
