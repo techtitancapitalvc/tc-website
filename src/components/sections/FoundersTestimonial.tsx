@@ -134,8 +134,8 @@ function TestimonialCard({ item }: { item: typeof testimonials[0] }) {
         >
           {/* FIXED: Reduced Mobile Quote Font to 10px and tightened line height */}
           <p
-            className={`m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D] max-md:!leading-[1.4] ${item.longText ? "max-md:!text-[9px]" : "max-md:!text-[11px]"}`}
-            style={{ fontSize: item.longText ? "clamp(9px, min(0.89vw, 1.35vh), 12px)" : "clamp(10px, min(1vw, 1.5vh), 14px)" }}
+            className={`m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D] max-md:!leading-[1.4] ${item.longText ? "max-md:!text-[9px]" : "max-md:!text-[9px]"}`}
+            style={{ fontSize: item.longText ? "clamp(9px, min(0.89vw, 1.35vh), 12px)" : "clamp(9px, min(0.92vw, 1.4vh), 12px)" }}
           >
             {item.text}
           </p>
