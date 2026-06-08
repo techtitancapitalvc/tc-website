@@ -60,10 +60,10 @@ export default function WhyTitanSeed() {
     },
     spread: (i: number) => {
       const positions = [
-        { x: "-65%", y: "-70%" }, 
-        { x: "65%",  y: "-65%" }, 
-        { x: "-75%", y: "45%" },  
-        { x: "55%",  y: "50%" },  
+        { x: "-69%", y: "-68%" }, 
+        { x: "69%",  y: "-63%" }, 
+        { x: "-79%", y: "43%" },  
+        { x: "59%",  y: "48%" },  
       ];
       return {
         x: positions[i].x,
@@ -87,7 +87,8 @@ export default function WhyTitanSeed() {
       }}
     >
       {/* ── HEADING ── */}
-      <div className="mx-auto mb-[clamp(60px,10vh,120px)] flex w-full max-w-[1440px] shrink-0 flex-col">
+      {/* FIXED: Added a massive responsive margin-bottom specifically for desktop (lg:mb-...) so the cards have plenty of room to animate upward. Mobile remains completely untouched. */}
+      <div className="mx-auto mb-[clamp(60px,10vh,120px)] lg:mb-[clamp(140px,15vh,200px)] flex w-full max-w-[1440px] shrink-0 flex-col">
         <motion.div
           className="flex w-full flex-row items-center max-lg:justify-center lg:justify-start"
           initial="hidden"
@@ -141,7 +142,6 @@ export default function WhyTitanSeed() {
             whileHover={{ scale: 1.05, zIndex: 10, transition: { type: "spring", stiffness: 300, damping: 20 } }}
             className="absolute flex cursor-pointer flex-col items-center justify-center bg-white"
             style={{
-              // FIXED: Decreased width slightly, increased height slightly.
               width: "clamp(190px, 20vw, 290px)",
               height: "clamp(160px, 18vw, 230px)",
               padding: "clamp(6px, 1vw, 12px)",
@@ -149,7 +149,6 @@ export default function WhyTitanSeed() {
               boxShadow: "10px 12px 20px 0px rgba(233,233,233,0.8)",
               left: "50%",
               top: "50%",
-              // Matched margins perfectly to the new clamp bounds
               marginLeft: "calc(clamp(190px, 20vw, 290px) / -2)",
               marginTop: "calc(clamp(160px, 18vw, 230px) / -2)",
             }}
