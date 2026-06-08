@@ -87,8 +87,8 @@ export default function WhyTitanSeed() {
       }}
     >
       {/* ── HEADING ── */}
-      {/* FIXED: Added a massive responsive margin-bottom specifically for desktop (lg:mb-...) so the cards have plenty of room to animate upward. Mobile remains completely untouched. */}
-      <div className="mx-auto mb-[clamp(60px,10vh,120px)] lg:mb-[clamp(140px,15vh,200px)] flex w-full max-w-[1440px] shrink-0 flex-col">
+      {/* FIXED: Reduced base mb for mobile (mb-[20px]), shifted previous clamp to md: and kept lg: intact */}
+      <div className="mx-auto mb-[20px] md:mb-[clamp(60px,10vh,120px)] lg:mb-[clamp(140px,15vh,200px)] flex w-full max-w-[1440px] shrink-0 flex-col">
         <motion.div
           className="flex w-full flex-row items-center max-lg:justify-center lg:justify-start"
           initial="hidden"
@@ -202,7 +202,8 @@ export default function WhyTitanSeed() {
 
       {/* ── TABLET / MOBILE: RESPONSIVE GRID ── */}
       <motion.div
-        className="mt-[20px] grid w-full max-w-[800px] grid-cols-1 gap-[20px] md:grid-cols-2 md:gap-[32px] lg:hidden"
+        // FIXED: Reduced mobile mt to 10px (keeps md:mt-[20px] for tablet)
+        className="mt-[10px] md:mt-[20px] grid w-full max-w-[800px] grid-cols-1 gap-[20px] md:grid-cols-2 md:gap-[32px] lg:hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.15 }}
