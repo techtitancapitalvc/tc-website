@@ -197,20 +197,39 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── GIANT WATERMARK ── */}
-      <div
+     {/* ── GIANT WATERMARK ── */}
+     <div
         className="pointer-events-none absolute flex w-full justify-center overflow-hidden"
-        style={{ bottom: "clamp(-25px, min(-3.82vw, -5.6vh), -55px)" }}
+        style={{ 
+          bottom: "clamp(-15px, min(-3.82vw, -5.6vh), -45px)",
+          // Apply the exact same padding as your inner content wrapper
+          paddingLeft: "var(--section-px-wide, 5%)",
+          paddingRight: "var(--section-px-wide, 5%)",
+        }}
       >
-        <h1
-          className="w-full select-none whitespace-nowrap text-center font-poppins font-bold leading-[1.502] bg-[linear-gradient(0deg,#DBDBDB_26.78%,#EBEBEB_70.55%)] bg-clip-text text-transparent"
-          style={{
-            fontSize:      "clamp(60px, min(10.42vw, 15.27vh), 150px)",
-            letterSpacing: "clamp(8px, min(1.56vw, 2.29vh), 22.5px)",
-          }}
+        <svg 
+          className="w-full max-w-[1440px]" 
+          viewBox="0 0 1000 150" 
+          preserveAspectRatio="xMidYMax meet"
         >
-          TITAN CAPITAL
-        </h1>
+          <defs>
+            <linearGradient id="titanGradient" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="26.78%" stopColor="#DBDBDB" />
+              <stop offset="70.55%" stopColor="#EBEBEB" />
+            </linearGradient>
+          </defs>
+          <text
+            x="0"
+            y="130"
+            textLength="1000"
+            lengthAdjust="spacing"
+            fill="url(#titanGradient)"
+            className="font-poppins font-bold"
+            style={{ fontSize: "140px" }}
+          >
+            TITAN CAPITAL
+          </text>
+        </svg>
       </div>
 
     </footer>

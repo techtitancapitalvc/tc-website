@@ -89,50 +89,6 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* ============================================
-   CUSTOM CURSOR (premium VC look)
-   Centred on the pointer via negative margins; the dot/ring positions
-   themselves come from framer-motion transforms. Native cursor is hidden
-   only when the JS cursor is active (fine-pointer devices).
-   ============================================ */
-html.cc-active,
-html.cc-active * {
-  cursor: none !important;
-}
-
-.cc-dot,
-.cc-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  border-radius: 9999px;
-  z-index: 99999;
-  will-change: transform;
-}
-
-.cc-dot {
-  width: 7px;
-  height: 7px;
-  margin: -3.5px 0 0 -3.5px;
-  background: var(--primary-dark, #001a4d);
-}
-
-.cc-ring {
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
-  border: 1.5px solid rgba(0, 26, 77, 0.35);
-  background: transparent;
-}
-
-/* Accessibility: if the user prefers reduced motion, drop the trailing lag
-   feel by keeping the ring tight (handled in JS spring is still gentle). */
-@media (prefers-reduced-motion: reduce) {
-  .cc-ring {
-    transition: none;
-  }
-}
 
 /* ============================================
    HERO SECTION — Single scale-factor system

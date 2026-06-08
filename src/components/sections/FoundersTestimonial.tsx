@@ -275,7 +275,7 @@ export default function FounderTestimonial() {
                 style={{ transformOrigin: "left" }}
                 variants={hl}
               />
-              <span className="relative z-10">Founder Say</span>
+              <span className="relative z-10">Founder&apos;s say</span>
             </span>
           </motion.h2>
         </motion.div>

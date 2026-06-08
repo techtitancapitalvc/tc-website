@@ -198,13 +198,15 @@ export default function Navbar() {
                 activeSubMenu ? "hidden lg:flex" : "flex"
               }`}
             >
-              <div className="mb-[20px] px-[24px] lg:px-[36px]">
+              <div className="mb-[20px]">
                 <Link
                   href="/"
                   onClick={() => setIsMenuOpen(false)}
-                  className="font-['Libre_Baskerville',_serif] text-[14px] font-medium tracking-wide text-white transition-opacity hover:opacity-80"
+                  className="group flex w-full items-center border-l-[3px] border-transparent px-[21px] py-[8px] transition-all duration-300 ease-out hover:border-l-[#4D8AFF] hover:bg-[#002868]/30 lg:px-[33px]"
                 >
-                  HOME
+                  <span className="font-['Libre_Baskerville',_serif] text-[14px] font-medium tracking-wide text-white/80 transition-all duration-300 group-hover:text-white">
+                    HOME
+                  </span>
                 </Link>
               </div>
 
@@ -214,15 +216,24 @@ export default function Navbar() {
                     <button
                       key={item.id}
                       onClick={() => setActiveSubMenu(item.id === activeSubMenu ? null : item.id)}
-                      className={`flex w-full cursor-pointer items-center justify-between px-[24px] py-[16px] transition-colors duration-200 lg:px-[36px] ${
-                        activeSubMenu === item.id ? "bg-[#002868]" : "hover:bg-[#002868]/40"
+                      className={`group flex w-full cursor-pointer items-center justify-between border-l-[3px] px-[21px] py-[16px] transition-all duration-300 ease-out lg:px-[33px] ${
+                        activeSubMenu === item.id
+                          ? "border-l-[#4D8AFF] bg-[#002868]"
+                          : "border-l-transparent hover:border-l-[#4D8AFF]/70 hover:bg-[#002868]/30"
                       }`}
                     >
-                      <span className="font-['Libre_Baskerville',_serif] text-[22px] font-medium leading-[150%] text-white lg:text-[28px]">
+                      <span className={`font-['Libre_Baskerville',_serif] text-[22px] font-medium leading-[150%] transition-all duration-300 lg:text-[28px] ${
+                        activeSubMenu === item.id ? "text-white" : "text-white/85 group-hover:text-white"
+                      }`}>
                         {item.title}
                       </span>
 
-                      <svg width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        className={`transition-transform duration-300 ease-out ${
+                          activeSubMenu === item.id ? "translate-x-[2px]" : "group-hover:translate-x-[3px]"
+                        }`}
+                        width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      >
                         <path d="M9 18l6-6-6-6" />
                       </svg>
                     </button>
@@ -231,9 +242,9 @@ export default function Navbar() {
                       key={item.id}
                       href={`/${item.id}`}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex w-full cursor-pointer items-center justify-between px-[24px] py-[16px] transition-colors duration-200 hover:bg-[#002868]/40 lg:px-[36px]"
+                      className="group flex w-full cursor-pointer items-center justify-between border-l-[3px] border-transparent px-[21px] py-[16px] transition-all duration-300 ease-out hover:border-l-[#4D8AFF]/70 hover:bg-[#002868]/30 lg:px-[33px]"
                     >
-                      <span className="font-['Libre_Baskerville',_serif] text-[22px] font-medium leading-[150%] text-white lg:text-[28px]">
+                      <span className="font-['Libre_Baskerville',_serif] text-[22px] font-medium leading-[150%] text-white/85 transition-all duration-300 group-hover:text-white lg:text-[28px]">
                         {item.title}
                       </span>
                     </Link>
@@ -250,7 +261,7 @@ export default function Navbar() {
               aria-hidden={!activeSubMenu}
             >
               <div className="flex h-full w-[100vw] flex-col overflow-y-auto lg:w-[400px]">
-                <div className="flex flex-col items-start gap-[20px] px-[24px] pb-[40px] pt-[40px] lg:px-[40px] lg:pt-[60px]">
+                <div className="flex flex-col items-stretch gap-[4px] px-[16px] pb-[40px] pt-[40px] lg:px-[28px] lg:pt-[60px]">
                   {menuData
                     .find((m) => m.id === activeSubMenu)
                     ?.subItems.map((subItem, idx) => (
@@ -258,8 +269,9 @@ export default function Navbar() {
                         key={idx}
                         href={`/${subItem.toLowerCase().replace(/\s+/g, "-")}`}
                         onClick={() => setIsMenuOpen(false)}
-                        className="font-['Poppins',_sans-serif] text-[18px] font-normal leading-[150%] text-[#0E0E0E] transition-colors hover:text-[#001A4D] lg:text-[20px]"
+                        className="group flex items-center rounded-[10px] px-[12px] py-[12px] font-['Poppins',_sans-serif] text-[18px] font-normal leading-[150%] text-[#0E0E0E]/75 transition-all duration-300 ease-out hover:bg-[#001A4D]/[0.06] hover:text-[#001A4D] hover:translate-x-[4px] lg:text-[20px]"
                       >
+                        <span className="mr-[10px] h-[2px] w-0 rounded-full bg-[#001A4D] transition-all duration-300 ease-out group-hover:w-[16px]" />
                         {subItem}
                       </Link>
                     ))}

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Libre_Baskerville, Poppins, Inter, Plus_Jakarta_Sans, Montserrat, DM_Sans } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
-import CustomCursor from "@/components/ui/CustomCursor";
 import "./globals.css";
 
 /*
@@ -82,7 +81,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${libreBaskerville.variable} ${poppins.variable} ${inter.variable} ${plusJakartaSans.variable} ${montserrat.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col m-0 p-0">
-        <CustomCursor />
         <Navbar />
         {/* FIX: Removed pt-[115px]. The Hero section now handles its own overlap padding to prevent gaps. */}
         <main className="flex-1 w-full m-0 p-0">{children}</main>

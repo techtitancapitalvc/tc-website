@@ -178,18 +178,20 @@ export default function IndicornsSpotlight() {
           </div>
         </div>
 
-        {/* ── RIGHT SIDE QUOTE ── */}
-        <div
-          className="flex flex-col items-center text-center md:items-start md:text-left max-md:!max-w-full max-md:!px-4 max-md:!gap-[16px]"
+       {/* ── RIGHT SIDE QUOTE ── */}
+       <div
+          // ADDED md:-mr-[20px] (optional): Use this to physically pull the box to the right if the parent container is constraining it. Adjust the 20px as needed.
+          className="flex flex-col items-center text-center md:items-start md:text-left max-md:!max-w-full max-md:!px-4 max-md:!gap-[16px] md:-mr-[20px]"
           style={{
-            maxWidth:    "clamp(260px, min(32.99vw, 48.37vh), 475px)",
+            // INCREASED DESKTOP MAX-WIDTH: Allows the text to flow further right before wrapping (changed max from 475px to 600px)
+            maxWidth:    "clamp(260px, min(48vw, 62vh), 630px)",
             gap:         "clamp(6px, min(0.83vw, 1.22vh), 12px)",
           }}
         >
           <p
             className="m-0 font-['Poppins',_sans-serif] italic text-white max-md:!text-[15px] max-md:!leading-[1.5]"
             style={{
-              fontSize:   "clamp(11px, min(1.39vw, 2.04vh), 20px)",
+              fontSize:   "clamp(16px, min(1.94vw, 2.85vh), 28px)",
               fontWeight: 300,
               lineHeight: "126%",
             }}
@@ -198,7 +200,9 @@ export default function IndicornsSpotlight() {
           </p>
           <p
             className="m-0 font-['Poppins',_sans-serif] font-normal tracking-wide text-white/80 max-md:!text-[14px]"
-            style={{ fontSize: "clamp(10px, min(1.11vw, 1.63vh), 16px)" }}
+            style={{ 
+              fontSize: "clamp(12px, min(1.38vw, 2.03vh), 20px)" 
+            }}
           >
             - Titan Capital
           </p>

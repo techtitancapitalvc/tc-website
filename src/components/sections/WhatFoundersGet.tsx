@@ -38,7 +38,7 @@ const features = [
   {
     id: "playbook",
     title: "Industry Playbook",
-    desc: "GTM frameworks, financial models, cap table guides, from founders who've actually built.",
+    desc: "GTM frameworks, financial models, cap table guides, from founders who've actually built companies themselves.",
     top: 580, left: 790, width: 476,
   },
 ];
@@ -153,7 +153,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0], index: n
           </h3>
         </motion.div>
 
-        <motion.p variants={descVariants} className="m-0 max-w-[370px] font-['Poppins',_sans-serif] text-[clamp(14px,1.5vw,16px)] font-normal leading-[150%] text-[#333]">
+        <motion.p variants={descVariants} className="m-0 max-w-[370px] font-['Poppins',_sans-serif] max-md:text-[18px] md:text-[clamp(14px,1.5vw,16px)] font-normal leading-[150%] text-[#333]">
           {feature.desc}
         </motion.p>
 
@@ -221,8 +221,8 @@ export default function WhatFoundersGet() {
           className="relative h-[800px] w-[1280px] shrink-0 origin-top scale-[0.27] min-[400px]:scale-[0.3] sm:scale-[0.5] md:scale-[0.65] lg:scale-[0.75] xl:scale-[0.9] 2xl:scale-100"
         >
           
-          {/* STEP 1: CENTRAL TITAN CAPITAL HUB */}
-          <motion.div 
+         {/* STEP 1: CENTRAL TITAN CAPITAL HUB */}
+         <motion.div 
             variants={{
               hidden: { opacity: 0, scale: 0.5 },
               visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
@@ -230,6 +230,7 @@ export default function WhatFoundersGet() {
             className="absolute left-[640px] top-[340px] z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center pointer-events-none"
             style={{ width: "263.495px", height: "218.526px", aspectRatio: "263.49 / 218.53" }}
           >
+            <div className="relative h-full w-full max-md:scale-[0.75] md:scale-100">
               <Image 
                 src="/images/misc/Whatfoundersget.svg" 
                 alt="Central Image" 
@@ -237,6 +238,7 @@ export default function WhatFoundersGet() {
                 style={{ objectFit: "contain" }}
                 priority
              />
+            </div>
           </motion.div>
 
           {/* STEP 2: ARROWS */}

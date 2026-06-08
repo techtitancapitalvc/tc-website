@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform, AnimatePresence, MotionValue, Variants } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 /* ── DATA CONFIGURATIONS ── */
 const impactData = [
   { num: "300+", label: "Startup Backed", caption: "Across seed, pre-Series A and growth stages since 2011" },
   { num: "650+", label: "Founders Backed", caption: "Operators, builders, and category creators" },
-  { num: "₹450B+", label: "Capital Raised by Portfolio", caption: "From 100+ institutional investors globally" },
-  { num: "6", label: "Indicorns", caption: "Direct employment across the portfolio ecosystem" },
   { num: "250M+", label: "Lives Impacted", caption: "Customers served by portfolio companies" },
+  { num: "6", label: "Indicorns", caption: "Direct employment across the portfolio ecosystem" },
+  { num: "₹45,000 Cr+", label: "Capital Raised by Portfolio", caption: "From 100+ institutional investors globally" },
   { num: "4", label: "IPO's", caption: "Direct employment across the portfolio ecosystem" },
 ];
 
@@ -38,86 +38,29 @@ const slides = [
   },
 ];
 
-interface CarouselItemProps {
-  data: {
-    num: string;
-    label: string;
-    caption: string;
-  };
-  index: number;
-  progress: MotionValue<number>;
-}
-
-const DWELL = 0.55; 
-const steppedCenter = (t: number, steps: number) => {
-  const raw = Math.max(0, Math.min(steps, t * steps));
-  const i = Math.min(steps - 1, Math.floor(raw));
-  const frac = raw - i;
-  if (frac <= DWELL) return i;                  
-  const x = (frac - DWELL) / (1 - DWELL);       
-  return i + x * x * (3 - 2 * x);               
-};
-
-/* ── SUB-COMPONENT: CAROUSEL ITEM ── */
-const CarouselItem = ({ data, index, progress }: CarouselItemProps) => {
-  const getDiff = (p: number) => {
-    const totalItems = impactData.length;
-    const adjustedProgress = Math.min(1, p / 0.5);
-    const center = steppedCenter(adjustedProgress, totalItems);
-    let diff = ((index - center) % totalItems + totalItems) % totalItems;
-    if (diff > 3) diff -= totalItems;
-    return diff;
-  };
-
-  const spread = 0.65;
-  
-  const x = useTransform(progress, (p: number) => `calc(${Math.sin(getDiff(p) * spread)} * clamp(150px, 45vw, 650px))`);
-  const y = useTransform(progress, (p: number) => `calc(50px - (${getDiff(p) * getDiff(p)} * clamp(25px, 10vw, 75px)))`);
-  const scale = useTransform(progress, (p: number) => Math.max(0.4, Math.cos(getDiff(p) * 0.8)));
-  
-  const opacity = useTransform(progress, (p: number) => {
-    const diff = Math.abs(getDiff(p));
-    if (diff >= 1.5) return 0; 
-    return Math.cos(diff * (Math.PI / 3)); 
-  });
-
-  const captionOpacity = useTransform(progress, (p: number) => {
-    const diff = Math.abs(getDiff(p));
-    return diff < 0.3 ? Math.max(0, Math.cos(diff * Math.PI * 1.6)) : 0;
-  });
-
-  return (
-    <motion.div
-      style={{ 
-        x, 
-        y, 
-        scale, 
-        opacity, 
-        zIndex: useTransform(progress, (p: number) => Math.round(10 - Math.abs(getDiff(p)))) 
-      }}
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center w-[90%] max-w-[700px]"
-    >
-      <h2 className="text-[clamp(32px,8vw,44px)] font-bold text-[#001A4D] font-['Libre_Baskerville',_serif] leading-[119%] mb-1 md:mb-2 flex items-center justify-center">
-        {data.num}
-      </h2>
-      <h3 className="text-[clamp(14px,3.5vw,22px)] font-semibold text-[#001A4D] font-['Libre_Baskerville',_serif] leading-[119%] max-w-[180px] md:max-w-[340px] mx-auto">
-        {data.label}
-      </h3>
-      <motion.h4 
-        style={{ opacity: captionOpacity }}
-        className="mt-4 md:mt-6 text-[#323232] font-['Poppins',_sans-serif] text-[clamp(12px,1.4vw,19px)] font-medium leading-relaxed w-[85%] max-w-2xl mx-auto"
-      >
-        {data.caption}
-      </motion.h4>
-    </motion.div>
-  );
-};
-
-/* ── MAIN UNIFIED STABLE COMPONENT ── */
+/* ── MAIN COMPONENT ── */
 export default function ImpactAndStories() {
-  const masterTrackRef = useRef<HTMLDivElement>(null);
+  const [centerIndex, setCenterIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isHoveringCenter, setIsHoveringCenter] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  /* Cooldown lock — prevents rapid-fire shifts when the mouse
+     stays still and items slide underneath the cursor. One hover
+     gesture = one shift. The lock resets when the mouse moves back
+     to the center zone (or leaves the carousel entirely). */
+  const shiftLock = useRef(false);
+
+  /* Auto-advance impact carousel every 2s */
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCenterIndex((prev) => (prev + 1) % impactData.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  /* Auto-advance stories every 5s */
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -127,22 +70,66 @@ export default function ImpactAndStories() {
 
   const slide = slides[currentSlide];
 
-  const { scrollYProgress } = useScroll({
-    target: masterTrackRef,
-    offset: ["start start", "end end"],
-  });
+  /* Compute shortest-path diff from center for wrapping carousel */
+  const getDiff = useCallback(
+    (index: number) => {
+      const total = impactData.length;
+      let diff = index - centerIndex;
+      if (diff > total / 2) diff -= total;
+      if (diff < -total / 2) diff += total;
+      return diff;
+    },
+    [centerIndex]
+  );
 
-  const contentYDesktop = useTransform(scrollYProgress, [0.45, 1], ["0px", "-580px"]);
-  const contentYMobile = useTransform(scrollYProgress, [0.45, 1], ["0px", "-250px"]);
+  /* HOVER a side item → shift ONE item, then lock (desktop only).
+     The lock prevents chain-shifts when items slide under a stationary cursor. */
+  const handleSideHover = useCallback(
+    (index: number) => {
+      if (shiftLock.current) return;
+      shiftLock.current = true;
+      setCenterIndex(index);
+      setIsPaused(true);
+      setIsHoveringCenter(false);
+    },
+    []
+  );
 
-  const blobScale = useTransform(scrollYProgress, (p: number) => {
-    if (p > 0.5) return 0;
-    const adjusted = p / 0.5;
-    const currentPosition = steppedCenter(adjusted, impactData.length);
-    const dist = Math.abs(currentPosition - Math.round(currentPosition));
-    return Math.max(0, Math.cos(dist * Math.PI));
-  });
-  const blobOpacity = useTransform(blobScale, [0, 1], [0.4, 1.0]);
+  /* CLICK / TAP a side item → always shift, no lock (works on mobile & desktop) */
+  const handleSideClick = useCallback(
+    (index: number) => {
+      shiftLock.current = false;          // reset lock so next hover works
+      setCenterIndex(index);
+      setIsPaused(true);
+      setIsHoveringCenter(false);
+    },
+    []
+  );
+
+  /* CLICK / TAP center item → toggle gradient (for mobile, since no hover) */
+  const handleCenterClick = useCallback(() => {
+    setIsHoveringCenter((prev) => !prev);
+    setIsPaused(true);
+  }, []);
+
+  /* Mouse enters the center zone → unlock shifts & show gradient */
+  const handleCenterEnter = useCallback(() => {
+    shiftLock.current = false;
+    setIsHoveringCenter(true);
+    setIsPaused(true);
+  }, []);
+
+  /* Mouse leaves center zone */
+  const handleCenterLeave = useCallback(() => {
+    setIsHoveringCenter(false);
+  }, []);
+
+  /* Mouse leaves the whole carousel → reset everything */
+  const handleCarouselLeave = useCallback(() => {
+    shiftLock.current = false;
+    setIsPaused(false);
+    setIsHoveringCenter(false);
+  }, []);
 
   const tvGlitch: Variants = {
     initial: { opacity: 0, filter: "brightness(0%) grayscale(100%)", scaleY: 0.01 },
@@ -150,188 +137,304 @@ export default function ImpactAndStories() {
     exit:    { opacity: 0, filter: "brightness(0%) grayscale(100%)", scaleY: 0.01, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
+  const handleNext = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const handlePrev = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
   return (
-    <div ref={masterTrackRef} className="relative w-full bg-white max-md:h-[300vh] md:h-[280vh]">
-      
-      {/* VIEWPORT CANVAS LOCKDOWN */}
-      <div 
-        className="sticky top-[80px] flex flex-col items-center w-full bg-white overflow-hidden select-none"
-        style={{ height: "calc(100svh - 80px)" }}
+    <div className="relative w-full bg-white">
+
+      {/* =========================================================
+            STAGE 1: AUTO-ROTATING IMPACT CAROUSEL
+            ========================================================= */}
+      <div
+        className="relative w-full h-[450px] overflow-hidden bg-white flex flex-col items-center justify-start max-md:!pt-[16px] max-md:!h-[320px]"
+        style={{ paddingTop: "clamp(80px, min(8vw, 12vh), 120px)" }}
+        onMouseLeave={handleCarouselLeave}
       >
-        <motion.div 
-          style={{ "--y-desk": contentYDesktop, "--y-mob": contentYMobile } as any} 
-          className="w-full flex-shrink-0 flex flex-col items-center max-md:[transform:translateY(var(--y-mob))] md:[transform:translateY(var(--y-desk))]"
-        >
-          
-          {/* =========================================================
-                STAGE 1: ROTATING CAROUSEL GLOBE
-                ========================================================= */}
-          <div 
-            className="relative w-full h-[450px] overflow-hidden bg-white flex flex-col items-center justify-start max-md:!pt-[16px] max-md:!h-[320px]"
-            style={{ paddingTop: "clamp(80px, min(8vw, 12vh), 120px)" }}
+        {/* HEADING */}
+        <div className="relative flex flex-col items-center justify-center w-full px-4 z-10 shrink-0">
+          <motion.div
+            className="flex flex-row items-center justify-center text-center w-full max-w-[1280px] mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
           >
-            <div className="relative flex flex-col items-center justify-center w-full px-4 z-10 shrink-0">
-              {/* ANIMATED HEADING */}
-              <motion.div 
-                className="flex flex-row items-center justify-center text-center w-full max-w-[1280px] mx-auto"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.2 }}
-              >
-                <motion.h2
+            <motion.h2
+              variants={{
+                hidden: { opacity: 0, y: 40 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+              }}
+              className="m-0 flex flex-row items-center justify-center"
+            >
+              <span className="relative inline-flex items-center justify-center overflow-hidden px-[8px] py-[4px] md:px-[20px] md:py-[10px] text-[clamp(28px,7vw,var(--heading-xl))] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold italic bg-transparent">
+                <motion.span
                   variants={{
-                    hidden: { opacity: 0, y: 40 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                    hidden: { scaleX: 0 },
+                    visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.4 } }
                   }}
-                  className="m-0 flex flex-row items-center justify-center"
-                >
-                  <span className="relative inline-flex items-center justify-center overflow-hidden px-[8px] py-[4px] md:px-[20px] md:py-[10px] text-[clamp(28px,7vw,var(--heading-xl))] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold italic bg-transparent">
-                    <motion.span 
-                      variants={{
-                        hidden: { scaleX: 0 },
-                        visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.4 } }
-                      }}
-                      style={{ transformOrigin: "left" }}
-                      className="absolute inset-0 bg-[#D3E2FF] z-0" 
-                    />
-                    <span className="relative z-10 leading-none">Impact</span>
-                  </span>
-                  <span className="text-[clamp(28px,7vw,var(--heading-xl))] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold not-italic leading-none ml-2 md:ml-3">
-                    at glance
-                  </span>
-                </motion.h2>
-              </motion.div>
-            </div>
+                  style={{ transformOrigin: "left" }}
+                  className="absolute inset-0 bg-[#D3E2FF] z-0"
+                />
+                <span className="relative z-10 leading-none">Impact</span>
+              </span>
+              <span className="text-[clamp(28px,7vw,var(--heading-xl))] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold not-italic leading-none ml-2 md:ml-3">
+                at a glance
+              </span>
+            </motion.h2>
+          </motion.div>
+        </div>
 
-            <div className="relative w-full flex-1 flex items-center justify-center">
-              <motion.div
-                style={{ scale: blobScale, opacity: blobOpacity }}
-                className="absolute left-1/2 top-[45%] max-md:!top-[50%] -translate-x-1/2 -translate-y-1/2 w-[160px] h-[160px] md:w-[200px] md:h-[200px] bg-[#D3E2FF] blur-[30px] md:blur-[50px] rounded-full pointer-events-none z-0"
-              />
-              {impactData.map((item, i) => (
-                <CarouselItem key={i} data={item} index={i} progress={scrollYProgress} />
-              ))}
-            </div>
-          </div>
+        {/* CAROUSEL AREA */}
+        <div className="relative w-full flex-1 flex items-center justify-center">
 
-          {/* =========================================================
-                STAGE 2: FEATURED FOUNDER CREDENTIAL SHOWCASE
-                ========================================================= */}
-          <div 
-            className="w-full bg-white flex flex-col items-center justify-start max-md:!pt-[24px] max-md:!pb-0"
+          {/* GRADIENT BLOB — hidden by default, appears on hover of center item */}
+          <div
+            className="absolute left-1/2 top-[45%] max-md:!top-[50%] w-[160px] h-[160px] md:w-[200px] md:h-[200px] bg-[#D3E2FF] blur-[30px] md:blur-[50px] rounded-full pointer-events-none z-0"
             style={{
-              paddingTop:    "clamp(40px, min(6.94vw, 10.18vh), 100px)",
-              paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
-              paddingLeft:   "var(--section-px-wide)",
-              paddingRight:  "var(--section-px-wide)",
+              transform: `translate(-50%, -50%) scale(${isHoveringCenter ? 1 : 0})`,
+              opacity: isHoveringCenter ? 1 : 0,
+              transition: "transform 0.4s ease-in-out, opacity 0.4s ease-in-out",
+            }}
+          />
+
+          {/* CAROUSEL ITEMS */}
+          {impactData.map((item, i) => {
+            const diff = getDiff(i);
+            const absDiff = Math.abs(diff);
+            const sinVal = Math.sin(diff * 0.65);
+            const diffSq = diff * diff;
+            const scale = Math.max(0.4, Math.cos(diff * 0.8));
+            const opacity = absDiff >= 1.5 ? 0 : Math.cos(absDiff * (Math.PI / 3));
+            const captionOpacity = absDiff < 0.3 ? Math.max(0, Math.cos(absDiff * Math.PI * 1.6)) : 0;
+            const zIndex = Math.round(10 - absDiff);
+            const isCenter = absDiff < 0.5;
+            const isSide = !isCenter && absDiff < 1.5;
+
+            return (
+              <div
+                key={i}
+                className="absolute left-1/2 top-1/2 flex flex-col items-center justify-start text-center w-[90%] max-w-[700px] max-md:[--base-y:-10px] max-md:[--y-spread:65px] md:[--base-y:50px] md:[--y-spread:clamp(25px,10vw,75px)]"
+                style={{
+                  transform: `translate(-50%, -50%) translate(calc(${sinVal.toFixed(5)} * clamp(150px, 45vw, 650px)), calc(var(--base-y) - ${diffSq.toFixed(5)} * var(--y-spread))) scale(${scale.toFixed(5)})`,
+                  opacity,
+                  zIndex,
+                  transition: "transform 0.6s ease-in-out, opacity 0.6s ease-in-out",
+                  cursor: isSide ? "pointer" : "default",
+                }}
+                onClick={() => {
+                  if (isSide) handleSideClick(i);
+                  if (isCenter) handleCenterClick();
+                }}
+                onMouseEnter={() => {
+                  if (isSide) handleSideHover(i);
+                  if (isCenter) handleCenterEnter();
+                }}
+                onMouseLeave={() => {
+                  if (isCenter) handleCenterLeave();
+                }}
+              >
+                <h2
+                  className={`font-bold text-[#001A4D] font-['Libre_Baskerville',_serif] leading-[119%] mb-1 md:mb-2 flex items-center justify-center ${
+                    item.num === "₹45,000 Cr+"
+                      ? "max-md:text-[clamp(22px,6vw,28px)] md:text-[clamp(32px,8vw,44px)]"
+                      : "text-[clamp(32px,8vw,44px)]"
+                  }`}
+                >
+                  {item.num}
+                </h2>
+                <h3 className="text-[clamp(14px,3.5vw,22px)] font-semibold text-[#001A4D] font-['Libre_Baskerville',_serif] leading-[119%] max-w-[180px] md:max-w-[340px] mx-auto">
+                  {item.label}
+                </h3>
+                <h4
+                  className="mt-4 md:mt-6 text-[#323232] font-['Poppins',_sans-serif] font-normal leading-[1.5] w-[85%] max-w-2xl mx-auto"
+                  style={{
+                    opacity: captionOpacity,
+                    fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)",
+                    transition: "opacity 0.6s ease-in-out",
+                  }}
+                >
+                  {item.caption}
+                </h4>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* =========================================================
+            STAGE 2: FEATURED FOUNDER CREDENTIAL SHOWCASE
+            ========================================================= */}
+      <div
+        className="w-full bg-white flex flex-col items-center justify-start max-md:!pt-[24px] max-md:!pb-0"
+        style={{
+          paddingTop:    "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+          paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+          paddingLeft:   "var(--section-px-wide)",
+          paddingRight:  "var(--section-px-wide)",
+        }}
+      >
+
+        <motion.div
+          className="mx-auto flex w-full max-w-[828px] flex-col items-center justify-center text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            variants={{
+              hidden: { opacity: 0, y: 40 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+            }}
+            className="m-0 flex items-center justify-center text-center font-['Libre_Baskerville',_serif] font-bold italic text-[#001A4D] text-[clamp(28px,7vw,var(--heading-xl))]"
+          >
+            <span className="relative inline-flex items-center justify-center overflow-hidden px-[8px] py-[4px] md:px-[20px] md:py-[10px]">
+              <motion.span
+                variants={{
+                  hidden: { scaleX: 0 },
+                  visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.4 } }
+                }}
+                style={{ transformOrigin: "left" }}
+                className="absolute inset-0 z-0 bg-[#D3E2FF]"
+              />
+              <span className="relative z-10 leading-none">Their stories,</span>
+            </span>
+          </motion.h2>
+
+          <motion.h2
+            variants={{
+              hidden: { opacity: 0, y: 40 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.5 } }
+            }}
+            className="m-0 mt-2 md:mt-3 text-center font-['Libre_Baskerville',_serif] font-semibold leading-[1.2] text-[#001A4D] text-[clamp(28px,7vw,var(--heading-xl))]"
+          >
+            our credentials
+          </motion.h2>
+        </motion.div>
+
+        {/* RELATIVE WRAPPER */}
+        <div className="relative mx-auto flex w-full max-w-[1280px] items-center justify-center mt-[clamp(24px,min(3.5vw,5vh),48px)] max-md:!mt-[12px]">
+
+          {/* DESKTOP ONLY: LEFT ARROW */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-0 top-[35%] z-20 group flex shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center overflow-hidden rounded-full border-none bg-[#D3E2FF] transition max-md:hidden"
+            style={{
+              width:  "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+              height: "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+            }}
+            aria-label="Previous slide"
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
             }}
           >
-            
-            <motion.div 
-              className="mx-auto flex w-full max-w-[828px] flex-col items-center justify-center text-center"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.4 }}
+            <div
+              className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
+              style={{ background: 'radial-gradient(circle 40px at var(--mouse-x, 50%) var(--mouse-y, 50%), #FFFFFF 0%, transparent 100%)' }}
+            />
+            <svg className="relative z-10" xmlns="http://www.w3.org/2000/svg" style={{ width: "60%", height: "60%" }} viewBox="0 0 59 59" fill="none">
+              <path d="M27.1151 20.9695C27.2962 20.8007 27.4415 20.5972 27.5423 20.371C27.6431 20.1448 27.6973 19.9007 27.7016 19.6531C27.706 19.4056 27.6605 19.1597 27.5677 18.9301C27.475 18.7005 27.337 18.492 27.1619 18.3169C26.9868 18.1418 26.7783 18.0038 26.5487 17.911C26.3191 17.8183 26.0732 17.7728 25.8256 17.7771C25.5781 17.7815 25.3339 17.8357 25.1078 17.9365C24.8816 18.0372 24.6781 18.1825 24.5093 18.3637L14.6759 28.197C14.3307 28.5427 14.1367 29.0113 14.1367 29.4999C14.1367 29.9885 14.3307 30.4571 14.6759 30.8028L24.5093 40.6362C24.6781 40.8173 24.8816 40.9626 25.1078 41.0634C25.3339 41.1642 25.5781 41.2183 25.8256 41.2227C26.0732 41.2271 26.3191 41.1815 26.5487 41.0888C26.7783 40.9961 26.9868 40.8581 27.1619 40.683C27.337 40.5079 27.475 40.2994 27.5677 40.0698C27.6605 39.8402 27.706 39.5943 27.7016 39.3467C27.6973 39.0992 27.6431 38.855 27.5423 38.6289C27.4415 38.4027 27.2962 38.1991 27.1151 38.0303L20.4284 31.3437H44.2497C44.7387 31.3437 45.2076 31.1494 45.5534 30.8037C45.8992 30.4579 46.0934 29.9889 46.0934 29.4999C46.0934 29.0109 45.8992 28.542 45.5534 28.1962C45.2076 27.8504 44.7387 27.6562 44.2497 27.6562H20.4284L27.1151 20.9695Z" fill="black"/>
+            </svg>
+          </button>
+
+          {/* HORIZONTAL BOX */}
+          <div className="w-full flex flex-col items-center justify-center gap-[clamp(28px,min(4.8vw,7vh),68px)] lg:flex-row lg:items-center lg:justify-center max-md:!gap-[20px] md:px-[90px]">
+
+            {/* SWIPE ZONE */}
+            <motion.div
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(e, info) => {
+                const threshold = 40;
+                if (info.offset.x < -threshold) handleNext();
+                if (info.offset.x > threshold) handlePrev();
+              }}
+              className="relative w-full shrink-0 overflow-hidden cursor-grab active:cursor-grabbing"
+              style={{ maxWidth: "clamp(340px, min(55vw, 75vh), 850px)" }}
             >
-              <motion.h2
-                variants={{
-                  hidden: { opacity: 0, y: 40 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-                }}
-                className="m-0 flex items-center justify-center text-center font-['Libre_Baskerville',_serif] font-bold italic text-[#001A4D] text-[clamp(28px,7vw,var(--heading-xl))]"
-              >
-                <span className="relative inline-flex items-center justify-center overflow-hidden px-[8px] py-[4px] md:px-[20px] md:py-[10px]">
-                  <motion.span
-                    variants={{
-                      hidden: { scaleX: 0 },
-                      visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.4 } }
-                    }}
-                    style={{ transformOrigin: "left" }}
-                    className="absolute inset-0 z-0 bg-[#D3E2FF]"
-                  />
-                  <span className="relative z-10 leading-none">Their stories,</span>
-                </span>
-              </motion.h2>
-
-              <motion.h2
-                variants={{
-                  hidden: { opacity: 0, y: 40 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.5 } }
-                }}
-                className="m-0 mt-2 md:mt-3 text-center font-['Libre_Baskerville',_serif] font-semibold leading-[1.2] text-[#001A4D] text-[clamp(28px,7vw,var(--heading-xl))]"
-              >
-                our credentials
-              </motion.h2>
-            </motion.div>
-
-            <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center gap-[clamp(28px,min(4.8vw,7vh),68px)] lg:flex-row lg:items-center lg:justify-center mt-[clamp(24px,min(3.5vw,5vh),48px)] max-md:!mt-[12px] max-md:!gap-[20px]">
-              
-              <div className="relative w-full shrink-0 overflow-hidden" style={{ maxWidth: "clamp(340px, min(55vw, 75vh), 850px)" }}>
-                <div className="absolute left-[8%] top-[13%] z-[5] h-[72%] w-[58%]">
-                  <AnimatePresence mode="wait">
-                    <motion.div key={`photo-${currentSlide}`} variants={tvGlitch} initial="initial" animate="animate" exit="exit" className="relative h-full w-full">
-                      <div className="absolute" style={{ top: "0%", bottom: "8%", right: "-50%", width: "140%" }}>
-                        <Image src={slide.image} alt={slide.name} fill sizes="(max-width: 1440px) 45vw, 600px" style={{ objectFit: "cover", objectPosition: "bottom right" }} />
-                      </div>
-                      
-                      <div className="absolute" style={{ bottom: "15%", left: "10%", width: "clamp(60px, 15vw, 120px)" }}>
-                        <Image src={slide.logo} alt="Logo" width={120} height={40} style={{ width: "100%", height: "auto", objectFit: "contain", objectPosition: "left" }} />
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                <Image src="/images/misc/television.svg" alt="TV Frame Frame" width={800} height={500} className="pointer-events-none relative z-[10] block h-auto w-full" priority />
-
-                <div className="absolute left-[8%] top-[13%] z-[15] flex h-[72%] w-[58%] items-start overflow-hidden pointer-events-none">
-                  <AnimatePresence mode="wait">
-                    <motion.div key={`text-${currentSlide}`} variants={tvGlitch} initial="initial" animate="animate" exit="exit" className="relative h-full w-full">
-                      
-                      <h3 className="absolute m-0 font-['Libre_Baskerville',_serif] text-black font-bold" style={{ top: "15%", left: "10%", width: "45%", fontSize: "clamp(12px, 3.5vw, 22px)", lineHeight: "110%" }}>
-                        {slide.name}
-                      </h3>
-                      <p className="absolute m-0 font-['Poppins',_sans-serif] text-black font-light max-md:!top-[42%]" style={{ top: "33%", left: "10%", width: "45%", fontSize: "clamp(8px, 2.2vw, 16px)", lineHeight: "119%" }}>
-                        {slide.role}
-                      </p>
-
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+              <div className="absolute left-[8%] top-[13%] z-[5] h-[72%] w-[58%] pointer-events-none">
+                <AnimatePresence mode="wait">
+                  <motion.div key={`photo-${currentSlide}`} variants={tvGlitch} initial="initial" animate="animate" exit="exit" className="relative h-full w-full">
+                    <div className="absolute" style={{ top: "0%", bottom: "8%", right: "-50%", width: "140%" }}>
+                      <Image src={slide.image} alt={slide.name} fill sizes="(max-width: 1440px) 45vw, 600px" style={{ objectFit: "cover", objectPosition: "bottom right" }} />
+                    </div>
+                    <div className="absolute" style={{ bottom: "15%", left: "10%", width: "clamp(60px, 15vw, 120px)" }}>
+                      <Image src={slide.logo} alt="Logo" width={120} height={40} style={{ width: "100%", height: "auto", objectFit: "contain", objectPosition: "left" }} />
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
-              <div className="flex w-full flex-col items-center text-center" style={{ maxWidth: "clamp(280px, min(33vw, 48.4vh), 475px)", gap: "clamp(20px, min(2.6vw, 3.81vh), 36px)" }}>
+              <Image src="/images/misc/television.svg" alt="TV Frame" width={800} height={500} className="pointer-events-none relative z-[10] block h-auto w-full" priority />
+
+              <div className="absolute left-[8%] top-[13%] z-[15] flex h-[72%] w-[58%] items-start overflow-hidden pointer-events-none">
+                <AnimatePresence mode="wait">
+                  <motion.div key={`text-${currentSlide}`} variants={tvGlitch} initial="initial" animate="animate" exit="exit" className="relative h-full w-full">
+                    <h3 className="absolute m-0 font-['Libre_Baskerville',_serif] text-black font-bold" style={{ top: "15%", left: "10%", width: "45%", fontSize: "clamp(12px, 3.5vw, 22px)", lineHeight: "110%" }}>
+                      {slide.name}
+                    </h3>
+                    <p className="absolute m-0 font-['Poppins',_sans-serif] text-black font-light max-md:!top-[42%]" style={{ top: "33%", left: "10%", width: "45%", fontSize: "clamp(8px, 2.2vw, 16px)", lineHeight: "119%" }}>
+                      {slide.role}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+
+            <div className="flex w-full flex-col items-center text-center" style={{ maxWidth: "clamp(280px, min(33vw, 48.4vh), 475px)", gap: "clamp(20px, min(2.6vw, 3.81vh), 36px)" }}>
+              <div className="w-full max-md:min-h-[100px]">
                 <AnimatePresence mode="wait">
                   <motion.p key={currentSlide} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="m-0 w-full text-center font-['Poppins',sans-serif] font-normal leading-[1.5] text-[#323232]" style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}>
                     {slide.text}
                   </motion.p>
                 </AnimatePresence>
-
-                <button 
-                  className="group relative flex shrink-0 cursor-pointer items-center justify-center gap-[10px] overflow-hidden rounded-[9px] border-none bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold text-white transition-all duration-300 ease-in-out h-[clamp(38px,3.75vw,54px)] w-[clamp(130px,12.6vw,181px)] text-[clamp(11px,1vw,15px)] p-[10px]"
-                  onMouseMove={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
-                    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
-                  }}
-                >
-                  <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" style={{ background: 'radial-gradient(circle 80px at var(--mouse-x, 50%) var(--mouse-y, 50%), #003CB3 0%, transparent 100%)' }} />
-                  <span className="relative z-10 text-center">Read Full Story</span>
-                </button>
               </div>
 
+              <button
+                className="group relative flex shrink-0 cursor-pointer items-center justify-center gap-[10px] overflow-hidden rounded-[9px] border-none bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold text-white transition-all duration-300 ease-in-out h-[clamp(38px,3.75vw,54px)] w-[clamp(130px,12.6vw,181px)] text-[clamp(11px,1vw,15px)] p-[10px]"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                  e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                }}
+              >
+                <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" style={{ background: 'radial-gradient(circle 80px at var(--mouse-x, 50%) var(--mouse-y, 50%), #003CB3 0%, transparent 100%)' }} />
+                <span className="relative z-10 text-center">Read Full Story</span>
+              </button>
             </div>
-
-            <div className="flex items-center gap-3 mt-[clamp(24px,min(3.5vw,5vh),48px)] max-md:!mt-[16px]">
-              {slides.map((_, i) => (
-                <button key={i} className={`cursor-pointer border-none p-0 transition-all duration-300 ease-in-out ${currentSlide === i ? "h-[12px] w-8 rounded-[10px] bg-[#001A4D]" : "h-[12px] w-[12px] rounded-full bg-[#D3E2FF]"}`} onClick={() => setCurrentSlide(i)} />
-              ))}
-            </div>
-
           </div>
 
-        </motion.div>
+          {/* DESKTOP ONLY: RIGHT ARROW */}
+          <button
+            onClick={handleNext}
+            className="absolute right-0 top-[35%] z-20 group flex shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center overflow-hidden rounded-full border-none bg-[#D3E2FF] transition max-md:hidden"
+            style={{
+              width:  "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+              height: "clamp(48px, min(5.35vw, 7.84vh), 77px)",
+            }}
+            aria-label="Next slide"
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
+              style={{ background: 'radial-gradient(circle 40px at var(--mouse-x, 50%) var(--mouse-y, 50%), #FFFFFF 0%, transparent 100%)' }}
+            />
+            <svg className="relative z-10" xmlns="http://www.w3.org/2000/svg" style={{ width: "60%", height: "60%", transform: "rotate(180deg)" }} viewBox="0 0 59 59" fill="none">
+              <path d="M27.1151 20.9695C27.2962 20.8007 27.4415 20.5972 27.5423 20.371C27.6431 20.1448 27.6973 19.9007 27.7016 19.6531C27.706 19.4056 27.6605 19.1597 27.5677 18.9301C27.475 18.7005 27.337 18.492 27.1619 18.3169C26.9868 18.1418 26.7783 18.0038 26.5487 17.911C26.3191 17.8183 26.0732 17.7728 25.8256 17.7771C25.5781 17.7815 25.3339 17.8357 25.1078 17.9365C24.8816 18.0372 24.6781 18.1825 24.5093 18.3637L14.6759 28.197C14.3307 28.5427 14.1367 29.0113 14.1367 29.4999C14.1367 29.9885 14.3307 30.4571 14.6759 30.8028L24.5093 40.6362C24.6781 40.8173 24.8816 40.9626 25.1078 41.0634C25.3339 41.1642 25.5781 41.2183 25.8256 41.2227C26.0732 41.2271 26.3191 41.1815 26.5487 41.0888C26.7783 40.9961 26.9868 40.8581 27.1619 40.683C27.337 40.5079 27.475 40.2994 27.5677 40.0698C27.6605 39.8402 27.706 39.5943 27.7016 39.3467C27.6973 39.0992 27.6431 38.855 27.5423 38.6289C27.4415 38.4027 27.2962 38.1991 27.1151 38.0303L20.4284 31.3437H44.2497C44.7387 31.3437 45.2076 31.1494 45.5534 30.8037C45.8992 30.4579 46.0934 29.9889 46.0934 29.4999C46.0934 29.0109 45.8992 28.542 45.5534 28.1962C45.2076 27.8504 44.7387 27.6562 44.2497 27.6562H20.4284L27.1151 20.9695Z" fill="black"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 mt-[clamp(24px,min(3.5vw,5vh),48px)] max-md:!mt-[16px]">
+          {slides.map((_, i) => (
+            <button key={i} className={`cursor-pointer border-none p-0 transition-all duration-300 ease-in-out ${currentSlide === i ? "h-[12px] w-8 rounded-[10px] bg-[#001A4D]" : "h-[12px] w-[12px] rounded-full bg-[#D3E2FF]"}`} onClick={() => setCurrentSlide(i)} />
+          ))}
+        </div>
       </div>
     </div>
   );

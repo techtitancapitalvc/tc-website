@@ -68,12 +68,15 @@ export default function Hero() {
             so "Founders" is the SAME size as the italic headings in WhatWeBelieve /
             BackedBefore / FoundersTestimonial. */}
         <h1
-          className="relative z-10 mx-auto w-full text-center font-['Libre_Baskerville',_serif] font-normal leading-[110%] text-black text-[clamp(32px,10vw,48px)] lg:text-[length:calc(var(--heading-xl)_*_0.875)]"
-          style={{ maxWidth: "640px" }}
+          className="relative z-10 mx-auto w-full text-center font-['Libre_Baskerville',_serif] font-normal leading-[110%] text-black text-[clamp(32px,11vw,64px)] lg:text-[length:calc(var(--heading-xl)_*_1.05)]"
+          style={{ maxWidth: "720px" }}
         >
-          300+ bets. All on
-          <span className="block font-semibold italic leading-[120%] text-[#001A4D] text-[clamp(40px,13.5vw,60px)] lg:text-[length:var(--heading-xl)]">
-            Founders
+          <span className="block whitespace-nowrap">300+ bets.</span>
+          <span className="block whitespace-nowrap">
+            All on{" "}
+            <span className="font-semibold italic text-[#001A4D]">
+              Founders
+            </span>
           </span>
         </h1>
 
@@ -237,14 +240,12 @@ export default function Hero() {
           {founderSlots.map((slot, i) => {
             const f = slot.pool[currentIndices[i]];
             return (
-              <div 
-                key={i} 
-                className="shrink-0"
-                style={{ 
-                  // Math perfectly assigns exactly 1/3 width to each card minus the gap space, 
-                  // forcing exactly 3 per row and snapping the leftovers to the center.
-                  width: "calc((100% - 2 * var(--m-gap)) / 3)", 
-                  perspective: "1000px" 
+              <div
+                key={i}
+                className="relative shrink-0 aspect-[3/4]"
+                style={{
+                  width: "calc((100% - 2 * var(--m-gap)) / 3)",
+                  perspective: "1000px"
                 }}
               >
                 <AnimatePresence mode="wait">
@@ -255,22 +256,22 @@ export default function Hero() {
                     exit={{ rotateY: 90, opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                     style={{ transformStyle: "preserve-3d" }}
-                    className="flex w-full flex-col items-start rounded-[12px] bg-white p-[clamp(6px,2vw,10px)] shadow-[0_4px_14.8px_0_rgba(101,101,101,0.25)]"
+                    className="absolute inset-0 flex flex-col items-start overflow-hidden rounded-[12px] bg-white p-[clamp(6px,2vw,10px)] shadow-[0_4px_14.8px_0_rgba(101,101,101,0.25)]"
                   >
-                    <div className="relative w-full aspect-[211/223] overflow-hidden rounded-[6px]">
+                    <div className="relative w-full aspect-[1/1] shrink-0 overflow-hidden rounded-[6px]">
                       <Image
                         src={f.image}
                         alt={f.name}
                         fill
-                        style={{ objectFit: "cover" }}
+                        style={{ objectFit: "cover", objectPosition: "top" }}
                         sizes="33vw"
                       />
                     </div>
                     <div className="w-full pt-[clamp(4px,1.5vw,8px)]">
-                      <p className="w-full font-['Libre_Baskerville',_serif] font-bold leading-[119%] text-black text-[clamp(7px,3vw,14px)]">
+                      <p className="w-full font-['Libre_Baskerville',_serif] font-bold leading-[119%] text-black text-[clamp(6px,2.2vw,11px)] line-clamp-1">
                         {f.name}
                       </p>
-                      <p className="mt-[2px] w-full font-['Poppins',_sans-serif] font-light leading-[120%] text-black text-[clamp(5px,2.3vw,11px)]">
+                      <p className="mt-[2px] w-full font-['Poppins',_sans-serif] font-light leading-[120%] text-black text-[clamp(5px,1.8vw,9px)] line-clamp-2">
                         {f.role}
                       </p>
                     </div>
