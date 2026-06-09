@@ -5,6 +5,7 @@ import WhatFoundersGet from "@/components/sections/WhatFoundersGet";
 import WhatWeBelieve from "@/components/sections/WhatWeBelieve";
 import ImpactAtGlance from "@/components/sections/ImpactAtGlance";
 import IndicornsSpotlight from "@/components/sections/IndicornSpotlight";
+import BackedEarly from "@/components/sections/BackedEarly";
 import FounderTestimonial from "@/components/sections/FoundersTestimonial";
 import Footer from "@/components/sections/Footer";
 
