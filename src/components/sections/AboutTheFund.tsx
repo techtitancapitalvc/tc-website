@@ -111,7 +111,7 @@ export default function AboutTheFund() {
             }}
           >
             <Image
-              src="/images/titanwinnderfund/AboutTheFund.png"
+              src="/images/titanwinnderfund/AboutTheFund.webp"
               alt="About the fund — founders building together"
               fill
               sizes="(max-width: 768px) 90vw, 50vw"
