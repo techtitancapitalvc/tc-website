@@ -93,6 +93,7 @@ function PortfolioCard({
   const progressRef = useRef(0);
   const targetRef = useRef(0); // 0 = white, 1 = brandColor
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const [isActive, setIsActive] = useState(false);
 
   // State to hold our dynamically extracted colors
   const [gradientColors, setGradientColors] = useState({
@@ -225,6 +226,7 @@ function PortfolioCard({
         };
         card.setAttribute("data-hovered", "true");
       }
+      setIsActive(true);
       targetRef.current = 1;
       cancelAnimationFrame(animRef.current);
       animRef.current = requestAnimationFrame(drawFill);
@@ -235,6 +237,26 @@ function PortfolioCard({
   const handleMouseLeave = useCallback(() => {
     const card = cardRef.current;
     if (card) card.setAttribute("data-hovered", "false");
+    setIsActive(false);
+    targetRef.current = 0;
+    cancelAnimationFrame(animRef.current);
+    animRef.current = requestAnimationFrame(drawFill);
+  }, [drawFill]);
+
+  /* Touch support for mobile — mirrors mouse enter/leave */
+  const handleTouchStart = useCallback(() => {
+    const card = cardRef.current;
+    if (card) card.setAttribute("data-hovered", "true");
+    setIsActive(true);
+    targetRef.current = 1;
+    cancelAnimationFrame(animRef.current);
+    animRef.current = requestAnimationFrame(drawFill);
+  }, [drawFill]);
+
+  const handleTouchEnd = useCallback(() => {
+    const card = cardRef.current;
+    if (card) card.setAttribute("data-hovered", "false");
+    setIsActive(false);
     targetRef.current = 0;
     cancelAnimationFrame(animRef.current);
     animRef.current = requestAnimationFrame(drawFill);
@@ -266,6 +288,9 @@ function PortfolioCard({
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       className="portfolio-card group relative flex cursor-pointer flex-col items-center overflow-hidden bg-white"
       style={{
         boxShadow: "0 2px 12px 0 rgba(0,0,0,0.04)",
@@ -294,7 +319,7 @@ function PortfolioCard({
       {/* Logo — grayscale by default, full colour on hover */}
       <div className="relative z-10 flex flex-1 w-full items-center justify-center px-[15%]">
         <div
-          className="relative w-full transition-[filter] duration-500 ease-out grayscale group-hover:grayscale-0"
+          className={`relative w-full transition-[filter] duration-500 ease-out ${isActive ? "grayscale-0" : "grayscale"}`}
           style={{
             height: "clamp(36px, min(4.5vw, 6.5vh), 64px)",
             transform: `scale(${company.logoScale})`,

@@ -48,7 +48,7 @@ export default function WhyTitanSeed() {
         { x: "-25%", y: "125%", rotate: -12, zIndex: 1 },
         { x: "25%",  y: "125%", rotate: 12,  zIndex: 2 },
         { x: "-20%", y: "130%",  rotate: 6,   zIndex: 3 },
-        { x: "30%",  y: "25%",  rotate: -7,  zIndex: 4 },
+        { x: "30%",  y: "130%",  rotate: -7,  zIndex: 4 },
       ];
       return {
         x: positions[i].x,
