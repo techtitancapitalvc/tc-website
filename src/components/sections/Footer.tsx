@@ -9,6 +9,11 @@ import Link from "next/link";
   All 23 multiview viewports (1097×617 → 2560×1600) scale smoothly.
 */
 
+/* Map specific footer link labels to custom routes */
+const footerHrefs: Record<string, string> = {
+  "Titan Winner Fund": "/winnerFund",
+};
+
 const navLinks = [
   { title: "Home", links: [] },
   { title: "About", links: ["Our Story", "Teams", "Indicorns"] },
@@ -114,7 +119,7 @@ export default function Footer() {
                     {section.links.map((link, linkIdx) => (
                       <li key={linkIdx}>
                         <Link
-                          href="#"
+                          href={footerHrefs[link] ?? "#"}
                           className="inline-block font-poppins font-normal leading-[1.5] text-[#0E0E0E] transition-all duration-300 hover:scale-105 hover:text-[#001A4D]"
                           style={{ fontSize: "clamp(10px, min(1.18vw, 1.73vh), 17px)" }}
                         >

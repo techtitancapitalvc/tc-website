@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+/* Map specific sub-items to custom routes */
+const subItemHrefs: Record<string, string> = {
+  "Titan Winner Fund": "/winnerFund",
+};
+
 // Pre-configured mock data matching the screenshot categories
 const menuData = [
   {
@@ -267,7 +272,7 @@ export default function Navbar() {
                     ?.subItems.map((subItem, idx) => (
                       <Link
                         key={idx}
-                        href={`/${subItem.toLowerCase().replace(/\s+/g, "-")}`}
+                        href={subItemHrefs[subItem] ?? `/${subItem.toLowerCase().replace(/\s+/g, "-")}`}
                         onClick={() => setIsMenuOpen(false)}
                         className="group flex items-center rounded-[10px] px-[12px] py-[12px] font-['Poppins',_sans-serif] text-[18px] font-normal leading-[150%] text-[#0E0E0E]/75 transition-all duration-300 ease-out hover:bg-[#001A4D]/[0.06] hover:text-[#001A4D] hover:translate-x-[4px] lg:text-[20px]"
                       >

@@ -1,98 +1,85 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 
 /*
-  Each company has a `brandColor` — used for the hover gradient.
-  Cards are monochrome (grayscale) by default; on hover the gradient
-  fills in from the cursor and the logo snaps to full colour.
+  Removed the hardcoded brandColor and brandColorDark.
+  The component will now dynamically extract them from the logo itself!
 */
 const portfolioCompanies = [
   {
     name: "Boba Bhai",
     logo: "/images/logos/bobabhai.webp",
     category: "QSR & cloud kitchens",
-    brandColor: "#F3DCF6",
-    brandColorDark: "#E2B6EA",
     logoScale: 1,
   },
   {
     name: "Zouk",
     logo: "/images/logos/zouk_new_logo.webp",
     category: "Vegan leather goods",
-    brandColor: "#FDE8D0",
-    brandColorDark: "#F5CFA0",
     logoScale: 0.8,
   },
   {
     name: "BECO",
     logo: "/images/logos/BECO.webp",
     category: "Sustainable home products",
-    brandColor: "#D4EDDA",
-    brandColorDark: "#A8D8B0",
     logoScale: 1,
   },
   {
     name: "Simplismart",
     logo: "/images/logos/Simplismart.webp",
     category: "AI infrastructure",
-    brandColor: "#D3E2FF",
-    brandColorDark: "#A8C4F5",
     logoScale: 1,
   },
   {
     name: "Supertails",
-    logo: "/images/logos/Supertails.webp",
-    category: "Pet care platform",
-    brandColor: "#FDEBD0",
-    brandColorDark: "#F5D0A0",
+    logo: "/images/logos/Supertails.png",
+    category: "Pet products marketplace",
     logoScale: 1,
   },
   {
-    name: "Nat Habit",
-    logo: "/images/logos/Nat Habit.webp",
-    category: "Natural personal care",
-    brandColor: "#E8F5E0",
-    brandColorDark: "#C0E2B0",
+    name: "HomeRun",
+    logo: "/images/logos/homerun1.webp",
+    category: "B2B quick commerce",
+    logoScale: 1,
+  }, 
+  {
+    name: "Anveshan",
+    logo: "/images/logos/anveshan.webp",
+    category: "Pure & natural foods",
     logoScale: 1,
   },
   {
-    name: "GoKwik",
-    logo: "/images/logos/GoKwik.svg",
-    category: "E-commerce enablement",
-    brandColor: "#E0E8FF",
-    brandColorDark: "#B0C4F5",
-    logoScale: 1,
-  },
-  {
-    name: "Headout",
-    logo: "/images/logos/Headout.svg",
-    category: "Experiences marketplace",
-    brandColor: "#FFE0E6",
-    brandColorDark: "#F5B0BE",
+    name: "Mitigata",
+    logo: "/images/logos/mitigata-logo.webp",
+    category: "Full-stack cyber security",
     logoScale: 1,
   },
   {
     name: "Park+",
     logo: "/images/logos/Park+.webp",
     category: "Automobile platform",
-    brandColor: "#FFF4D6",
-    brandColorDark: "#F5E0A0",
     logoScale: 1,
   },
   {
-    name: "DotPe",
-    logo: "/images/logos/DotPe.webp",
-    category: "Digital commerce",
-    brandColor: "#D3E8FF",
-    brandColorDark: "#A8CCF5",
+    name: "MEKR",
+    logo: "/images/logos/mekr.webp",
+    category: "Appliance Manufacturing ·",
     logoScale: 1,
   },
 ];
 
-/* ── Card — monochrome by default, gradient + colour on hover ── */
+// Helper to mix a color with white to maintain your beautiful pastel gradient aesthetic
+const mixWithWhite = (r: number, g: number, b: number, percentWhite: number) => {
+  const newR = Math.round(r + (255 - r) * percentWhite);
+  const newG = Math.round(g + (255 - g) * percentWhite);
+  const newB = Math.round(b + (255 - b) * percentWhite);
+  return `rgb(${newR}, ${newG}, ${newB})`;
+};
+
+/* ── Card — monochrome by default, dynamic gradient colour on hover ── */
 function PortfolioCard({
   company,
   index,
@@ -106,6 +93,60 @@ function PortfolioCard({
   const progressRef = useRef(0);
   const targetRef = useRef(0); // 0 = white, 1 = brandColor
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
+
+  // State to hold our dynamically extracted colors
+  const [gradientColors, setGradientColors] = useState({
+    light: "#F5F5F5",
+    dark: "#E0E0E0",
+  });
+
+  // Dynamically extract the dominant color from the image on mount
+  useEffect(() => {
+    const img = new window.Image();
+    img.crossOrigin = "Anonymous";
+    img.src = company.logo;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let r = 0, g = 0, b = 0, count = 0;
+
+      for (let i = 0; i < imageData.length; i += 4) {
+        const alpha = imageData[i + 3];
+        const pr = imageData[i];
+        const pg = imageData[i + 1];
+        const pb = imageData[i + 2];
+
+        // Skip fully transparent pixels and pure white backgrounds to find the ACTUAL brand color
+        if (alpha < 50) continue;
+        if (pr > 240 && pg > 240 && pb > 240) continue;
+
+        r += pr;
+        g += pg;
+        b += pb;
+        count++;
+      }
+
+      if (count > 0) {
+        const avgR = Math.floor(r / count);
+        const avgG = Math.floor(g / count);
+        const avgB = Math.floor(b / count);
+
+        // Convert the raw color into the soft pastel versions you used originally
+        setGradientColors({
+          light: mixWithWhite(avgR, avgG, avgB, 0.85), // 85% white for the inner gradient
+          dark: mixWithWhite(avgR, avgG, avgB, 0.70),  // 70% white for the outer edges
+        });
+      }
+    };
+  }, [company.logo]);
 
   const drawFill = useCallback(() => {
     const canvas = canvasRef.current;
@@ -135,15 +176,15 @@ function PortfolioCard({
     if (progressRef.current > 0.001) {
       const p = progressRef.current;
 
-      // Radial gradient: white at center → brand colour at edges
+      // Radial gradient: white at center → extracted brand colour at edges
       const cx = w / 2;
       const cy = h / 2;
       const radius = Math.sqrt(cx * cx + cy * cy);
 
       const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
       gradient.addColorStop(0, `rgba(255, 255, 255, ${p})`);
-      gradient.addColorStop(0.4, company.brandColor);
-      gradient.addColorStop(1, company.brandColorDark);
+      gradient.addColorStop(0.4, gradientColors.light);
+      gradient.addColorStop(1, gradientColors.dark);
 
       ctx.globalAlpha = p;
       ctx.fillStyle = gradient;
@@ -161,7 +202,7 @@ function PortfolioCard({
         targetRef.current === 1 ? "true" : "false"
       );
     }
-  }, [company.brandColor, company.brandColorDark]);
+  }, [gradientColors]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const card = cardRef.current;
