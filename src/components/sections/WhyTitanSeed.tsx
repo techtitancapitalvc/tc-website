@@ -81,7 +81,7 @@ export default function WhyTitanSeed() {
       style={{
         minHeight: "calc(100svh - var(--nav-height))",
         paddingTop: "clamp(20px, min(3.5vw, 5vh), 50px)",
-        paddingBottom: "clamp(10px, min(1.5vw, 2vh), 20px)",
+        paddingBottom: "clamp(-30px, min(-1.5vw, -2vh), -20px)",
         paddingLeft: "var(--section-px-wide)",
         paddingRight: "var(--section-px-wide)",
       }}
