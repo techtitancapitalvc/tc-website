@@ -246,7 +246,7 @@ export default function Footer() {
           className="flex w-full flex-row items-end justify-between"
           style={{ paddingBottom: "clamp(12px, min(1.67vw, 2.44vh), 24px)" }}
         >
-          <p
+          {/* <p
             className="font-poppins font-normal leading-[1.5] text-[#0E0E0E]"
             style={{
               maxWidth: "clamp(140px, 25vw, 360px)",
@@ -254,6 +254,12 @@ export default function Footer() {
             }}
           >
             SEBI registration disclaimer for Winners Fund this is mandatory.
+          </p> */}
+          <p
+            className="font-poppins font-normal leading-[1.5] text-[#001A4D]"
+            style={{ fontSize: "clamp(9px, min(1.67vw, 2.44vh), 24px)" }}
+          >
+            © 2026 Titan Capital. All rights reserved.
           </p>
           <a
             href="mailto:startups@titancapital.vc"
@@ -278,30 +284,25 @@ export default function Footer() {
           className="flex w-full flex-row items-center justify-between"
           style={{ marginBottom: "clamp(60px, min(10.42vw, 15.27vh), 150px)" }}
         >
-          <p
-            className="font-poppins font-normal leading-[1.5] text-[#001A4D]"
-            style={{ fontSize: "clamp(9px, min(1.67vw, 2.44vh), 24px)" }}
-          >
-            © 2026 Titan Capital. All rights reserved.
-          </p>
+          
           <div
             className="flex flex-wrap justify-end"
             style={{ gap: "clamp(10px, min(2.78vw, 4.07vh), 40px)" }}
           >
-            <Link
+            {/* <Link
               href="#"
               className="inline-block font-poppins font-normal leading-[1.5] text-[#0E0E0E] underline decoration-solid transition-transform duration-300 hover:scale-105 hover:opacity-70"
               style={{ fontSize: "clamp(8px, min(1.11vw, 1.63vh), 16px)" }}
             >
               Privacy Policy
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               href="#"
               className="inline-block font-poppins font-normal leading-[1.5] text-[#0E0E0E] underline decoration-solid transition-transform duration-300 hover:scale-105 hover:opacity-70"
               style={{ fontSize: "clamp(8px, min(1.11vw, 1.63vh), 16px)" }}
             >
               Terms and Conditions
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>

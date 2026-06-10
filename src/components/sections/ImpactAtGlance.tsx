@@ -18,7 +18,7 @@ const slides = [
     name: "Ashish Mohapatra",
     role: "Co-Founder & CEO, Ofbusiness",
     image: "/images/misc/5.webp",
-    logo: "/images/logos/Ofbusiness.webp",
+    logo: "/images/logos/OfBusiness.png",
     text: `"I like businesses that are under the radar. I make products that are far away from the limelight, because that is where a business is to be made."`,
   },
   {
@@ -32,7 +32,7 @@ const slides = [
     name: "Harshil Mathur",
     role: "Co-founder and CEO of Razorpay",
     image: "/images/misc/3.webp",
-    logo: "/images/logos/Razorpay.webp",
+    logo: "/images/logos/Razorpay-logo.webp",
     text: `"We believed in Harshil's mission to simplify payments for every business in India."`,
   },
 ];

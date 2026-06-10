@@ -99,22 +99,32 @@ export default function Hero() {
        <div
           className="relative z-20 mt-[clamp(36px,12vw,64px)] flex flex-row items-center justify-center lg:mt-0"
           style={{
-            gap: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
+            gap: "clamp(16px, min(2.2vw, 3.2vh), 32px)", // Increased gap to match larger buttons
             marginBottom: "clamp(16px, min(2.9vw, 4.28vh), 42px)",
           }}
         >
-          {/* SECONDARY BUTTON */}
+          {/* SECONDARY BUTTON - INCREASED SIZE */}
           <Link
             href="/portfolio"
-            className="flex shrink-0 items-center justify-center p-[10px] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#001A4D] transition-opacity hover:opacity-60 h-[clamp(40px,min(3.75vw,5.5vh),54px)] w-[clamp(140px,min(12.85vw,18.84vh),185px)] text-[clamp(13px,min(1.11vw,1.63vh),16px)]"
+            className="flex shrink-0 items-center justify-center p-[10px] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#001A4D] transition-opacity hover:opacity-60"
+            style={{
+              height: "clamp(48px, min(5vw, 7vh), 64px)", // Increased from 40-54px to 48-64px
+              width: "clamp(170px, min(16vw, 23vh), 220px)", // Increased from 140-185px to 170-220px
+              fontSize: "clamp(15px, min(1.4vw, 2vh), 20px)" // Increased font size from 13-16px to 15-20px
+            }}
           >
             View Portfolio
           </Link>
 
-          {/* PRIMARY BUTTON WITH CURSOR SPOTLIGHT */}
+          {/* PRIMARY BUTTON WITH CURSOR SPOTLIGHT - INCREASED SIZE */}
           <Link
             href="/get-investment"
-            className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[clamp(7px,0.625vw,9px)] bg-[#001A4D] p-[10px] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all h-[clamp(40px,min(3.75vw,5.5vh),54px)] w-[clamp(140px,min(12.85vw,18.84vh),185px)] text-[clamp(13px,min(1.11vw,1.63vh),16px)]"
+            className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[clamp(7px,0.625vw,9px)] bg-[#001A4D] p-[10px] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
+            style={{
+              height: "clamp(48px, min(5vw, 7vh), 64px)", // Increased from 40-54px to 48-64px
+              width: "clamp(170px, min(16vw, 23vh), 220px)", // Increased from 140-185px to 170-220px
+              fontSize: "clamp(15px, min(1.4vw, 2vh), 20px)" // Increased font size from 13-16px to 15-20px
+            }}
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const x = e.clientX - rect.left;

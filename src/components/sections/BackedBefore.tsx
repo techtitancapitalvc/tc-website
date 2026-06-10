@@ -30,7 +30,7 @@ const row2Companies = [
   { name: "Kutumb", logoSrc: "/images/logos/Kutumb.webp", scaleClass: "scale-[1.3]" },
   { name: "Magma", logoSrc: "/images/logos/magma factory.webp", scaleClass: "scale-[2.4]" },
   { name: "Mekr", logoSrc: "/images/logos/mekr.webp", scaleClass: "" },
-  { name: "Powerhouse 91", logoSrc: "/images/logos/powerhouse.webp", scaleClass: "scale-[1.3]" },
+  { name: "Slovic", logoSrc: "/images/logos/slovic.avif", scaleClass: "scale-[1.3]" },
   { name: "Zouk", logoSrc: "/images/logos/zouk_new_logo.webp", scaleClass: "scale-[0.8]" },
 ];
 

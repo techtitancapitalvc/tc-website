@@ -11,7 +11,7 @@ import { motion, Variants } from "framer-motion";
 const portfolioCompanies = [
   {
     name: "Boba Bhai",
-    logo: "/images/logos/bobabhai.webp",
+    logo: "/images/logos/bobabhai-logo.webp",
     category: "QSR & cloud kitchens",
     logoScale: 1,
   },
@@ -65,7 +65,7 @@ const portfolioCompanies = [
   },
   {
     name: "MEKR",
-    logo: "/images/logos/mekr.webp",
+    logo: "/images/logos/mekr-logo.webp",
     category: "Appliance Manufacturing ·",
     logoScale: 1,
   },

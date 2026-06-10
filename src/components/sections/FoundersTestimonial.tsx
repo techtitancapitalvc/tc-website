@@ -46,7 +46,7 @@ const testimonials = [
   {
     id: 6,
     name: "Anand Yadav",
-    role: "Cofounder, OZiva",
+    role: "Cofounder, Mekr",
     image: "/images/Testimonials/Anand_yadav.png",
     text: "“Titan Capital was among the first to believe in what we were building at Mekr and backed us when it mattered most. Since then, they have gone beyond capital - offering strategic guidance, opening doors through their network, and supporting us through every stage of our journey. Their founder-first mindset makes them the kind of partner every founder hopes to have by their side.”",
   },
@@ -436,11 +436,11 @@ export default function FounderTestimonial() {
           href="/get-investment"
           className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
           style={{
-            height:       "clamp(40px, min(3.75vw, 5.5vh), 54px)",
-            width:        "clamp(160px, min(15.35vw, 22.51vh), 221px)",
-            fontSize:     "clamp(12px, min(1.11vw, 1.63vh), 16px)",
-            borderRadius: "clamp(7px, min(0.625vw, 0.92vh), 9px)",
-            padding:      "clamp(6px, 0.69vw, 10px)",
+            height:       "clamp(56px, min(5vw, 7vh), 75px)", // Increased 1.4x (was 40px -> 54px)
+            width:        "clamp(224px, min(21.5vw, 31.5vh), 310px)", // Increased 1.4x (was 160px -> 221px)
+            fontSize:     "clamp(16px, min(1.5vw, 2.2vh), 22px)", // Increased 1.4x (was 12px -> 16px)
+            borderRadius: "clamp(9px, min(0.8vw, 1.2vh), 12px)",
+            padding:      "clamp(8px, 1vw, 14px)",
           }}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
