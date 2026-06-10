@@ -104,7 +104,7 @@ export default function WhatWeLookFor() {
     <section
       className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-white"
       style={{
-        paddingTop: "clamp(-10px, min(-1.94vw, -2.18vh), -50px)",
+        paddingTop: "clamp(40px, min(4vw, 6vh), 80px)",
         paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
         paddingLeft: "var(--section-px-wide)",
         paddingRight: "var(--section-px-wide)",

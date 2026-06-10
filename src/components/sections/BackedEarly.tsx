@@ -174,7 +174,7 @@ const companies = [
   { name: "Shadowfax",     bgImage: "/images/portfolio/shadowfax_bg.webp",     logo: "/images/logos/Shadowfax.svg",                logoScale: 1.2 },
   { name: "Credgenics",    bgImage: "/images/portfolio/credgenics_bg.webp",    logo: "/images/logos/Credgenics.svg",               logoScale: 0.9 },
   { name: "OLA",           bgImage: "/images/portfolio/ola_bg.webp",           logo: "/images/logos/ola.svg",                      logoScale: 0.7 },
-  { name: "Zouk",          bgImage: "/images/portfolio/zouk_bg.webp",          logo: "/images/logos/zouk_new_logo.webp",           logoScale: 0.8 },
+  // { name: "Zouk",          bgImage: "/images/portfolio/zouk_bg.webp",          logo: "/images/logos/zouk_new_logo.webp",           logoScale: 0.8 },
   { name: "Cart.com",      bgImage: "/images/portfolio/Cart.com_bg.webp",      logo: "/images/logos/cartdotcom.svg",               logoScale: 1.0, noInvert: true },
   { name: "Unicommerce",   bgImage: "/images/portfolio/Unicommerce_bg.webp",   logo: "/images/logos/unicommerce-logo.svg",         logoScale: 1.0 },
   { name: "Khatabook",     bgImage: "/images/portfolio/khatabook_bg.webp",     logo: "/images/logos/khatabook.png",                logoScale: 1.2, logoClass: "translate-y-[5px]" }, 

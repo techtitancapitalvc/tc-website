@@ -5,7 +5,6 @@ export default function BackedEarlySection() {
     { id: 1, logo: '/images/logos/Shadowfax.svg', bg: '/images/portfolio/shadowfax_bg.webp', name: 'Shadowfax' },
     { id: 2, logo: '/images/logos/Credgenics.svg', bg: '/images/portfolio/credgenics_bg.webp', name: 'Credgenics' },
     { id: 3, logo: '/images/logos/ola.svg', bg: '/images/portfolio/ola_bg.webp', name: 'OLA' },
-    { id: 4, logo: '/images/logos/zouk_new_logo.webp', bg: '/images/portfolio/zouk_bg.webp', name: 'Zouk' },
   ];
 
   return (

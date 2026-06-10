@@ -384,9 +384,9 @@ function FilterDropdown({
         {company.logo ? (
           <div
             className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-            // FIXED: Changed to a uniform 55x55% square bounding box.
-            // All logos will now be constrained to the exact same maximum dimensions.
-            style={{ width: "55%", height: "55%" }}
+            /* Tighter bounding box: 42% wide × 28% tall keeps all logos
+               visually consistent regardless of aspect ratio. */
+            style={{ width: "42%", height: "28%" }}
           >
             <Image
               src={company.logo}

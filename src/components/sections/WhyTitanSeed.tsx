@@ -23,24 +23,40 @@ const cardsData = [
 ];
 
 export default function WhyTitanSeed() {
-  const [isSpread, setIsSpread] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
-  
-  // High threshold threshold (0.8) used strictly to trigger the heavy card spreading layout shift
-  const isSectionFullyVisible = useInView(sectionRef, { once: true, amount: 0.8 });
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const mobileRef = useRef<HTMLDivElement>(null);
 
+  /* ── Reversible in-view detection ──
+     Cards area triggers spread/contract.
+     Heading stays once: true (text shouldn't re-animate). */
+  const isCardsInView = useInView(sectionRef, { amount: 0.7 });
+  const isMobileInView = useInView(sectionRef, { amount: 0.6 });
+
+  /* Small delay before spreading so the section has time to settle */
+  const [isSpread, setIsSpread] = useState(false);
   useEffect(() => {
-    if (isSectionFullyVisible) {
-      const timer = setTimeout(() => setIsSpread(true), 300);
+    if (isCardsInView) {
+      const timer = setTimeout(() => setIsSpread(true), 150);
       return () => clearTimeout(timer);
     }
-  }, [isSectionFullyVisible]);
+    // Contract back immediately when scrolled out
+    setIsSpread(false);
+  }, [isCardsInView]);
 
   const smoothSpring = {
     type: "spring" as const,
     stiffness: 80,
     damping: 14,
     mass: 1,
+  };
+
+  /* Contract spring is slightly faster / snappier */
+  const contractSpring = {
+    type: "spring" as const,
+    stiffness: 100,
+    damping: 18,
+    mass: 0.9,
   };
 
   const cardVariants: Variants = {
@@ -56,7 +72,7 @@ export default function WhyTitanSeed() {
         y: positions[i].y,
         rotate: positions[i].rotate,
         zIndex: positions[i].zIndex,
-        transition: smoothSpring,
+        transition: contractSpring,
       };
     },
     spread: (i: number) => {
@@ -71,7 +87,7 @@ export default function WhyTitanSeed() {
         y: positions[i].y,
         rotate: 0,
         zIndex: 5,
-        transition: smoothSpring,
+        transition: { ...smoothSpring, delay: i * 0.07 },
       };
     },
   };
@@ -81,9 +97,9 @@ export default function WhyTitanSeed() {
       ref={sectionRef}
       className="relative flex w-full flex-col items-center justify-start lg:flex-row lg:items-start lg:justify-center lg:gap-[clamp(20px,3vw,60px)] overflow-hidden bg-white"
       style={{
-        minHeight: "calc(100svh - var(--nav-height))",
+        minHeight: "clamp(500px, 78svh, 750px)",
         paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
-        paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingBottom: "clamp(16px, min(2vw, 3vh), 40px)",
         paddingLeft: "var(--section-px-wide)",
         paddingRight: "var(--section-px-wide)",
       }}
@@ -93,10 +109,8 @@ export default function WhyTitanSeed() {
         <motion.div
           className="flex w-full flex-row items-center max-lg:justify-center lg:flex-col lg:items-start"
           initial="hidden"
-          // NEW: Changes to native inline viewport with a minimal threshold (0.05).
-          // This fires the animation the absolute second this element slips up underneath the hero section.
           whileInView="visible"
-          viewport={{ once: true, amount: 0.05 }} 
+          viewport={{ once: true, amount: 0.05 }}
         >
           <motion.h2
             className="m-0 mr-2 mb-2 whitespace-nowrap font-['Libre_Baskerville',_serif] text-[clamp(28px,4vw,var(--heading-xl))] font-semibold not-italic leading-[110%] text-[#001A4D] md:mr-3"
@@ -131,7 +145,10 @@ export default function WhyTitanSeed() {
       </div>
 
       {/* ── DESKTOP: CARDS ── */}
-      <div className="relative hidden w-full max-w-[1100px] flex-1 items-center justify-center lg:flex">
+      <div
+        ref={cardsRef}
+        className="relative hidden w-full max-w-[1100px] flex-1 items-center justify-center lg:flex"
+      >
         {cardsData.map((card, i) => (
           <motion.div
             key={i}
@@ -202,20 +219,25 @@ export default function WhyTitanSeed() {
 
       {/* ── TABLET / MOBILE: RESPONSIVE GRID ── */}
       <motion.div
+        ref={mobileRef}
         className="mt-[10px] md:mt-[20px] grid w-full max-w-[800px] grid-cols-1 gap-[20px] md:grid-cols-2 md:gap-[32px] lg:hidden"
         initial="hidden"
-        // Controlled globally by the high threshold hook so cards still fade up gracefully only when fully scrolled into
-        animate={isSectionFullyVisible ? "visible" : "hidden"} 
+        animate={isMobileInView ? "visible" : "hidden"}
         variants={{
-          hidden: {},
-          visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+          hidden: { transition: { staggerChildren: 0.06, staggerDirection: -1 } },
+          visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
         }}
       >
         {cardsData.map((card, i) => (
           <motion.div
             key={i}
             variants={{
-              hidden: { opacity: 0, y: 30, scale: 0.96 },
+              hidden: {
+                opacity: 0,
+                y: 40,
+                scale: 0.88,
+                transition: { duration: 0.35, ease: "easeIn" },
+              },
               visible: {
                 opacity: 1,
                 y: 0,

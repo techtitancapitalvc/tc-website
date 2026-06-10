@@ -217,7 +217,7 @@ function SlotMachineBox({
           className="font-['Libre_Baskerville',_serif] font-semibold text-[#001A4D]"
           style={{ fontSize: brandSize }}
         >
-          Your Brand
+          Titan Capital
         </span>
       </div>
     </div>
