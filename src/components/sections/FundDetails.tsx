@@ -262,11 +262,16 @@ function FundAccordionItem({
 }
 
 export default function FundDetails() {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [disclaimerOpen, setDisclaimerOpen] = useState(false);
 
   const toggle = (id: string) => {
-    setOpenId((prev) => (prev === id ? null : id));
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   return (
@@ -357,7 +362,7 @@ export default function FundDetails() {
             >
               <FundAccordionItem
                 fund={fund}
-                isOpen={openId === fund.id}
+                isOpen={openIds.has(fund.id)}
                 onToggle={() => toggle(fund.id)}
               />
             </motion.div>

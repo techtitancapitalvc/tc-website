@@ -217,7 +217,7 @@ export default function PortfolioWinnerFund() {
               },
             }}
           >
-            Winner Fund
+            Winners Fund
           </motion.h2>
         </motion.div>
 

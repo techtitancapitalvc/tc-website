@@ -261,67 +261,104 @@ function CompanyCard({ company, mode = "marquee" }: { company: (typeof companies
 }
 
 /* ═══════════════════════════════════════════════════════
-   CardMarquee (Desktop Only) — always-continuous + drag-to-scroll
-   Inspired by a16z.com/portfolio: never pauses, drag follows
-   cursor, momentum on release, seamless infinite loop.
+   CardMarquee (Desktop Only)
+   ─ Pauses on hover
+   ─ Click-and-drag to slide
+   ─ Momentum coast after fast swipe
+   ─ Seamless infinite loop (content is doubled)
    ═══════════════════════════════════════════════════════ */
 function CardMarquee() {
-  const doubled = [...companies, ...companies];
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const doubled = [...companies, ...companies];    // two copies for seamless loop
+  const trackRef = useRef<HTMLDivElement>(null);    // the sliding strip
+  const [isDragging, setIsDragging] = useState(false); // only for cursor style
 
+  /* ── All animation numbers live here (never cause re-renders) ── */
   const s = useRef({
-    x: 0,
-    halfWidth: 0,
-    lastTime: 0,
-    // drag
-    dragging: false,
-    dragStartX: 0,
-    dragStartScrollX: 0,
-    // momentum
-    velocity: 0,
-    lastPointerX: 0,
-    lastPointerTime: 0,
+    x: 0,              // current translateX position (px, always ≤ 0)
+    halfWidth: 0,      // width of ONE set of cards — our loop boundary
+    lastTime: 0,       // timestamp of previous frame (for delta-time)
+    hovered: false,     // is the mouse inside the marquee?
+    dragging: false,    // is the user currently dragging?
+    dragStartX: 0,      // clientX when drag began
+    dragStartScrollX: 0,// x position when drag began
+    velocity: 0,        // px/frame after drag release (for momentum)
+    lastPointerX: 0,    // previous clientX during drag (for velocity calc)
+    lastPointerTime: 0, // previous timestamp during drag
   });
 
-  // Base speed: full loop in 55s (matches original CSS animation)
-  const BASE_SPEED_RATIO = 1 / 55000;
-  const FRICTION = 0.95;           // momentum decay per frame
-  const MIN_VELOCITY = 0.05;       // stop momentum below this
+  /*
+   * SPEED: one full loop takes 55 seconds.
+   * The strip is `halfWidth` pixels wide, so each millisecond
+   * we move halfWidth / 55000 pixels to the left.
+   */
+  const SPEED = 1 / 55000;
 
+  /*
+   * MOMENTUM: after a fast drag-release the strip keeps
+   * sliding and slows down gradually (multiplied by FRICTION
+   * every frame). Stops when below MIN_VEL.
+   */
+  const FRICTION = 0.92;
+  const MIN_VEL  = 0.3;
+
+  /*
+   * MAX_DT: if the browser tab was hidden and comes back,
+   * `dt` could be 5+ seconds → huge jump. We cap it at 33ms
+   * (≈ 2 frames at 60fps) so it never jumps.
+   */
+  const MAX_DT = 33;
+
+  /* ── The animation loop (runs every frame ≈ 60×/sec) ── */
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
+    /* Measure how wide one set of cards is */
     const measure = () => { s.current.halfWidth = track.scrollWidth / 2; };
     requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
 
     let rafId: number;
+
     const tick = (now: number) => {
       const st = s.current;
-      if (!st.lastTime) st.lastTime = now;
-      const dt = now - st.lastTime;
+
+      /* First frame: just save the time, don't move */
+      if (!st.lastTime) { st.lastTime = now; rafId = requestAnimationFrame(tick); return; }
+
+      /* Delta time (ms since last frame), capped to avoid big jumps */
+      const dt = Math.min(now - st.lastTime, MAX_DT);
       st.lastTime = now;
 
-      if (st.halfWidth > 0) {
-        if (!st.dragging) {
-          // Auto-scroll ALWAYS runs — never pauses
-          st.x -= st.halfWidth * BASE_SPEED_RATIO * dt;
-
-          // Momentum layered on top (fades to zero after drag release)
-          if (Math.abs(st.velocity) > MIN_VELOCITY) {
-            st.x += st.velocity;
-            st.velocity *= FRICTION;
-            if (Math.abs(st.velocity) <= MIN_VELOCITY) st.velocity = 0;
-          }
+      if (st.halfWidth > 0 && !st.dragging) {
+        /*
+         * STATE 1 — Momentum (right after a drag-release)
+         * The strip coasts in the swipe direction, slowing down each frame.
+         */
+        if (Math.abs(st.velocity) > MIN_VEL) {
+          st.x += st.velocity;
+          st.velocity *= FRICTION;
+          if (Math.abs(st.velocity) <= MIN_VEL) st.velocity = 0;
         }
-
-        // Seamless wrap
-        while (st.x < -st.halfWidth) st.x += st.halfWidth;
-        while (st.x > 0) st.x -= st.halfWidth;
+        /*
+         * STATE 2 — Auto-scroll (normal idle movement)
+         * Only runs when NOT hovered and momentum is done.
+         */
+        else if (!st.hovered) {
+          st.x -= st.halfWidth * SPEED * dt;
+        }
+        /* STATE 3 — Hovered & no momentum → do nothing (paused) */
       }
 
+      /* ── Seamless wrap ──
+       * If we've scrolled past one full copy, jump back.
+       * The user can't see this because both copies look identical. */
+      if (st.halfWidth > 0) {
+        if (st.x < -st.halfWidth) st.x += st.halfWidth;
+        if (st.x > 0)            st.x -= st.halfWidth;
+      }
+
+      /* Apply the position (translate3d uses the GPU → buttery smooth) */
       track.style.transform = `translate3d(${st.x}px,0,0)`;
       rafId = requestAnimationFrame(tick);
     };
@@ -330,11 +367,19 @@ function CardMarquee() {
     return () => { cancelAnimationFrame(rafId); window.removeEventListener("resize", measure); };
   }, []);
 
-  /* ── Pointer handlers ────────────────────────────────── */
+  /* ── Hover handlers (pause / resume) ── */
+  const onMouseEnter = useCallback(() => { s.current.hovered = true; }, []);
+  const onMouseLeave = useCallback(() => {
+    s.current.hovered = false;
+    /* If mouse leaves mid-drag, release it */
+    if (s.current.dragging) { s.current.dragging = false; s.current.velocity = 0; setIsDragging(false); }
+  }, []);
+
+  /* ── Drag handlers ── */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const st = s.current;
     st.dragging = true;
-    st.velocity = 0;                        // kill any residual momentum
+    st.velocity = 0;                          // kill leftover momentum
     st.dragStartX = e.clientX;
     st.dragStartScrollX = st.x;
     st.lastPointerX = e.clientX;
@@ -346,35 +391,42 @@ function CardMarquee() {
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     const st = s.current;
     if (!st.dragging) return;
-    // Direct follow
+
+    /* Move the strip so it follows the finger/cursor exactly */
     st.x = st.dragStartScrollX + (e.clientX - st.dragStartX);
-    // Track velocity for momentum
+
+    /* Track how fast the pointer is moving (for momentum after release) */
     const now = performance.now();
     const dtMs = now - st.lastPointerTime;
-    if (dtMs > 0) {
-      st.velocity = (e.clientX - st.lastPointerX) * (16 / dtMs); // normalise to ~16ms frame
+    if (dtMs > 4) {                           // ignore tiny intervals
+      st.velocity = (e.clientX - st.lastPointerX) * (16 / dtMs);
+      st.lastPointerX = e.clientX;
+      st.lastPointerTime = now;
     }
-    st.lastPointerX = e.clientX;
-    st.lastPointerTime = now;
   }, []);
 
   const onPointerUp = useCallback(() => {
     s.current.dragging = false;
     setIsDragging(false);
-    // velocity already set — momentum loop in tick() picks it up
+    /* velocity is already set from the last pointer-move →
+       the tick() loop picks it up and coasts with momentum */
   }, []);
 
   return (
     <div
       className={`relative w-full overflow-hidden hidden md:block select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
     >
+      {/* Left/right fade overlays */}
       <div className="absolute left-0 top-0 z-10 h-full w-[4%] bg-gradient-to-r from-[#FBF7F0]/60 via-[#FBF7F0]/20 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 z-10 h-full w-[4%] bg-gradient-to-l from-[#FBF7F0]/60 via-[#FBF7F0]/20 to-transparent pointer-events-none" />
 
+      {/* The sliding track */}
       <div
         ref={trackRef}
         className="flex w-max items-center gap-[clamp(12px,1.5vw,20px)]"
