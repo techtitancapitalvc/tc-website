@@ -51,8 +51,68 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Titan Capital",
-  description: "Early stage venture capital fund by Kunal Bahl & Rohit Bansal",
+  title: {
+    default: "Titan Capital",
+    template: "%s - Titan Capital",
+  },
+  description:
+    "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
+  keywords: [
+    "Titan Capital",
+    "venture capital",
+    "early stage",
+    "seed funding",
+    "Kunal Bahl",
+    "Rohit Bansal",
+    "startup investment",
+    "India VC",
+  ],
+  authors: [{ name: "Titan Capital" }],
+  creator: "Titan Capital",
+  metadataBase: new URL("https://www.titancapital.vc"),
+  robots: {
+    index: true,
+    follow: true,
+    "max-image-preview": "large" as const,
+    "max-snippet": -1,
+    "max-video-preview": -1,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Titan Capital",
+    title: "Titan Capital",
+    description:
+      "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
+    url: "https://www.titancapital.vc",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Titan Capital",
+    description:
+      "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  other: {
+    "msapplication-TileImage": "/icon-192.png",
+  },
 };
 
 /*
@@ -64,6 +124,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#001A4D",
   // Allow user zoom — disabling it (maximumScale: 1) hurts accessibility.
 };
 

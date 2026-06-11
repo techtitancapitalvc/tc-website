@@ -504,7 +504,7 @@ function EmailInput({
 }
 
 /* ═══════════════════════════════════════════════════════
-   URL input with validation
+   URL input with live validation
    ═══════════════════════════════════════════════════════ */
 
 function UrlInput({
@@ -522,6 +522,28 @@ function UrlInput({
   error: string;
   onBlur: () => void;
 }) {
+  const [touched, setTouched] = useState(false);
+  const [focused, setFocused] = useState(false);
+
+  const liveStatus: "neutral" | "invalid" | "valid" =
+    value.trim().length === 0
+      ? "neutral"
+      : isValidUrl(value)
+        ? "valid"
+        : touched
+          ? "invalid"
+          : "neutral";
+
+  /* Green ring while focused + valid; red ring persists after blur */
+  const ringClass =
+    error
+      ? "ring-2 ring-[#C53030]/40"
+      : liveStatus === "invalid"
+        ? "ring-2 ring-[#C53030]/40"
+        : liveStatus === "valid" && focused
+          ? "ring-2 ring-[#16a34a]/40"
+          : "";
+
   return (
     <div>
       <motion.input
@@ -529,12 +551,18 @@ function UrlInput({
         name={id}
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
+        onChange={(e) => {
+          onChange(e.target.value);
+          if (!touched) setTouched(true);
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false);
+          if (!touched) setTouched(true);
+          onBlur();
+        }}
         placeholder={placeholder}
-        className={`w-full rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] focus:border-[#001A4D]/30 focus:bg-[#EEF3FF] ${
-          error ? "ring-2 ring-[#C53030]/30" : ""
-        }`}
+        className={`w-full rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] focus:border-[#001A4D]/30 focus:bg-[#EEF3FF] ${ringClass}`}
         style={{
           padding: "clamp(14px, min(1.25vw, 1.85vh), 18px) clamp(16px, min(1.4vw, 2vh), 22px)",
           fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)",
@@ -544,12 +572,12 @@ function UrlInput({
         whileFocus={{ y: -3, boxShadow: "0 8px 28px rgba(0,26,77,0.12)", borderColor: "rgba(0,26,77,0.25)" }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       />
-      {error && (
+      {(error || liveStatus === "invalid") && (
         <p
           className="mt-[6px] font-['Poppins',_sans-serif] text-[#C53030]"
           style={{ fontSize: "clamp(11px, min(0.9vw, 1.3vh), 13px)" }}
         >
-          {error}
+          {error || "Please enter a valid URL (e.g. https://acme.com)"}
         </p>
       )}
     </div>
@@ -1078,7 +1106,14 @@ export default function GetInvestmentForm() {
             variants={fieldSlideUp}
           >
             <FieldLabel htmlFor="linkedin">LinkedIn or personal site</FieldLabel>
-            <TextInput id="linkedin" placeholder="linkedin.com/in/jane" value={linkedin} onChange={setLinkedin} />
+            <UrlInput
+              id="linkedin"
+              placeholder="linkedin.com/in/jane"
+              value={linkedin}
+              onChange={setLinkedin}
+              error=""
+              onBlur={() => {}}
+            />
           </motion.div>
 
           {/* ── Divider ── */}
