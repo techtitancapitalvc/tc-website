@@ -14,16 +14,17 @@ import Link from "next/link";
 
 /* Map specific footer link labels to custom routes */
 const footerHrefs: Record<string, string> = {
-  "Titan Winner Fund": "/winnerFund",
+  "Titan Winners Fund": "/winnerFund",
   "Our Portfolio": "/portfolio",
   "Titan Seed Fund": "/titanseedfund",
   "Home Page": "/",
+  "Get Investment": "/getinvestment"
 };
 
 const navLinks = [
   { title: "Home", links: ["Home Page"] },
   { title: "About", links: ["Our Story", "Teams", "Indicorns"] },
-  { title: "For Founder", links: ["Get Investment", "Beyond Cheque", "Titan Seed Fund", "Titan Winner Fund"] },
+  { title: "For Founder", links: ["Get Investment", "Beyond Cheque", "Titan Seed Fund", "Titan Winners Fund"] },
   { title: "Portfolio", links: ["Our Portfolio"] },
   { title: "Community", links: ["Founder Story", "Titan Ecosystem"] },
   { title: "Perspective", links: ["Blogs","News","Events"] },

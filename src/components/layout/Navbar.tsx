@@ -6,9 +6,10 @@ import Image from "next/image";
 
 /* Map specific sub-items to custom routes */
 const subItemHrefs: Record<string, string> = {
-  "Titan Winner Fund": "/winnerFund",
+  "Titan Winners Fund": "/winnerFund",
   "Titan Seed Funding": "/titanseedfund",
   "Portfolio": "/portfolio",
+  "Get Investment" : "/getinvestment"
 };
 
 // Pre-configured mock data matching the screenshot categories
@@ -21,7 +22,7 @@ const menuData = [
   {
     id: "for-founders",
     title: "FOR FOUNDERS",
-    subItems: ["Get investment", "Beyond The Cheque", "Titan Seed Funding", "Titan Winner Fund"],
+    subItems: ["Get Investment", "Beyond The Cheque", "Titan Seed Funding", "Titan Winners Fund"],
   },
   {
     id: "portfolio",

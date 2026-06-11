@@ -247,9 +247,7 @@ export default function WinnersHero() {
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } }
           }}
         >
-          The Titan Capital Winners Fund backs portfolio companies that have
-          demonstrated exceptional traction, and are ready to define their
-          categories at scale.
+          The Titan Capital Winners Fund backs the companies in our portfolio that have already proven themselves, and are ready to own their category.
         </motion.p>
 
       </motion.div>

@@ -35,7 +35,7 @@ const fundsData: { id: string; title: string; info: FundInfo }[] = [
     title: "Fund II Details",
     info: {
       aifName: "Titan Capital Winners Fund II",
-      sebiNumber: "—",
+      sebiNumber: "IN/AIF2/26-27/2125",
       category: "Category II AIF",
       fundManager: "Titan Winners Fund Management LLP",
       officeAddress:

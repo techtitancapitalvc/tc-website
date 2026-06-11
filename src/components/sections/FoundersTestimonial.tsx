@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, Variants, useInView } from "framer-motion";
+import { motion, Variants } from "framer-motion"; // Removed useInView from here
 
 const testimonials = [
   {
@@ -104,14 +104,12 @@ function TestimonialCard({ item }: { item: typeof testimonials[0] }) {
             className="relative z-10 flex flex-col drop-shadow-md max-md:!p-[10px]"
             style={{ padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)" }}
           >
-            {/* FIXED: Reduced Mobile Name Font to 13px */}
             <p
               className="m-0 font-['Libre_Baskerville',_serif] font-bold text-white max-md:!text-[13px] max-md:!leading-[1.2]"
               style={{ fontSize: "clamp(14px, min(1.38vw, 2.04vh), 20px)" }}
             >
               {item.name}
             </p>
-            {/* FIXED: Reduced Mobile Role Font to 9px */}
             <p
               className="m-0 mt-1 font-['Poppins',_sans-serif] font-light text-white max-md:!text-[7px]"
               style={{ fontSize: "clamp(10px, min(0.89vw, 1.22vh), 13px)" }}
@@ -132,7 +130,6 @@ function TestimonialCard({ item }: { item: typeof testimonials[0] }) {
             padding: "clamp(12px, min(1.66vw, 2.44vh), 24px)",
           }}
         >
-          {/* FIXED: Reduced Mobile Quote Font to 10px and tightened line height */}
           <p
             className={`m-0 font-['Inter',_sans-serif] font-medium leading-[1.6] text-[#001A4D] max-md:!leading-[1.4] ${item.longText ? "max-md:!text-[9px]" : "max-md:!text-[9px]"}`}
             style={{ fontSize: item.longText ? "clamp(9px, min(0.89vw, 1.35vh), 12px)" : "clamp(9px, min(0.92vw, 1.4vh), 12px)" }}
@@ -140,14 +137,12 @@ function TestimonialCard({ item }: { item: typeof testimonials[0] }) {
             {item.text}
           </p>
           <div className="flex flex-col pt-3">
-            {/* FIXED: Reduced Mobile Name Font to 11px */}
             <p
               className="m-0 font-['Libre_Baskerville',_serif] font-bold text-[#001A4D] max-md:!text-[11px]"
               style={{ fontSize: "clamp(12px, min(1.25vw, 1.83vh), 18px)" }}
             >
               {item.name}
             </p>
-            {/* FIXED: Reduced Mobile Role Font to 9px */}
             <p
               className="m-0 mt-1 font-['Poppins',_sans-serif] font-medium text-[#001A4D] max-md:!text-[9px]"
               style={{ fontSize: "clamp(9px, min(0.83vw, 1.22vh), 12px)" }}
@@ -169,7 +164,7 @@ export default function FounderTestimonial() {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
+  // Removed useInView and the corresponding useEffect that caused the auto-scroll
 
   const getCardStep = (): number => {
     if (!trackRef.current) return 300;
@@ -195,17 +190,6 @@ export default function FounderTestimonial() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
-  useEffect(() => {
-    if (isInView) {
-      const timer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          setTranslateX(getMaxScroll());
-        });
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isInView]);
 
   const nextSlide = () => {
     const step = getCardStep();
@@ -253,7 +237,6 @@ export default function FounderTestimonial() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <motion.h2
-            // FIXED: Locked consistently to 28px on mobile to match other sections
             className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D] max-md:!text-[28px]"
             style={{
               fontSize:   "var(--heading-xl)",
@@ -267,7 +250,6 @@ export default function FounderTestimonial() {
           </motion.h2>
 
           <motion.h2
-            // FIXED: Locked consistently to 28px on mobile
             className="m-0 font-['Libre_Baskerville',_serif] text-[#001A4D] max-md:!text-[28px]"
             style={{
               fontSize:   "var(--heading-xl)",
@@ -404,7 +386,6 @@ export default function FounderTestimonial() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <motion.h2
-            // FIXED: Locked consistently to 28px on mobile
             className="m-0 text-center font-['Libre_Baskerville',_serif] font-bold italic leading-[1.19] text-[#001A4D] max-md:!text-[28px]"
             style={{ fontSize: "var(--heading-xl)" }}
             variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}
@@ -420,7 +401,6 @@ export default function FounderTestimonial() {
           </motion.h2>
 
           <motion.h2
-            // FIXED: Locked consistently to 28px on mobile, tightened top margin
             className="m-0 mt-2 w-full text-center font-['Libre_Baskerville',_serif] font-bold leading-[1.19] text-[#001A4D] max-md:!text-[28px] max-md:!mt-1"
             style={{
               fontSize: "var(--heading-xl)",
@@ -433,12 +413,12 @@ export default function FounderTestimonial() {
         </motion.div>
 
         <Link
-          href="/get-investment"
+          href="/getinvestment"
           className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
           style={{
-            height:       "clamp(56px, min(5vw, 7vh), 75px)", // Increased 1.4x (was 40px -> 54px)
-            width:        "clamp(224px, min(21.5vw, 31.5vh), 310px)", // Increased 1.4x (was 160px -> 221px)
-            fontSize:     "clamp(16px, min(1.5vw, 2.2vh), 22px)", // Increased 1.4x (was 12px -> 16px)
+            height:       "clamp(56px, min(5vw, 7vh), 75px)",
+            width:        "clamp(224px, min(21.5vw, 31.5vh), 310px)", 
+            fontSize:     "clamp(16px, min(1.5vw, 2.2vh), 22px)", 
             borderRadius: "clamp(9px, min(0.8vw, 1.2vh), 12px)",
             padding:      "clamp(8px, 1vw, 14px)",
           }}

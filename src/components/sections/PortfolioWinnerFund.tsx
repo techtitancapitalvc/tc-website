@@ -13,64 +13,64 @@ import { motion, Variants } from "framer-motion";
 */
 const portfolioCompanies = [
   {
-    name: "Boba Bhai",
-    logo: "/images/logos/bobabhai-logo.webp",
-    category: "QSR & cloud kitchens",
-    logoW: "52%", logoH: "18%",   // 4.3:1  wide pill with purple bg — heavy, constrain
-  },
-  {
-    name: "Zouk",
-    logo: "/images/logos/zouk_new_logo.webp",
-    category: "Vegan leather goods",
-    logoW: "40%", logoH: "15%",   // 3:1    clean serif wordmark
+    name: "Anveshan",
+    logo: "/images/logos_backup/anveshan.webp",
+    category: "Pure & natural foods",
+    logoW: "65%", logoH: "18%",   // 4.9:1  wide serif wordmark, thin
   },
   {
     name: "BECO",
-    logo: "/images/logos/BECO.webp",
+    logo: "/images/logos_backup/BECO.webp",
     category: "Sustainable home products",
     logoW: "48%", logoH: "80%",   // 2.7:1  bold blocky letters
   },
   {
+    name: "Boba Bhai",
+    logo: "/images/logos_backup/bobabhai-logo.webp",
+    category: "QSR & cloud kitchens",
+    logoW: "52%", logoH: "18%",   // 4.3:1  wide pill with purple bg — heavy, constrain
+  },
+  {
+    name: "Giva",
+    logo: "/images/logos_backup/GIVA.webp",
+    category: "Automobile platform",
+    logoW: "33%", logoH: "33%",   // 1:1    square icon with solid purple bg — heaviest
+  },
+  {
+    name: "HomeRun",
+    logo: "/images/logos_backup/homerun.png",
+    category: "B2B quick commerce",
+    logoW: "70%", logoH: "40%",   // 1.9:1  icon with solid yellow bg — heavy
+  },
+  {
+    name: "MEKR",
+    logo: "/images/logos_backup/mekr-logo.webp",
+    category: "Appliance Manufacturing",
+    logoW: "45%", logoH: "30%",   // 2.26:1 icon+text with dark bg
+  },
+  {
+    name: "Mitigata",
+    logo: "/images/logos_backup/mitigata-logo.webp",
+    category: "Full-stack cyber security",
+    logoW: "54%", logoH: "21%",   // 2.65:1 text + tagline, two lines
+  },
+  {
     name: "Simplismart",
-    logo: "/images/logos/Simplismart.webp",
+    logo: "/images/logos_backup/Simplismart.webp",
     category: "AI infrastructure",
     logoW: "68%", logoH: "28%",   // 6.7:1  extremely wide+thin, needs max width
   },
   {
     name: "Supertails",
-    logo: "/images/logos/supertails black.png",
+    logo: "/images/logos_backup/supertails black.png",
     category: "Pet products marketplace",
     logoW: "60%", logoH: "26%",   // 3.7:1  dog icon + text
   },
   {
-    name: "HomeRun",
-    logo: "/images/logos/homerun.png",
-    category: "B2B quick commerce",
-    logoW: "70%", logoH: "40%",   // 1.9:1  icon with solid yellow bg — heavy
-  },
-  {
-    name: "Anveshan",
-    logo: "/images/logos/anveshan.webp",
-    category: "Pure & natural foods",
-    logoW: "65%", logoH: "18%",   // 4.9:1  wide serif wordmark, thin
-  },
-  {
-    name: "Mitigata",
-    logo: "/images/logos/mitigata-logo.webp",
-    category: "Full-stack cyber security",
-    logoW: "54%", logoH: "21%",   // 2.65:1 text + tagline, two lines
-  },
-  {
-    name: "Park+",
-    logo: "/images/logos/Park+.webp",
-    category: "Automobile platform",
-    logoW: "33%", logoH: "33%",   // 1:1    square icon with solid purple bg — heaviest
-  },
-  {
-    name: "MEKR",
-    logo: "/images/logos/mekr-logo.webp",
-    category: "Appliance Manufacturing",
-    logoW: "45%", logoH: "30%",   // 2.26:1 icon+text with dark bg
+    name: "Zouk",
+    logo: "/images/logos_backup/zouk_new_logo.webp",
+    category: "Vegan leather goods",
+    logoW: "40%", logoH: "15%",   // 3:1    clean serif wordmark
   },
 ];
 

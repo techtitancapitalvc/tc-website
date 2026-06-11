@@ -762,6 +762,7 @@ export default function PortfolioGrid() {
             style={{
               marginTop: "clamp(16px, min(1.39vw, 2.03vh), 20px)",
               gap: "clamp(12px, min(1vw, 1.5vh), 16px)",
+              paddingRight: "clamp(12px, min(1.4vw, 2vh), 20px)",
             }}
           >
             {FILTER_CONFIG.map(({ key, label }) => (

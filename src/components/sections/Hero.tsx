@@ -90,7 +90,7 @@ export default function Hero() {
             marginBottom: "clamp(16px, min(2.7vw, 3.97vh), 39px)",
           }}
         >
-          The Titan Capital Winners Fund backs the companies in our portfolio that have already proven themselves, and are ready to own their category.
+          We partner with founders from day one. We invest conviction, not just capital, and stay by their side through every stage of journey.
         </p>
 
        {/* BUTTONS — extra top gap on mobile (subtext is hidden there) */}
@@ -116,7 +116,7 @@ export default function Hero() {
 
           {/* PRIMARY BUTTON WITH CURSOR SPOTLIGHT - INCREASED SIZE */}
           <Link
-            href="/get-investment"
+            href="/getinvestment"
             className="group relative m-0 flex shrink-0 items-center justify-center gap-[10px] overflow-hidden rounded-[clamp(7px,0.625vw,9px)] bg-[#001A4D] p-[10px] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all"
             style={{
               height: "clamp(48px, min(5vw, 7vh), 64px)", // Increased from 40-54px to 48-64px

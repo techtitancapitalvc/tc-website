@@ -33,7 +33,7 @@ const slides = [
     role: "Co-founder and CEO of Razorpay",
     image: "/images/misc/3.webp",
     logo: "/images/logos/Razorpay-logo.webp",
-    text: `"We believed in Harshil's mission to simplify payments for every business in India."`,
+    text: `"The vision was never just to be a payment gateway. It was to be the financial nervous system for a business."`,
   },
 ];
 
@@ -100,7 +100,7 @@ export default function ImpactAndStories() {
       shiftLock.current = false;          // reset lock so next hover works
       setCenterIndex(index);
       setIsPaused(true);
-      setIsHoveringCenter(false);
+      setIsHoveringCenter(true);          // Ensures the glow effect appears immediately
     },
     []
   );
@@ -382,7 +382,8 @@ export default function ImpactAndStories() {
             </motion.div>
 
             <div className="flex w-full flex-col items-center text-center" style={{ maxWidth: "clamp(280px, min(33vw, 48.4vh), 475px)", gap: "clamp(20px, min(2.6vw, 3.81vh), 36px)" }}>
-              <div className="w-full max-md:min-h-[100px]">
+              {/* FIXED CONTAINER HEIGHT to prevent the button from jumping */}
+              <div className="w-full flex items-center justify-center h-[140px] max-md:h-[160px]">
                 <AnimatePresence mode="wait">
                   <motion.p key={currentSlide} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="m-0 w-full text-center font-['Poppins',sans-serif] font-normal leading-[1.5] text-[#323232]" style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}>
                     {slide.text}

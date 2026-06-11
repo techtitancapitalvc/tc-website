@@ -12,31 +12,25 @@ const faqs = [
     id: "faq-1",
     question: "Do I need a deck to apply?",
     answer:
-      "A deck helps us understand your vision faster, but it's not mandatory. A clear description of the problem, your solution, and early traction is enough to get started.",
+      "No. A short email or 6-field form is enough to get started. If there's mutual interest, we'll ask for more at the right time.",
   },
   {
     id: "faq-2",
     question: "What stage do you invest at?",
     answer:
-      "Pre-seed, seed, and Series A. We like to be your first institutional investor. We follow on in later rounds through the Winners Fund.",
+      "Pre-seed and seed. We prefer to be your first institutional investor, and we follow on in later rounds through the Winners Fund.",
   },
   {
     id: "faq-3",
     question: "How long does the process take?",
     answer:
-      "We are known to convey our decision within days.",
-  },
-  {
-    id: "faq-4",
-    question: "Do you invest outside India?",
-    answer:
-      "Our primary focus is India-first companies. We occasionally invest in global companies with strong India relevance.",
+      "We move fast. Most founders hear back from us within days, not weeks.",
   },
   {
     id: "faq-5",
     question: "What happens after you invest?",
     answer:
-      "You get full access to the Titan network, ecosystem, and team. Your first year as a Titan portfolio company is the most important, we work closely with you on hiring, GTM, and the next fundraise.",
+      "You get full access to the Titan network, ecosystem, and team. The first year as a Titan portfolio company is the most important, we work closely with you on hiring, GTM strategy, and setting up your next fundraise.",
   },
 ];
 

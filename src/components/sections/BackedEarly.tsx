@@ -171,18 +171,18 @@ const LOGO_W = 150;
 const LOGO_H = 40;
 
 const companies = [
-  { name: "Shadowfax",     bgImage: "/images/portfolio/shadowfax_bg.webp",     logo: "/images/logos/Shadowfax.svg",                logoScale: 1.2 },
-  { name: "Credgenics",    bgImage: "/images/portfolio/credgenics_bg.webp",    logo: "/images/logos/Credgenics.svg",               logoScale: 0.9 },
-  { name: "OLA",           bgImage: "/images/portfolio/ola_bg.webp",           logo: "/images/logos/ola.svg",                      logoScale: 0.7 },
-  // { name: "Zouk",          bgImage: "/images/portfolio/zouk_bg.webp",          logo: "/images/logos/zouk_new_logo.webp",           logoScale: 0.8 },
-  { name: "Cart.com",      bgImage: "/images/portfolio/Cart.com_bg.webp",      logo: "/images/logos/cartdotcom.svg",               logoScale: 1.0, noInvert: true },
-  { name: "Unicommerce",   bgImage: "/images/portfolio/Unicommerce_bg.webp",   logo: "/images/logos/unicommerce-logo.svg",         logoScale: 1.0 },
-  { name: "Khatabook",     bgImage: "/images/portfolio/khatabook_bg.webp",     logo: "/images/logos/khatabook.png",                logoScale: 1.2, logoClass: "translate-y-[5px]" }, 
-  { name: "Mamaearth",     bgImage: "/images/portfolio/mamaearth_bg.webp",     logo: "/images/logos/mamaearthpng-logo.webp",       logoScale: 1.0 },
-  { name: "Ofbusiness",    bgImage: "/images/portfolio/ofbusiness_bg.webp",    logo: "/images/logos/ofbusiness_white.svg",         logoScale: 1.0 },
-  { name: "Razorpay",      bgImage: "/images/portfolio/razorpay_bg.webp",      logo: "/images/logos/Razorpay-logo.webp",           logoScale: 1.0 },
-  { name: "Snapdeal",      bgImage: "/images/portfolio/snapdeal_bg.webp",      logo: "/images/logos/snapdeal-company-1-logo.webp", logoScale: 1.0 },
-  { name: "Urban Company", bgImage: "/images/portfolio/urbanccompany_bg.webp", logo: "/images/logos/uc_white.png",                 logoScale: 1.0 },
+  { name: "Shadowfax",     bgImage: "/images/portfolio/shadowfax_bg.webp",     logo: "/images/logos_backup/Shadowfax.svg",                logoScale: 1.2 },
+  { name: "Credgenics",    bgImage: "/images/portfolio/credgenics_bg.webp",    logo: "/images/logos_backup/Credgenics.svg",               logoScale: 0.9 },
+  { name: "OLA",           bgImage: "/images/portfolio/ola_bg.webp",           logo: "/images/logos_backup/ola.svg",                      logoScale: 0.7 },
+  // { name: "Zouk",          bgImage: "/images/portfolio/zouk_bg.webp",          logo: "/images/logos_backup/zouk_new_logo.webp",           logoScale: 0.8 },
+  { name: "Cart.com",      bgImage: "/images/portfolio/Cart.com_bg.webp",      logo: "/images/logos_backup/cartdotcom.svg",               logoScale: 1.0, noInvert: true },
+  { name: "Unicommerce",   bgImage: "/images/portfolio/Unicommerce_bg.webp",   logo: "/images/logos_backup/unicommerce-logo.svg",         logoScale: 1.0 },
+  { name: "Khatabook",     bgImage: "/images/portfolio/khatabook_bg.webp",     logo: "/images/logos_backup/khatabook.png",                logoScale: 1.2, logoClass: "translate-y-[5px]" },
+  { name: "Mamaearth",     bgImage: "/images/portfolio/mamaearth_bg.webp",     logo: "/images/logos_backup/mamaearthpng-logo.webp",       logoScale: 1.0 },
+  { name: "Ofbusiness",    bgImage: "/images/portfolio/ofbusiness_bg.webp",    logo: "/images/logos_backup/ofbusiness_white.svg",         logoScale: 1.0 },
+  { name: "Razorpay",      bgImage: "/images/portfolio/razorpay_bg.webp",      logo: "/images/logos_backup/Razorpay-logo.webp",           logoScale: 1.0 },
+  { name: "Snapdeal",      bgImage: "/images/portfolio/snapdeal_bg.webp",      logo: "/images/logos_backup/snapdeal-company-1-logo.webp", logoScale: 1.0 },
+  { name: "Urban Company", bgImage: "/images/portfolio/urbanccompany_bg.webp", logo: "/images/logos_backup/uc_white.png",                 logoScale: 1.0 },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -205,10 +205,15 @@ function CompanyCard({ company, mode = "marquee" }: { company: (typeof companies
     boxShadow: "0 4px 10px 4px rgba(166, 166, 166, 0.15)",
   };
 
+  const isMarquee = mode === "marquee";
+
   return (
     <div
-      // FIXED: Added group/card to isolate hover scopes and hover:scale-105 to zoom ONLY this specific box
-      className="group/card relative shrink-0 cursor-pointer overflow-hidden transition-all duration-300 ease-out hover:scale-105 hover:shadow-[0_0_20px_10px_rgba(166,166,166,0.3)]"
+      className={`group/card relative shrink-0 overflow-hidden ${
+        isMarquee
+          ? "pointer-events-none"                                       // no hover effects in marquee — drag handled by parent
+          : "cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-[0_0_20px_10px_rgba(166,166,166,0.3)]"
+      }`}
       style={modeStyles}
     >
       {/* Background image */}
@@ -216,9 +221,8 @@ function CompanyCard({ company, mode = "marquee" }: { company: (typeof companies
         src={company.bgImage}
         alt={company.name}
         fill
-        sizes={mode === "marquee" ? "(max-width: 768px) 45vw, 22vw" : "50vw"}
-        // FIXED: Changed from generic row group-hover to card-specific group-hover/card
-        className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-105"
+        sizes={isMarquee ? "(max-width: 768px) 45vw, 22vw" : "50vw"}
+        className={`object-cover ${isMarquee ? "" : "transition-transform duration-500 ease-out group-hover/card:scale-105"}`}
       />
 
       <div
@@ -230,10 +234,11 @@ function CompanyCard({ company, mode = "marquee" }: { company: (typeof companies
       />
 
       {/* Logo container */}
-      {/* FIXED: Swapped to group-hover/card:translate-y-[-4px] to ensure only the active card's logo slides up */}
       <div
-        className="absolute bottom-0 left-0 z-[2] flex items-end transition-transform duration-300 ease-out group-hover/card:translate-y-[-4px]"
-        style={{ padding: mode === "marquee" ? "clamp(14px, min(1.8vw, 2.6vh), 24px)" : "12px" }}
+        className={`absolute bottom-0 left-0 z-[2] flex items-end ${
+          isMarquee ? "" : "transition-transform duration-300 ease-out group-hover/card:translate-y-[-4px]"
+        }`}
+        style={{ padding: isMarquee ? "clamp(14px, min(1.8vw, 2.6vh), 24px)" : "12px" }}
       >
         <div
           className="relative"
@@ -256,20 +261,124 @@ function CompanyCard({ company, mode = "marquee" }: { company: (typeof companies
 }
 
 /* ═══════════════════════════════════════════════════════
-   CardMarquee (Desktop Only)
+   CardMarquee (Desktop Only) — always-continuous + drag-to-scroll
+   Inspired by a16z.com/portfolio: never pauses, drag follows
+   cursor, momentum on release, seamless infinite loop.
    ═══════════════════════════════════════════════════════ */
 function CardMarquee() {
   const doubled = [...companies, ...companies];
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const s = useRef({
+    x: 0,
+    halfWidth: 0,
+    lastTime: 0,
+    // drag
+    dragging: false,
+    dragStartX: 0,
+    dragStartScrollX: 0,
+    // momentum
+    velocity: 0,
+    lastPointerX: 0,
+    lastPointerTime: 0,
+  });
+
+  // Base speed: full loop in 55s (matches original CSS animation)
+  const BASE_SPEED_RATIO = 1 / 55000;
+  const FRICTION = 0.95;           // momentum decay per frame
+  const MIN_VELOCITY = 0.05;       // stop momentum below this
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const measure = () => { s.current.halfWidth = track.scrollWidth / 2; };
+    requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+
+    let rafId: number;
+    const tick = (now: number) => {
+      const st = s.current;
+      if (!st.lastTime) st.lastTime = now;
+      const dt = now - st.lastTime;
+      st.lastTime = now;
+
+      if (st.halfWidth > 0) {
+        if (!st.dragging) {
+          // Auto-scroll ALWAYS runs — never pauses
+          st.x -= st.halfWidth * BASE_SPEED_RATIO * dt;
+
+          // Momentum layered on top (fades to zero after drag release)
+          if (Math.abs(st.velocity) > MIN_VELOCITY) {
+            st.x += st.velocity;
+            st.velocity *= FRICTION;
+            if (Math.abs(st.velocity) <= MIN_VELOCITY) st.velocity = 0;
+          }
+        }
+
+        // Seamless wrap
+        while (st.x < -st.halfWidth) st.x += st.halfWidth;
+        while (st.x > 0) st.x -= st.halfWidth;
+      }
+
+      track.style.transform = `translate3d(${st.x}px,0,0)`;
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(rafId); window.removeEventListener("resize", measure); };
+  }, []);
+
+  /* ── Pointer handlers ────────────────────────────────── */
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const st = s.current;
+    st.dragging = true;
+    st.velocity = 0;                        // kill any residual momentum
+    st.dragStartX = e.clientX;
+    st.dragStartScrollX = st.x;
+    st.lastPointerX = e.clientX;
+    st.lastPointerTime = performance.now();
+    setIsDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const st = s.current;
+    if (!st.dragging) return;
+    // Direct follow
+    st.x = st.dragStartScrollX + (e.clientX - st.dragStartX);
+    // Track velocity for momentum
+    const now = performance.now();
+    const dtMs = now - st.lastPointerTime;
+    if (dtMs > 0) {
+      st.velocity = (e.clientX - st.lastPointerX) * (16 / dtMs); // normalise to ~16ms frame
+    }
+    st.lastPointerX = e.clientX;
+    st.lastPointerTime = now;
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    s.current.dragging = false;
+    setIsDragging(false);
+    // velocity already set — momentum loop in tick() picks it up
+  }, []);
 
   return (
-    // Outer container row retains 'group' which correctly flags the track animation to stop moving entirely
-    <div className="group relative w-full overflow-hidden hidden md:block">
+    <div
+      className={`relative w-full overflow-hidden hidden md:block select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    >
       <div className="absolute left-0 top-0 z-10 h-full w-[4%] bg-gradient-to-r from-[#FBF7F0]/60 via-[#FBF7F0]/20 to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 z-10 h-full w-[4%] bg-gradient-to-l from-[#FBF7F0]/60 via-[#FBF7F0]/20 to-transparent pointer-events-none" />
 
       <div
-        className="flex w-max items-center gap-[clamp(12px,1.5vw,20px)] animate-[continuous-marquee_55s_linear_infinite] group-hover:[animation-play-state:paused]"
-        style={{ paddingRight: "clamp(12px,1.5vw,20px)" }}
+        ref={trackRef}
+        className="flex w-max items-center gap-[clamp(12px,1.5vw,20px)]"
+        style={{ paddingRight: "clamp(12px,1.5vw,20px)", willChange: "transform" }}
       >
         {doubled.map((company, i) => (
           <CompanyCard key={`${company.name}-${i}`} company={company} mode="marquee" />
