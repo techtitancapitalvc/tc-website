@@ -16,14 +16,14 @@ type Logo = { src: string; alt: string; scaleClass: string };
 const DESKTOP_COLUMNS: Logo[][] = [
   [
     { src: "/images/logos/ola.svg", alt: "OLA", scaleClass: "scale-[0.8]" },
-    { src: "/images/logos/mamaearthpng-logo.webp", alt: "Mamaearth", scaleClass: "scale-[1.3]" },
+    { src: "/images/logos/mamaearthpng-logo.webp", alt: "Mamaearth", scaleClass: "scale-[1]" },
     { src: "/images/logos/Bewakoof.svg", alt: "Bewakoof", scaleClass: "" },
     { src: "/images/logos/Credgenics.svg", alt: "Credgenics", scaleClass: "scale-[1]" },
     { src: "/images/logos/zouk_new_logo.webp", alt: "Zouk", scaleClass: "" },
     { src: "/images/logos/GIVA.webp", alt: "GIVA", scaleClass: "scale-[0.8]" },
   ],
   [
-    { src: "/images/logos/Razorpay-logo.webp", alt: "Razorpay", scaleClass: "scale-[1.3]" },
+    { src: "/images/logos/Razorpay-logo.webp", alt: "Razorpay", scaleClass: "scale-[1.1]" },
     { src: "/images/logos/Shadowfax.svg", alt: "Shadowfax", scaleClass: "scale-[1.2]" },
     { src: "/images/logos/bira-91-logo.webp", alt: "Bira 91", scaleClass: "" },
     { src: "/images/logos/Headout.svg", alt: "Headout", scaleClass: "" },
@@ -32,7 +32,7 @@ const DESKTOP_COLUMNS: Logo[][] = [
   ],
   [
     { src: "/images/logos/Urban Company.webp", alt: "Urban Company", scaleClass: "" },
-    { src: "/images/logos/snapdeal-company-1-logo.webp", alt: "Snapdeal", scaleClass: "scale-[1.3]" },
+    { src: "/images/logos/snapdeal-company-1-logo.webp", alt: "Snapdeal", scaleClass: "scale-[1]" },
     { src: "/images/logos/Park+.webp", alt: "Park+", scaleClass: "scale-[0.7]" },
     { src: "/images/logos/mitigata-logo.webp", alt: "Mitigata", scaleClass: "" },
     { src: "/images/logos/mekr-logo.webp", alt: "MEKR", scaleClass: "" },
@@ -171,12 +171,12 @@ function SlotMachineBox({
       className="relative flex w-full max-w-[497px] items-center justify-center overflow-hidden rounded-[clamp(8px,0.8vw,12px)]"
       style={{ height, backgroundColor: "#FFF" }}
     >
-      {/* UPDATED: justify-between spreads the columns out, and the small padding keeps them off the exact edge */}
+      {/* UPDATED: justify-between spreads the columns out, with generous L/R padding */}
       <div
         className="absolute inset-0 z-0 flex flex-row items-center justify-between"
         style={{
-          paddingLeft: "clamp(12px, 4%, 32px)", 
-          paddingRight: "clamp(12px, 4%, 32px)",
+          paddingLeft: "clamp(24px, 7%, 52px)",
+          paddingRight: "clamp(24px, 7%, 52px)",
           maskImage:
             "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)",
           WebkitMaskImage:

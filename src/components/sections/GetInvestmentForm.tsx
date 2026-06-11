@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════
    Country codes — dial code, ISO, name, phone digit range
@@ -117,6 +117,25 @@ const fadeUp = {
   }),
 };
 
+const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.07,
+      delayChildren: 0.15,
+    },
+  },
+};
+
+const fieldSlideUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
+
 /* ═══════════════════════════════════════════════════════
    Reusable form primitives
    ═══════════════════════════════════════════════════════ */
@@ -156,18 +175,22 @@ function TextInput({
   type?: string;
 }) {
   return (
-    <input
+    <motion.input
       id={id}
       name={id}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-[10px] border-none bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none transition-shadow duration-200 placeholder:text-[#98A2B3] focus:ring-2 focus:ring-[#001A4D]/20"
+      className="w-full rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] focus:border-[#001A4D]/20 focus:bg-[#EEF3FF] focus:shadow-[0_0_0_4px_rgba(0,26,77,0.06)]"
       style={{
         padding: "clamp(14px, min(1.25vw, 1.85vh), 18px) clamp(16px, min(1.4vw, 2vh), 22px)",
         fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)",
+        transition: "border-color 0.25s, background-color 0.25s, box-shadow 0.25s",
       }}
+      whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,26,77,0.06)" }}
+      whileFocus={{ y: -1, boxShadow: "0 4px 16px rgba(0,26,77,0.08)" }}
+      transition={{ duration: 0.2 }}
     />
   );
 }
@@ -189,7 +212,7 @@ function TextArea({
 }) {
   return (
     <div>
-      <textarea
+      <motion.textarea
         id={id}
         name={id}
         value={value}
@@ -198,11 +221,15 @@ function TextArea({
         }}
         placeholder={placeholder}
         rows={rows}
-        className="w-full resize-none rounded-[10px] border-none bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none transition-shadow duration-200 placeholder:text-[#98A2B3] focus:ring-2 focus:ring-[#001A4D]/20"
+        className="w-full resize-none rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] focus:border-[#001A4D]/20 focus:bg-[#EEF3FF] focus:shadow-[0_0_0_4px_rgba(0,26,77,0.06)]"
         style={{
           padding: "clamp(14px, min(1.25vw, 1.85vh), 18px) clamp(16px, min(1.4vw, 2vh), 22px)",
           fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)",
+          transition: "border-color 0.25s, background-color 0.25s, box-shadow 0.25s",
         }}
+        whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,26,77,0.06)" }}
+        whileFocus={{ y: -1, boxShadow: "0 4px 16px rgba(0,26,77,0.08)" }}
+        transition={{ duration: 0.2 }}
       />
       <p
         className="mt-[6px] text-right font-['Poppins',_sans-serif] text-[#98A2B3]"
@@ -425,7 +452,7 @@ function EmailInput({
 
   return (
     <div>
-      <input
+      <motion.input
         id={id}
         name={id}
         type="email"
@@ -440,11 +467,14 @@ function EmailInput({
           if (!touched) setTouched(true);
         }}
         placeholder={placeholder}
-        className={`w-full rounded-[10px] border-none bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none transition-all duration-200 placeholder:text-[#98A2B3] ${ringClass}`}
+        className={`w-full rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] ${ringClass}`}
         style={{
           padding: "clamp(14px, min(1.25vw, 1.85vh), 18px) clamp(16px, min(1.4vw, 2vh), 22px)",
           fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)",
+          transition: "border-color 0.25s, background-color 0.25s, box-shadow 0.25s",
         }}
+        whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,26,77,0.06)" }}
+        transition={{ duration: 0.2 }}
       />
       {liveStatus === "invalid" && (
         <p
@@ -479,7 +509,7 @@ function UrlInput({
 }) {
   return (
     <div>
-      <input
+      <motion.input
         id={id}
         name={id}
         type="text"
@@ -487,13 +517,17 @@ function UrlInput({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         placeholder={placeholder}
-        className={`w-full rounded-[10px] border-none bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none transition-shadow duration-200 placeholder:text-[#98A2B3] focus:ring-2 focus:ring-[#001A4D]/20 ${
+        className={`w-full rounded-[10px] border-2 border-transparent bg-[#F2F7FF] font-['Poppins',_sans-serif] text-[#1D2939] outline-none placeholder:text-[#98A2B3] focus:border-[#001A4D]/20 focus:bg-[#EEF3FF] focus:shadow-[0_0_0_4px_rgba(0,26,77,0.06)] ${
           error ? "ring-2 ring-[#C53030]/30" : ""
         }`}
         style={{
           padding: "clamp(14px, min(1.25vw, 1.85vh), 18px) clamp(16px, min(1.4vw, 2vh), 22px)",
           fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)",
+          transition: "border-color 0.25s, background-color 0.25s, box-shadow 0.25s",
         }}
+        whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0,26,77,0.06)" }}
+        whileFocus={{ y: -1, boxShadow: "0 4px 16px rgba(0,26,77,0.08)" }}
+        transition={{ duration: 0.2 }}
       />
       {error && (
         <p
@@ -528,15 +562,18 @@ function CheckboxGroup({
       {options.map((opt) => {
         const checked = selected.has(opt);
         return (
-          <button
+          <motion.button
             key={opt}
             type="button"
             onClick={() => onToggle(opt)}
-            className="flex items-center gap-[clamp(6px,0.6vw,10px)] font-['Poppins',_sans-serif] text-[#1D2939] transition-colors"
+            className="flex items-center gap-[clamp(6px,0.6vw,10px)] font-['Poppins',_sans-serif] text-[#1D2939]"
             style={{ fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)" }}
+            whileHover={{ scale: 1.04, x: 2 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
-            <span
-              className={`flex shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-colors duration-150 ${
+            <motion.span
+              className={`flex shrink-0 items-center justify-center rounded-[4px] border-[1.5px] ${
                 checked
                   ? "border-[#001A4D] bg-[#001A4D]"
                   : "border-[#C0C5D0] bg-white"
@@ -545,9 +582,16 @@ function CheckboxGroup({
                 width: "clamp(18px, min(1.6vw, 2.4vh), 24px)",
                 height: "clamp(18px, min(1.6vw, 2.4vh), 24px)",
               }}
+              animate={checked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+              transition={{ duration: 0.25 }}
             >
               {checked && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <motion.svg
+                  width="12" height="12" viewBox="0 0 12 12" fill="none"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                >
                   <path
                     d="M2.5 6L5 8.5L9.5 3.5"
                     stroke="white"
@@ -555,11 +599,11 @@ function CheckboxGroup({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                </svg>
+                </motion.svg>
               )}
-            </span>
+            </motion.span>
             {opt}
-          </button>
+          </motion.button>
         );
       })}
     </div>
@@ -591,7 +635,7 @@ function FileUpload({
   );
 
   return (
-    <div
+    <motion.div
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -599,12 +643,20 @@ function FileUpload({
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
-      className={`flex cursor-pointer flex-col items-center justify-center rounded-[10px] bg-[#F2F7FF] transition-colors ${
-        dragOver ? "ring-2 ring-[#001A4D]/30" : ""
+      className={`flex cursor-pointer flex-col items-center justify-center rounded-[10px] border-2 border-dashed bg-[#F2F7FF] ${
+        dragOver ? "border-[#001A4D]/40 bg-[#E8EFFE]" : "border-transparent"
       }`}
       style={{
         padding: "clamp(28px, min(3vw, 4.5vh), 48px) clamp(20px, min(2vw, 3vh), 32px)",
+        transition: "border-color 0.3s, background-color 0.3s",
       }}
+      whileHover={{
+        y: -2,
+        boxShadow: "0 6px 20px rgba(0,26,77,0.07)",
+        borderColor: "rgba(0,26,77,0.2)",
+      }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ duration: 0.25 }}
     >
       <input
         ref={inputRef}
@@ -680,7 +732,7 @@ function FileUpload({
           </p>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -834,7 +886,7 @@ export default function GetInvestmentForm() {
 
   return (
     <section
-      className="relative flex w-full flex-col items-center overflow-hidden bg-white"
+      className="relative flex w-full flex-col items-center overflow-hidden bg-[#F9FAFB]"
       style={{
         paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
         paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
@@ -929,33 +981,38 @@ export default function GetInvestmentForm() {
             ══════════════════════════════════════════ */
         <motion.form
           onSubmit={handleSubmit}
-          className="w-full max-w-[940px] rounded-[clamp(12px,1.2vw,20px)] border border-[#E4E7EC] bg-white"
+          className="w-full max-w-[940px] rounded-[clamp(12px,1.2vw,20px)] border border-[#E4E7EC]/60 bg-white"
           style={{
             padding:
               "clamp(32px, min(4vw, 6vh), 64px) clamp(24px, min(3.5vw, 5vh), 56px)",
+            boxShadow: "0 8px 40px rgba(0, 26, 77, 0.07), 0 1.5px 6px rgba(0, 26, 77, 0.04)",
           }}
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+          variants={staggerContainer}
         >
 
           {/* ────────────────────────────────────────
               SECTION 1: About You — The Founder
               ──────────────────────────────────────── */}
-          <SectionHeading
-            label="About You"
-            title="The founder"
-            subtitle="We invest in people first. Tell us who you are."
-          />
+          <motion.div variants={fieldSlideUp}>
+            <SectionHeading
+              label="About You"
+              title="The founder"
+              subtitle="We invest in people first. Tell us who you are."
+            />
+          </motion.div>
 
           {/* First Name / Last Name */}
-          <div
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
               gap: "clamp(16px, min(1.6vw, 2.4vh), 24px)",
               marginBottom: "clamp(20px, min(2vw, 3vh), 32px)",
             }}
+            variants={fieldSlideUp}
           >
             <div>
               <FieldLabel required htmlFor="firstName">First Name</FieldLabel>
@@ -965,15 +1022,16 @@ export default function GetInvestmentForm() {
               <FieldLabel required htmlFor="lastName">Last Name</FieldLabel>
               <TextInput id="lastName" placeholder="Doe" value={lastName} onChange={setLastName} />
             </div>
-          </div>
+          </motion.div>
 
           {/* Email / Phone */}
-          <div
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
               gap: "clamp(16px, min(1.6vw, 2.4vh), 24px)",
               marginBottom: "clamp(20px, min(2vw, 3vh), 32px)",
             }}
+            variants={fieldSlideUp}
           >
             <div>
               <FieldLabel required htmlFor="email">Email</FieldLabel>
@@ -995,37 +1053,41 @@ export default function GetInvestmentForm() {
                 error={phoneError}
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* LinkedIn */}
-          <div
+          <motion.div
             style={{
               marginBottom: "clamp(40px, min(4vw, 6vh), 64px)",
             }}
+            variants={fieldSlideUp}
           >
             <FieldLabel htmlFor="linkedin">LinkedIn or personal site</FieldLabel>
             <TextInput id="linkedin" placeholder="linkedin.com/in/jane" value={linkedin} onChange={setLinkedin} />
-          </div>
+          </motion.div>
 
           {/* ── Divider ── */}
-          <hr className="mb-[clamp(32px,min(3.5vw,5vh),56px)] border-[#E4E7EC]" />
+          <motion.hr className="mb-[clamp(32px,min(3.5vw,5vh),56px)] border-[#E4E7EC]" variants={fieldSlideUp} />
 
           {/* ────────────────────────────────────────
               SECTION 2: The Company
               ──────────────────────────────────────── */}
-          <SectionHeading
-            label="The Company"
-            title="What are you building?"
-            subtitle=""
-          />
+          <motion.div variants={fieldSlideUp}>
+            <SectionHeading
+              label="The Company"
+              title="What are you building?"
+              subtitle=""
+            />
+          </motion.div>
 
           {/* Company Name / Website */}
-          <div
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
               gap: "clamp(16px, min(1.6vw, 2.4vh), 24px)",
               marginBottom: "clamp(20px, min(2vw, 3vh), 32px)",
             }}
+            variants={fieldSlideUp}
           >
             <div>
               <FieldLabel required htmlFor="companyName">Company name</FieldLabel>
@@ -1051,10 +1113,10 @@ export default function GetInvestmentForm() {
                 }}
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* One-line description */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required htmlFor="oneLiner">
               One-line description <span className="font-normal text-[#98A2B3]">(≤ 15 words)</span>
             </FieldLabel>
@@ -1070,10 +1132,10 @@ export default function GetInvestmentForm() {
             >
               {oneLiner.length}/{ONE_LINE_MAX} characters
             </p>
-          </div>
+          </motion.div>
 
           {/* Problem statement */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required htmlFor="problem">
               What problem are you solving, and why does it matter now?
             </FieldLabel>
@@ -1085,10 +1147,10 @@ export default function GetInvestmentForm() {
               maxChars={PROBLEM_MAX}
               rows={5}
             />
-          </div>
+          </motion.div>
 
           {/* Industry / sector */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required>
               Industry / sector <span className="font-normal text-[#98A2B3]">(select all that apply)</span>
             </FieldLabel>
@@ -1097,38 +1159,38 @@ export default function GetInvestmentForm() {
               selected={industries}
               onToggle={toggleIndustry}
             />
-          </div>
+          </motion.div>
 
           {/* Current stage */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel htmlFor="currentStage">Current stage</FieldLabel>
             <TextInput id="currentStage" placeholder="e.g. Pre-seed, Seed, Series A" value={currentStage} onChange={setCurrentStage} />
-          </div>
+          </motion.div>
 
           {/* How much raising */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel htmlFor="raisingAmount">How much are you raising? (in Rs.)</FieldLabel>
             <TextInput id="raisingAmount" placeholder="e.g. 2,00,00,000" value={raisingAmount} onChange={setRaisingAmount} />
-          </div>
+          </motion.div>
 
           {/* Raised before */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel>Have you raised before?</FieldLabel>
             <CheckboxGroup
               options={RAISED_BEFORE_OPTIONS}
               selected={raisedBefore}
               onToggle={toggleRaised}
             />
-          </div>
+          </motion.div>
 
           {/* Pitch deck upload */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required>Pitch deck <span className="font-normal text-[#98A2B3]">(PDF, PPT, DOC, or image)</span></FieldLabel>
             <FileUpload file={pitchDeck} onFile={setPitchDeck} />
-          </div>
+          </motion.div>
 
           {/* How did you hear about us */}
-          <div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }}>
+          <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel htmlFor="hearAbout">How did you hear about us?</FieldLabel>
             <TextInput
               id="hearAbout"
@@ -1136,10 +1198,10 @@ export default function GetInvestmentForm() {
               value={hearAbout}
               onChange={setHearAbout}
             />
-          </div>
+          </motion.div>
 
           {/* Anything else */}
-          <div style={{ marginBottom: "clamp(32px, min(3.5vw, 5vh), 48px)" }}>
+          <motion.div style={{ marginBottom: "clamp(32px, min(3.5vw, 5vh), 48px)" }} variants={fieldSlideUp}>
             <FieldLabel htmlFor="anythingElse">Anything else you want us to know?</FieldLabel>
             <TextArea
               id="anythingElse"
@@ -1149,26 +1211,57 @@ export default function GetInvestmentForm() {
               maxChars={ANYTHING_ELSE_MAX}
               rows={5}
             />
-          </div>
+          </motion.div>
 
-          {/* ── Submit button ── */}
-          <div className="flex flex-col items-center">
-            <button
+          {/* ── Submit button (cursor-spotlight, same as Hero "Get Investment") ── */}
+          <motion.div className="flex flex-col items-center" variants={fieldSlideUp}>
+            <motion.button
               type="submit"
               disabled={submitting}
-              className="rounded-[8px] bg-[#001A4D] font-['Poppins',_sans-serif] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="group relative overflow-hidden rounded-[clamp(7px,0.625vw,9px)] bg-[#001A4D] font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#F5F0E8] transition-all disabled:opacity-60"
               style={{
-                padding:
-                  "clamp(12px, min(1.25vw, 1.85vh), 18px) clamp(48px, min(5vw, 7vh), 72px)",
-                fontSize: "clamp(14px, min(1.25vw, 1.85vh), 18px)",
+                height: "clamp(48px, min(5vw, 7vh), 64px)",
+                width: "clamp(220px, min(20vw, 28vh), 280px)",
+                fontSize: "clamp(15px, min(1.4vw, 2vh), 20px)",
+              }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+                e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
               }}
             >
-              {submitting ? "Submitting…" : "Submit"}
-            </button>
+              {/* Spotlight gradient layer */}
+              <div
+                className="absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
+                style={{
+                  background: 'radial-gradient(circle 80px at var(--mouse-x, 50%) var(--mouse-y, 50%), #003CB3 0%, transparent 100%)',
+                }}
+              />
+              {submitting ? (
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <motion.span
+                    className="inline-block h-[16px] w-[16px] rounded-full border-2 border-white/30 border-t-white"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                  />
+                  Submitting…
+                </span>
+              ) : (
+                <span className="relative z-10">Submit Application</span>
+              )}
+            </motion.button>
 
             {/* Closing message */}
-            <div
+            <motion.div
               className="mt-[clamp(24px,min(2.5vw,3.7vh),40px)] text-center"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5, duration: 0.6 }}
             >
               <p
                 className="font-['Poppins',_sans-serif] font-semibold text-[#1D2939]"
@@ -1182,8 +1275,8 @@ export default function GetInvestmentForm() {
               >
                 You&apos;ll hear from us soon
               </p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
         </motion.form>
         )}

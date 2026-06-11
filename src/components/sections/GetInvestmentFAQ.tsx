@@ -10,33 +10,33 @@ import { motion, AnimatePresence } from "framer-motion";
 const faqs = [
   {
     id: "faq-1",
-    question: "What happens after you invest?",
-    answer:
-      "No. A short email or 6-field form is enough to start. If there's mutual interest, we'll ask for more at the right time.",
-  },
-  {
-    id: "faq-2",
     question: "Do I need a deck to apply?",
     answer:
       "A deck helps us understand your vision faster, but it's not mandatory. A clear description of the problem, your solution, and early traction is enough to get started.",
   },
   {
-    id: "faq-3",
+    id: "faq-2",
     question: "What stage do you invest at?",
     answer:
-      "We invest at the earliest stages — pre-seed and seed. We back founders before the playbook exists, when conviction matters more than metrics.",
+      "Pre-seed, seed, and Series A. We like to be your first institutional investor. We follow on in later rounds through the Winners Fund.",
+  },
+  {
+    id: "faq-3",
+    question: "How long does the process take?",
+    answer:
+      "We are known to convey our decision within days.",
   },
   {
     id: "faq-4",
-    question: "How long does the process take?",
+    question: "Do you invest outside India?",
     answer:
-      "We move fast. Most founders hear back within a week, and our process from first meeting to term sheet is typically 2–3 weeks.",
+      "Our primary focus is India-first companies. We occasionally invest in global companies with strong India relevance.",
   },
   {
     id: "faq-5",
-    question: "Do you invest outside India?",
+    question: "What happens after you invest?",
     answer:
-      "Our primary focus is India, but we do consider exceptional founders building for global markets with an India connection.",
+      "You get full access to the Titan network, ecosystem, and team. Your first year as a Titan portfolio company is the most important, we work closely with you on hiring, GTM, and the next fundraise.",
   },
 ];
 
@@ -145,7 +145,7 @@ export default function GetInvestmentFAQ() {
           viewport={{ once: true, amount: 0.5 }}
         >
           <motion.h2
-            className="m-0 font-['Libre_Baskerville',_serif] font-semibold italic leading-[115%] text-[#001A4D] max-md:!text-[28px]"
+            className="m-0 font-['Libre_Baskerville',_serif] font-semibold leading-[115%] text-[#001A4D] max-md:!text-[28px]"
             style={{ fontSize: "var(--heading-xl)" }}
             variants={{
               hidden: { opacity: 0, y: 40 },

@@ -116,7 +116,7 @@ export default function Navbar() {
 
         {/* CTA BUTTON: Explicitly smaller sizes for Mobile, Desktop uses lg: clamps to remain fully intact */}
         <Link
-          href="/get-investment"
+          href="/getinvestment"
           className="group relative flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] bg-white font-['Libre_Baskerville',_serif] font-semibold leading-[107%] text-[#001A4D] 
             h-[36px] w-[110px] px-2 text-[11px] 
             lg:h-[clamp(40px,3.26vw,47px)] lg:w-[clamp(145px,12.98vw,187px)] lg:p-[clamp(8px,0.69vw,10px)] lg:text-[clamp(13px,1.11vw,16px)]"
