@@ -387,16 +387,17 @@ function FilterDropdown({
         {company.logo ? (
           <div
             className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-            /* Square-ish bounding box: 60% × 50% ensures all logos —
-               wide text marks, square icons, tall emblems — render at
-               a visually consistent size regardless of aspect ratio. */
-            style={{ width: "60%", height: "50%" }}
+            /* FIXED: 55% width * 55% height = ~30% total area of the card.
+               This creates a perfect, uniform square box in the center.
+            */
+            style={{ width: "35%", height: "35%" }}
           >
             <Image
               src={company.logo}
               alt={company.brandName}
               fill
               sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 16vw"
+              /* object-contain forces the image to stretch/shrink to the edges of the 55% box */
               className="object-contain"
             />
           </div>
@@ -554,7 +555,6 @@ export default function PortfolioGrid() {
       return true;
     });
 
-    // UPDATED: Alphabetical natural sort (A-Z) handling character strings and numeric digits accurately
     return filtered.sort((a, b) =>
       a.brandName.localeCompare(b.brandName, undefined, {
         sensitivity: "base",

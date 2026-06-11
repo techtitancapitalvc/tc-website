@@ -66,8 +66,14 @@ function InteractivePill({
         style={{ top: 0, left: "50%", transformOrigin: "center center", x: parallaxX, y: parallaxY }}
       >
         <motion.div
-          className="rounded-full bg-[#001A4D]"
-          style={{ width: "2.2em", height: "2.2em", transformOrigin: "center center" }}
+          className="rounded-full"
+          style={{ 
+            width: "2.2em", 
+            height: "2.2em", 
+            transformOrigin: "center center",
+            background: "radial-gradient(circle at 35% 35%, #4267B2, #001A4D)",
+            boxShadow: "0px 6px 12px rgba(0, 26, 77, 0.2)"
+          }}
           initial={{ x: `calc(-50% + ${item.x}em)`, y: -400, opacity: 0, scale: 0 }}
           animate={
             isInView
@@ -82,12 +88,22 @@ function InteractivePill({
 
   return (
     <motion.div
-      className="absolute pointer-events-none"
+      // REMOVED pointer-events-none so the user can interact with the text
+      className="absolute"
       style={{ top: 0, left: "50%", transformOrigin: "center center", x: parallaxX, y: parallaxY, rotate: parallaxRot }}
     >
       <motion.div
-        className="flex items-center justify-center whitespace-nowrap rounded-[62px] border-[0.3px] border-[#001A4D] bg-[#D3E2FF] font-['Poppins',_sans-serif] font-medium italic text-[#001A4D]"
-        style={{ padding: "0.8em 2em", fontSize: "1em", transformOrigin: "center center" }}
+        // REMOVED select-none so text is selectable
+        className="flex items-center justify-center whitespace-nowrap rounded-[62px] border-[0.3px] border-[#001A4D] font-['Poppins',_sans-serif] font-medium italic text-[#001A4D]"
+        style={{ 
+          padding: "0.8em 2em", 
+          fontSize: "1em", 
+          transformOrigin: "center center",
+          background: "linear-gradient(180deg, #EBF0FF 0%, #D3E2FF 100%)",
+          boxShadow: "0px 8px 20px rgba(0, 26, 77, 0.12), inset 0px 2px 4px rgba(255, 255, 255, 0.7)",
+          // Ensuring cursor indicates text is selectable
+          cursor: "text"
+        }}
         initial={{ x: `calc(-50% + ${item.x}em)`, y: -400, opacity: 0, rotate: item.rotate + (idx % 2 === 0 ? 12 : -12), scale: 0.5 }}
         animate={
           isInView
@@ -111,11 +127,9 @@ export default function AboutTheFund() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Smooth out the raw mouse data so it feels heavy and physical
   const smoothX = useSpring(mouseX, { damping: 25, stiffness: 120, mass: 0.8 });
   const smoothY = useSpring(mouseY, { damping: 25, stiffness: 120, mass: 0.8 });
 
-  // Map the smooth mouse data to stack tilt and ball roll
   const stackTilt = useTransform(smoothX, [-1, 1], [-6, 6]);
   const ballRoll = useTransform(smoothX, [-1, 1], ["3.5em", "-3.5em"]);
 
@@ -135,7 +149,7 @@ export default function AboutTheFund() {
 
   return (
     <section
-      className="relative flex w-full items-center overflow-hidden bg-[#FBF7F0]"
+      className="relative flex w-full items-center overflow-hidden"
       style={{
         paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
         paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
@@ -199,17 +213,17 @@ export default function AboutTheFund() {
         {/* ── RIGHT: Interactive Balancing Stack ── */}
         <div
           ref={containerRef}
-          className="relative flex w-full items-start justify-center md:w-[55%] cursor-crosshair"
-          // Increased height slightly from 26em to 27em to accommodate the expanded Y coordinates
+          className="relative flex w-full items-start justify-center md:w-[55%]"
           style={{ height: "27em", fontSize: "clamp(12px, 1.4vw, 22px)" }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
           {/* THE STACK */}
           <motion.div
-            className="absolute inset-0 h-full w-full pointer-events-none"
+            // REMOVED pointer-events-none from the wrapper so child elements receive events
+            className="absolute inset-0 h-full w-full"
             style={{ 
-              transformOrigin: "center 24em", // Pivot point updated to match the new bottom ball Y coordinate
+              transformOrigin: "center 24em", 
               rotate: stackTilt 
             }}
           >
@@ -231,8 +245,14 @@ export default function AboutTheFund() {
                 style={{ top: 0, left: "50%", transformOrigin: "center center", x: ballRoll }}
               >
                 <motion.div
-                  className="rounded-full bg-[#001A4D]"
-                  style={{ width: "2.2em", height: "2.2em", transformOrigin: "center center" }}
+                  className="rounded-full"
+                  style={{ 
+                    width: "2.2em", 
+                    height: "2.2em", 
+                    transformOrigin: "center center",
+                    background: "radial-gradient(circle at 35% 35%, #4267B2, #001A4D)",
+                    boxShadow: "0px 6px 12px rgba(0, 26, 77, 0.2)"
+                  }}
                   initial={{ x: `calc(-50% + ${item.x}em)`, y: -400, opacity: 0, scale: 0 }}
                   animate={
                     isInView
