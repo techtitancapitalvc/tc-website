@@ -83,17 +83,17 @@ export default function Footer() {
               className="flex items-center"
               style={{ gap: "clamp(8px, min(1.11vw, 1.63vh), 16px)" }}
             >
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://www.linkedin.com/company/titan-capital-vc/" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(16px, min(1.67vw, 2.44vh), 24px)", height: "clamp(16px, min(1.67vw, 2.44vh), 24px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20.447 20.452H16.89V14.881C16.89 13.554 16.865 11.848 15.088 11.848C13.285 11.848 13.009 13.255 13.009 14.786V20.452H9.453V8.997H12.87V10.56H12.918C13.395 9.654 14.563 8.685 16.291 8.685C19.897 8.685 20.447 11.056 20.447 14.169V20.452ZM5.337 7.433C4.196 7.433 3.272 6.505 3.272 5.369C3.272 4.233 4.196 3.305 5.337 3.305C6.476 3.305 7.4 4.233 7.4 5.369C7.4 6.505 6.476 7.433 5.337 7.433ZM7.118 20.452H3.555V8.997H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 23.996 23.227 23.996 22.271V1.729C23.996 0.774 23.2 0 22.225 0Z" />
                 </svg>
               </Link>
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://twitter.com/TitanCapitalVC" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(16px, min(1.67vw, 2.44vh), 24px)", height: "clamp(16px, min(1.67vw, 2.44vh), 24px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18.901 1.153H22.581L14.541 10.339L24 22.846H16.596L10.794 15.263L4.148 22.846H0.466L9.043 13.037L0 1.153H7.593L12.836 8.082L18.901 1.153ZM17.611 20.644H19.65L6.486 3.24H4.309L17.611 20.644Z" />
                 </svg>
               </Link>
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://www.youtube.com/@TitanCapitalVC" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(17px, min(1.81vw, 2.65vh), 26px)", height: "clamp(17px, min(1.81vw, 2.65vh), 26px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
@@ -223,17 +223,17 @@ export default function Footer() {
               className="flex items-center"
               style={{ gap: "clamp(8px, 1.8vw, 16px)" }}
             >
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://www.linkedin.com/company/titan-capital-vc/" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(16px, 2.8vw, 24px)", height: "clamp(16px, 2.8vw, 24px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20.447 20.452H16.89V14.881C16.89 13.554 16.865 11.848 15.088 11.848C13.285 11.848 13.009 13.255 13.009 14.786V20.452H9.453V8.997H12.87V10.56H12.918C13.395 9.654 14.563 8.685 16.291 8.685C19.897 8.685 20.447 11.056 20.447 14.169V20.452ZM5.337 7.433C4.196 7.433 3.272 6.505 3.272 5.369C3.272 4.233 4.196 3.305 5.337 3.305C6.476 3.305 7.4 4.233 7.4 5.369C7.4 6.505 6.476 7.433 5.337 7.433ZM7.118 20.452H3.555V8.997H7.118V20.452ZM22.225 0H1.771C0.792 0 0 0.774 0 1.729V22.271C0 23.227 0.792 24 1.771 24H22.222C23.2 24 23.996 23.227 23.996 22.271V1.729C23.996 0.774 23.2 0 22.225 0Z" />
                 </svg>
               </Link>
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://twitter.com/TitanCapitalVC" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(16px, 2.8vw, 24px)", height: "clamp(16px, 2.8vw, 24px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18.901 1.153H22.581L14.541 10.339L24 22.846H16.596L10.794 15.263L4.148 22.846H0.466L9.043 13.037L0 1.153H7.593L12.836 8.082L18.901 1.153ZM17.611 20.644H19.65L6.486 3.24H4.309L17.611 20.644Z" />
                 </svg>
               </Link>
-              <Link href="#" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
+              <Link href="https://www.youtube.com/@TitanCapitalVC" className="inline-block transition-transform duration-300 hover:scale-110 hover:opacity-70">
                 <svg style={{ width: "clamp(17px, 3vw, 26px)", height: "clamp(17px, 3vw, 26px)" }} viewBox="0 0 24 24" fill="#0E0E0E" xmlns="http://www.w3.org/2000/svg">
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
