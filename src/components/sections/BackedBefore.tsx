@@ -22,7 +22,7 @@ const row2Companies = [
   { name: "Giva", logos_backuprc: "/images/logos_backup/GIVA.webp", scaleClass: "scale-[0.8]" },
   { name: "Boba Bhai", logos_backuprc: "/images/logos_backup/bobabhai.webp", scaleClass: "" },
   { name: "Invideo", logos_backuprc: "/images/logos_backup/invideo.svg", scaleClass: "scale-[0.8]" },
-  { name: "Park+", logos_backuprc: "/images/logos/Park+logo.webp", scaleClass: "scale-[1.1]" },
+  { name: "Park+", logos_backuprc: "/images/logos/PARK+logo.png", scaleClass: "scale-[1.1]" },
   { name: "Renee", logos_backuprc: "/images/logos_backup/RENEE.svg", scaleClass: "scale-[0.7]" }, 
   { name: "Supertails", logos_backuprc: "/images/logos_backup/Supertails.png", scaleClass: "scale-[1.3]" }, 
   { name: "Zingbus", logos_backuprc: "/images/logos_backup/zingbus.webp", scaleClass: "" },
