@@ -247,7 +247,7 @@ export default function ImpactAndStories() {
                 <h3 className="text-[clamp(14px,3.5vw,22px)] font-semibold text-[#001A4D] font-['Libre_Baskerville',_serif] leading-[119%] max-w-[180px] md:max-w-[340px] mx-auto">
                   {item.label}
                 </h3>
-                <h4
+                {/* <h4
                   className="mt-4 md:mt-6 text-[#323232] font-['Poppins',_sans-serif] font-normal leading-[1.5] w-[85%] max-w-2xl mx-auto"
                   style={{
                     opacity: captionOpacity,
@@ -256,7 +256,7 @@ export default function ImpactAndStories() {
                   }}
                 >
                   {item.caption}
-                </h4>
+                </h4> */}
               </div>
             );
           })}
