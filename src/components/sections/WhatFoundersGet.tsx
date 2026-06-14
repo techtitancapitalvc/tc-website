@@ -20,7 +20,7 @@ const desktopFeatures = [
   {
     id: "capital",
     title: "Follow-on Capital",
-    desc: "Breakout companies get follow-on through the Winners Fund. Your earliest believers investing again.",
+    desc: "Breakout companies get follow-on through the winners fund. Your earliest believers investing again.",
     top: 380, left: 0, width: 400,
   },
   {
@@ -59,7 +59,7 @@ const mobileFeatures = [
   { id: "hiring-m", title: "Hiring", desc: "Broadcast roles to 20,000+ community members. Warm intros to senior talent, not job board spam.", top: 150, left: 80, width: 180 },
   { id: "network-m", title: "Network", desc: "650+ founders, strategic partnerships with global companies, curated expert network. A network that actually shows up.", top: 120, left: 390, width: 200 },
   // ROW 2 — middle (flanking the hub)
-  { id: "capital-m", title: "Follow-on Capital", desc: "Breakout companies get follow-on through the Winners Fund. Your earliest believers investing again.", top: 290, left: 20, width: 200 },
+  { id: "capital-m", title: "Follow-on Capital", desc: "Breakout companies get follow-on through the winners fund. Your earliest believers investing again.", top: 290, left: 20, width: 200 },
   { id: "fundraising-m", title: "Fundraising", desc: "Warm intros to growth-stage funds, pitch prep, term sheet guidance, and fundraising support from people who've seen hundreds of rounds.", top: 280, left: 450, width: 150 },
   // ROW 3 — bottom
   { id: "firefighting-m", title: "Firefighting", desc: "Down rounds, team disagreements, co-founder disputes, regulatory surprises. We show up when it's hard, not just when it's easy.", top: 460, left: 90, width: 200 },

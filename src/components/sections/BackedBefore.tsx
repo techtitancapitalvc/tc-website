@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, useAnimationFrame, useMotionValue, useTransform } from "framer-motion";
 import Image from "next/image";
 
 // ROW 1: 10 Companies
@@ -34,6 +35,97 @@ const row2Companies = [
   { name: "Zouk", logos_backuprc: "/images/logos_backup/zouk_new_logo.webp", scaleClass: "scale-[0.8]" },
 ];
 
+// ---------------------------------------------------------
+// HELPER LOGIC FOR DRAGGABLE MARQUEE
+// ---------------------------------------------------------
+const wrap = (min: number, max: number, v: number) => {
+  const rangeSize = max - min;
+  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+};
+
+function DraggableMarquee({ 
+  items, 
+  direction = -1, 
+  speed = 50 
+}: { 
+  items: any[], 
+  direction?: number, 
+  speed?: number 
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = useState(0);
+  const rawX = useMotionValue(0);
+  const isDragging = useRef(false);
+  const isHovered = useRef(false);
+
+  // Measure the width of exactly 1/3 of the container to know exactly when to wrap seamlessly
+  useEffect(() => {
+    const measure = () => {
+      if (containerRef.current) {
+        setContentWidth(containerRef.current.scrollWidth / 3);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [items]);
+
+  useAnimationFrame((t, delta) => {
+    if (contentWidth === 0 || isDragging.current || isHovered.current) return;
+    
+    // Add movement per frame
+    let moveBy = direction * speed * (delta / 1000);
+    rawX.set(rawX.get() + moveBy);
+  });
+
+  // Smoothly wrap the X coordinate between bounds so it repeats infinitely
+  const smoothX = useTransform(rawX, (v) => {
+    if (contentWidth === 0) return 0;
+    return wrap(-contentWidth, 0, v);
+  });
+
+  return (
+    <motion.div
+      ref={containerRef}
+      // Replaced standard drag with manual pan gesture, touch-pan-y ensures vertical scrolling isn't blocked on mobile
+      className="flex w-max gap-[36px] md:gap-[54px] items-center cursor-grab active:cursor-grabbing touch-pan-y"
+      style={{ x: smoothX }}
+      onMouseEnter={() => { isHovered.current = true; }}
+      onMouseLeave={() => { isHovered.current = false; }}
+      onPanStart={() => { isDragging.current = true; }}
+      onPan={(e, info) => {
+        rawX.set(rawX.get() + info.delta.x);
+      }}
+      onPanEnd={() => { isDragging.current = false; }}
+    >
+      {items.map((company, i) => (
+        <motion.div
+          key={`marquee-item-${company.name}-${i}`}
+          className="relative flex shrink-0 items-center justify-center h-[36px] w-[108px] md:h-[53px] md:w-[164px] select-none"
+          whileHover={{ scale: 1.15, filter: "brightness(1.08)" }}
+          whileTap={{ scale: 1.25 }}
+          transition={{ type: "spring", stiffness: 400, damping: 18 }}
+        >
+          <div className={`relative w-full h-full ${company.scaleClass}`}>
+            <Image
+              src={company.logos_backuprc}
+              alt={company.name}
+              fill
+              style={{ objectFit: "contain" }}
+              sizes="(max-width: 768px) 108px, 164px"
+              priority={i < 10}
+              draggable={false} // Crucial: Stops default browser image ghost-dragging
+            />
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------
+// MAIN COMPONENT
+// ---------------------------------------------------------
 export default function BackedBefore() {
   const loopPoolRow1 = [...row1Companies, ...row1Companies, ...row1Companies];
   const loopPoolRow2 = [...row2Companies, ...row2Companies, ...row2Companies];
@@ -41,13 +133,9 @@ export default function BackedBefore() {
   return (
     <section className="flex flex-col items-center gap-[30px] md:gap-[45px] self-stretch overflow-hidden w-full bg-white" style={{ paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)", paddingLeft: "var(--section-px-wide)", paddingRight: "var(--section-px-wide)" }}>
       
-      {/* =========================================
-          ANIMATED SCROLL HEADING SEQUENCE
-          ========================================= */}
+      {/* ANIMATED SCROLL HEADING SEQUENCE */}
       <div className="flex flex-col items-center w-full max-w-[1009px] px-4 mb-4 md:mb-8 mx-auto">
-        
         <motion.h2 
-          // FIXED: Enforced clamp(28px) and leading-[100%] on mobile
           className="text-[var(--Primary-Color,#001A4D)] text-center font-['Libre_Baskerville',_serif] text-[clamp(28px,5vw,var(--heading-xl))] italic font-semibold leading-[100%] md:leading-[120%]"
           initial="hidden"
           whileInView="visible"
@@ -80,7 +168,6 @@ export default function BackedBefore() {
         </motion.h2>
 
         <motion.h2 
-          // FIXED: Enforced clamp(28px), leading-[100%] on mobile, and changed to not-italic to match screenshot
           className="self-stretch text-[var(--Primary-Color,#001A4D)] text-center font-['Libre_Baskerville',_serif] text-[clamp(28px,5vw,var(--heading-xl))] not-italic font-semibold leading-[100%] md:leading-[120%] mt-2 md:mt-0"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -91,59 +178,16 @@ export default function BackedBefore() {
         </motion.h2>
       </div>
 
-      {/* =========================================
-          TRACK ONE: Left to Right
-          ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-6" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
-        <div className="flex w-max gap-[36px] md:gap-[54px] pr-[36px] md:pr-[54px] items-center animate-[marquee-right_30s_linear_infinite] group-hover:[animation-play-state:paused]">
-          {loopPoolRow1.map((company, i) => (
-            <motion.div
-              key={`row1-${company.name}-${i}`}
-              className="relative flex shrink-0 items-center justify-center h-[36px] w-[108px] md:h-[53px] md:w-[164px] select-none cursor-pointer"
-              whileHover={{ scale: 1.15, filter: "brightness(1.08)" }}
-              whileTap={{ scale: 1.25 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            >
-              <div className={`relative w-full h-full ${company.scaleClass}`}>
-                <Image
-                  src={company.logos_backuprc}
-                  alt={company.name}
-                  fill
-                  style={{ objectFit: "contain" }}
-                  sizes="(max-width: 768px) 108px, 164px"
-                  priority={i < 10}
-                />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* TRACK ONE: Left to Right */}
+      <div className="flex w-full overflow-hidden relative py-4 md:py-6 mt-6" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
+         {/* direction 1 = left-to-right */}
+        <DraggableMarquee items={loopPoolRow1} direction={1} speed={60} />
       </div>
 
-      {/* =========================================
-          TRACK TWO: Right to Left
-          ========================================= */}
-      <div className="group flex w-full overflow-hidden relative py-4 md:py-6 mt-0 md:-mt-4" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
-        <div className="flex w-max gap-[36px] md:gap-[54px] pr-[36px] md:pr-[54px] items-center animate-[marquee-left_35s_linear_infinite] group-hover:[animation-play-state:paused]">
-          {loopPoolRow2.map((company, i) => (
-            <motion.div
-              key={`row2-${company.name}-${i}`}
-              className="relative flex shrink-0 items-center justify-center h-[36px] w-[108px] md:h-[53px] md:w-[164px] select-none cursor-pointer"
-              whileHover={{ scale: 1.15, filter: "brightness(1.08)" }}
-              whileTap={{ scale: 1.25 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            >
-              <div className={`relative w-full h-full ${company.scaleClass}`}>
-                <Image
-                  src={company.logos_backuprc}
-                  alt={company.name}
-                  fill
-                  style={{ objectFit: "contain" }}
-                  sizes="(max-width: 768px) 108px, 164px"
-                />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* TRACK TWO: Right to Left */}
+      <div className="flex w-full overflow-hidden relative py-4 md:py-6 mt-0 md:-mt-4" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
+         {/* direction -1 = right-to-left */}
+        <DraggableMarquee items={loopPoolRow2} direction={-1} speed={50} />
       </div>
     </section>
   );
