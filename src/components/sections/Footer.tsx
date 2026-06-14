@@ -285,7 +285,7 @@ export default function Footer() {
 
         {/* ── Copyright & Links — always side by side ── */}
         <div
-          className="flex w-full flex-row items-center justify-between"
+          className="flex w-full flex-row items-center justify-end"
           style={{ marginBottom: "clamp(60px, min(10.42vw, 15.27vh), 150px)" }}
         >
           
@@ -293,20 +293,20 @@ export default function Footer() {
             className="flex flex-wrap justify-end"
             style={{ gap: "clamp(10px, min(2.78vw, 4.07vh), 40px)" }}
           >
-            {/* <Link
-              href="#"
+            <Link
+              href="/privacy-policy"
               className="inline-block font-poppins font-normal leading-[1.5] text-[#0E0E0E] underline decoration-solid transition-transform duration-300 hover:scale-105 hover:opacity-70"
               style={{ fontSize: "clamp(8px, min(1.11vw, 1.63vh), 16px)" }}
             >
               Privacy Policy
-            </Link> */}
-            {/* <Link
-              href="#"
+            </Link>
+            <Link
+              href="/grievance-redressal"
               className="inline-block font-poppins font-normal leading-[1.5] text-[#0E0E0E] underline decoration-solid transition-transform duration-300 hover:scale-105 hover:opacity-70"
               style={{ fontSize: "clamp(8px, min(1.11vw, 1.63vh), 16px)" }}
             >
-              Terms and Conditions
-            </Link> */}
+              Grievance Redressal
+            </Link>
           </div>
         </div>
       </div>
