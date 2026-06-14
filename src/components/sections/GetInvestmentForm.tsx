@@ -1305,7 +1305,7 @@ export default function GetInvestmentForm() {
                 className="font-['Poppins',_sans-serif] font-semibold text-[#1D2939]"
                 style={{ fontSize: "clamp(14px, min(1.25vw, 1.85vh), 18px)" }}
               >
-                We read every application personally.
+                We read every application.
               </p>
               <p
                 className="mt-[4px] font-['Poppins',_sans-serif] font-normal text-[#667085]"
