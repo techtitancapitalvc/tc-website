@@ -1323,7 +1323,7 @@ export default function GetInvestmentForm() {
                 className="mt-[4px] font-['Poppins',_sans-serif] font-normal text-[#667085]"
                 style={{ fontSize: "clamp(13px, min(1.1vw, 1.6vh), 16px)" }}
               >
-                You&apos;ll hear from us soon
+                You&apos;ll hear from us soon.
               </p>
             </motion.div>
           </motion.div>
