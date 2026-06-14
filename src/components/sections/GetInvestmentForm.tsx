@@ -94,7 +94,6 @@ const RAISED_BEFORE_OPTIONS = [
   "No — first round",
   "Yes — angels only",
   "Yes — institutional",
-  "Bootstrapped",
 ];
 
 const ONE_LINE_MAX = 100;

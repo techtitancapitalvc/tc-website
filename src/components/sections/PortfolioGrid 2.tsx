@@ -421,7 +421,11 @@ function FilterDropdown({
         {/* ── FOUNDER PORTRAIT (hover) — wipes in top→down, logo + arrow reveal with it ── */}
         {founderImage && (
         <div
-          className="pointer-events-none absolute inset-0 z-10 transition-[clip-path] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] [clip-path:inset(0_0_100%_0)] group-hover:[clip-path:inset(0_0_0_0)]"
+          className="pointer-events-none absolute inset-0 z-10 transition-[clip-path] duration-500 ease-out"
+          style={{
+            clipPath: "inset(0 0 100% 0)",
+          }}
+          data-founder-reveal
         >
           <Image
             src={founderImage}
@@ -469,6 +473,22 @@ function FilterDropdown({
                 strokeLinejoin="round"
               />
             </svg>
+          </div>
+          {/* Brand name pinned over a soft gradient */}
+          <div
+            className="absolute inset-x-0 bottom-0 flex items-end"
+            style={{
+              background: "linear-gradient(to top, rgba(0,26,77,0.85) 0%, rgba(0,26,77,0) 100%)",
+              padding: "clamp(8px, min(0.9vw, 1.3vh), 14px)",
+              paddingTop: "clamp(20px, min(2.5vw, 3.6vh), 36px)",
+            }}
+          >
+            <span
+              className="font-['Poppins',_sans-serif] font-medium leading-tight text-white"
+              style={{ fontSize: "clamp(10px, min(0.95vw, 1.4vh), 14px)" }}
+            >
+              {company.brandName}
+            </span>
           </div>
         </div>
         )}

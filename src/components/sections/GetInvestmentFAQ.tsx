@@ -18,7 +18,7 @@ const faqs = [
     id: "faq-2",
     question: "What stage do you invest at?",
     answer:
-      "Pre-seed and seed. We prefer to be your first institutional investor, and we follow on in later rounds through the Winners Fund.",
+      "Pre-seed and seed. We prefer to be your first institutional investor, and for breakout companies, we follow on in later rounds through the Winners Fund.",
   },
   {
     id: "faq-3",

@@ -6,7 +6,7 @@
   Sheet: https://docs.google.com/spreadsheets/d/1LvHYkFm6HUzlXJbr_3Xuhs7k5YxtSUcDw6aiyZ8X8G4
   Columns (0-indexed):
     0: Brand Name | 1: Year | 2: Sector | 3: Status | 4: Tags |
-    5: Investment Stage | 6: Fund Type | 7: Logo
+    5: Investment Stage | 6: Fund Type | 7: Logo | 8: Founders Image
 
   Row 0 is a proper header row and is skipped during parsing.
 */
@@ -23,6 +23,7 @@ export interface PortfolioCompany {
   investmentStage: string;
   fundType: string;
   logo: string;
+  founderImage: string;
 }
 
 /** Title-case a string, handling hyphens (e.g. "pre-seed" → "Pre-Seed"). */
@@ -94,6 +95,7 @@ function rowToCompany(fields: string[]): PortfolioCompany | null {
     investmentStage: titleCase(get(5)),
     fundType: get(6),
     logo: remapLogo(get(7)),
+    founderImage: get(8),
   };
 }
 
