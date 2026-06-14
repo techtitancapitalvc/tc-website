@@ -5,7 +5,7 @@ import Image from "next/image";
 
 // ROW 1: 10 Companies
 const row1Companies = [
-  { name: "Ola", logos_backuprc: "/images/logos_backup/ola.svg", scaleClass: "scale-[0.8]" },
+  { name: "Ola", logos_backuprc: "/images/logos_backup/ola.svg", scaleClass: "scale-[0.7]" },
   { name: "Urban Company", logos_backuprc: "/images/logos_backup/Urban Company.webp", scaleClass: "" }, 
   { name: "Mamaearth", logos_backuprc: "/images/logos_backup/mamaearthpng.webp", scaleClass: "scale-[1.3]" },
   { name: "Shadowfax", logos_backuprc: "/images/logos_backup/Shadowfax.svg", scaleClass: "scale-[1.2]" },
@@ -24,7 +24,7 @@ const row2Companies = [
   { name: "Invideo", logos_backuprc: "/images/logos_backup/invideo.svg", scaleClass: "scale-[0.8]" },
   { name: "Park+", logos_backuprc: "/images/logos/PARK+logo.png", scaleClass: "scale-[1.1]" },
   { name: "Renee", logos_backuprc: "/images/logos_backup/RENEE.svg", scaleClass: "scale-[0.7]" }, 
-  { name: "Supertails", logos_backuprc: "/images/logos_backup/Supertails.png", scaleClass: "scale-[1.3]" }, 
+  { name: "Supertails", logos_backuprc: "/images/logos_backup/supertails_black.png", scaleClass: "scale-[1.3]" }, 
   { name: "Zingbus", logos_backuprc: "/images/logos_backup/zingbus.webp", scaleClass: "" },
   { name: "Anveshan", logos_backuprc: "/images/logos_backup/anveshan.webp", scaleClass: "" },
   { name: "Kutumb", logos_backuprc: "/images/logos_backup/Kutumb.webp", scaleClass: "scale-[1.3]" },
