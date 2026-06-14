@@ -54,23 +54,20 @@ const COUNTRY_CODES: CountryCode[] = [
    Helpers
    ═══════════════════════════════════════════════════════ */
 
-/** Validate a URL — must be a full http(s) URL or we prepend https:// and check */
 function isValidUrl(value: string): boolean {
-  if (!value.trim()) return true; // empty is ok (required check is separate)
+  if (!value.trim()) return true; 
   let url = value.trim();
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
   try {
     const parsed = new URL(url);
-    // Must have a dot in host (e.g. acme.com, not just "localhost")
     return parsed.hostname.includes(".");
   } catch {
     return false;
   }
 }
 
-/** Validate phone: only digits, length within country range */
 function isValidPhone(digits: string, country: CountryCode): boolean {
-  if (!digits) return true; // empty is ok
+  if (!digits) return true; 
   if (!/^\d+$/.test(digits)) return false;
   return digits.length >= country.min && digits.length <= country.max;
 }
@@ -262,7 +259,6 @@ function PhoneInput({
   const [search, setSearch] = useState("");
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
       setDropdownOpen(false);
@@ -288,11 +284,6 @@ function PhoneInput({
 
   const [phoneFocused, setPhoneFocused] = useState(false);
 
-  /* Live validation state:
-     - empty → neutral (no ring)
-     - invalid → red ring (persists after blur)
-     - valid + focused → green ring
-     - valid + blurred → no ring (green goes away) */
   const liveStatus: "neutral" | "invalid" | "valid" =
     phone.length === 0
       ? "neutral"
@@ -316,7 +307,6 @@ function PhoneInput({
         whileFocus={{ y: -3 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        {/* Country code button */}
         <motion.button
           type="button"
           onClick={() => { setDropdownOpen((p) => !p); setSearch(""); }}
@@ -339,7 +329,6 @@ function PhoneInput({
           </motion.svg>
         </motion.button>
 
-        {/* Phone number input */}
         <motion.input
           type="tel"
           value={phone}
@@ -360,13 +349,11 @@ function PhoneInput({
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         />
 
-        {/* Dropdown */}
         {dropdownOpen && (
           <div
             className="absolute left-0 top-full z-50 mt-[4px] w-full overflow-hidden rounded-[10px] border border-[#E4E7EC] bg-white shadow-lg"
             style={{ maxHeight: 240 }}
           >
-            {/* Search */}
             <div className="border-b border-[#E4E7EC] p-[8px]">
               <input
                 type="text"
@@ -404,7 +391,6 @@ function PhoneInput({
         )}
       </motion.div>
 
-      {/* Live validation hint or submit error */}
       {(liveStatus === "invalid" || error) && (
         <p
           className="mt-[6px] font-['Poppins',_sans-serif] text-[#C53030]"
@@ -425,11 +411,10 @@ function PhoneInput({
    ═══════════════════════════════════════════════════════ */
 
 function isValidEmail(email: string): boolean {
-  // Simple but reliable: local@domain.tld
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 }
 
-/* ═══════════════════════════════════════════════════════a
+/* ═══════════════════════════════════════════════════════
    Email input with live validation
    ═══════════════════════════════════════════════════════ */
 
@@ -456,7 +441,6 @@ function EmailInput({
           ? "invalid"
           : "neutral";
 
-  /* Green ring only while focused; red ring persists after blur */
   const ringClass =
     liveStatus === "invalid"
       ? "ring-2 ring-[#C53030]/40"
@@ -534,7 +518,6 @@ function UrlInput({
           ? "invalid"
           : "neutral";
 
-  /* Green ring while focused + valid; red ring persists after blur */
   const ringClass =
     error
       ? "ring-2 ring-[#C53030]/40"
@@ -737,7 +720,6 @@ function FileUpload({
         </div>
       ) : (
         <>
-          {/* Upload icon */}
           <svg
             width="28"
             height="28"
@@ -780,7 +762,7 @@ function FileUpload({
 }
 
 /* ═══════════════════════════════════════════════════════
-   Section divider heading (e.g. "About You" / "The Company")
+   Section divider heading 
    ═══════════════════════════════════════════════════════ */
 
 function SectionHeading({
@@ -825,7 +807,7 @@ export default function GetInvestmentForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState<CountryCode>(COUNTRY_CODES[0]); // India default
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>(COUNTRY_CODES[0]); 
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [linkedin, setLinkedin] = useState("");
@@ -868,27 +850,58 @@ export default function GetInvestmentForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate email
-    if (email && !isValidEmail(email)) {
+    // 1. Mandatory Fields Check: Stop immediately if ANY field is missing
+    if (
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !linkedin.trim() ||
+      !companyName.trim() ||
+      !websiteUrl.trim() ||
+      !oneLiner.trim() ||
+      !problem.trim() ||
+      industries.size === 0 ||
+      !currentStage.trim() ||
+      !raisingAmount.trim() ||
+      raisedBefore.size === 0 ||
+      !pitchDeck ||
+      !hearAbout.trim() ||
+      !anythingElse.trim()
+    ) {
+      setSubmitError("Please fill out all fields. Every field is mandatory.");
       return;
     }
 
-    // Validate phone
-    if (phone && !isValidPhone(phone, phoneCountry)) {
+    // 2. Format Validations
+    if (!isValidEmail(email)) {
+      setSubmitError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!isValidPhone(phone, phoneCountry)) {
       setPhoneError(
         phoneCountry.min === phoneCountry.max
           ? `Enter a valid ${phoneCountry.name} number (${phoneCountry.min} digits)`
           : `Enter a valid ${phoneCountry.name} number (${phoneCountry.min}–${phoneCountry.max} digits)`
       );
+      setSubmitError("Please fix the errors in the phone number.");
       return;
     }
 
-    // Validate URL
-    if (websiteUrl.trim() && !isValidUrl(websiteUrl)) {
+    if (!isValidUrl(websiteUrl)) {
       setUrlError("Please enter a valid URL (e.g. https://acme.com)");
+      setSubmitError("Please fix the errors in the website URL.");
       return;
     }
 
+    if (!isValidUrl(linkedin)) {
+      setSubmitError("Please enter a valid URL for your LinkedIn profile.");
+      return;
+    }
+
+    // Clear errors if validations pass
+    setSubmitError("");
     setSubmitting(true);
 
     try {
@@ -939,9 +952,6 @@ export default function GetInvestmentForm() {
     >
       <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center">
 
-        {/* ══════════════════════════════════════════
-            HEADING: "Build something the world needs."
-            ══════════════════════════════════════════ */}
         <motion.div
           className="mb-[clamp(36px,min(4.5vw,6.5vh),64px)] flex flex-col items-center text-center"
           initial="hidden"
@@ -988,9 +998,6 @@ export default function GetInvestmentForm() {
           </motion.p>
         </motion.div>
 
-        {/* ══════════════════════════════════════════
-            SUCCESS STATE
-            ══════════════════════════════════════════ */}
         {submitted ? (
           <motion.div
             className="flex w-full max-w-[940px] flex-col items-center rounded-[clamp(12px,1.2vw,20px)] border border-[#E4E7EC] bg-white text-center"
@@ -1019,9 +1026,6 @@ export default function GetInvestmentForm() {
           </motion.div>
         ) : (
 
-        /* ══════════════════════════════════════════
-            FORM CARD
-            ══════════════════════════════════════════ */
         <motion.form
           onSubmit={handleSubmit}
           className="w-full max-w-[940px] rounded-[clamp(12px,1.2vw,20px)] border border-[#E4E7EC]/60 bg-white"
@@ -1048,7 +1052,6 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* First Name / Last Name */}
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
@@ -1067,7 +1070,6 @@ export default function GetInvestmentForm() {
             </div>
           </motion.div>
 
-          {/* Email / Phone */}
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
@@ -1098,14 +1100,13 @@ export default function GetInvestmentForm() {
             </div>
           </motion.div>
 
-          {/* LinkedIn */}
           <motion.div
             style={{
               marginBottom: "clamp(40px, min(4vw, 6vh), 64px)",
             }}
             variants={fieldSlideUp}
           >
-            <FieldLabel htmlFor="linkedin">LinkedIn or personal site</FieldLabel>
+            <FieldLabel required htmlFor="linkedin">LinkedIn or personal site</FieldLabel>
             <UrlInput
               id="linkedin"
               placeholder="linkedin.com/in/jane"
@@ -1116,7 +1117,6 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* ── Divider ── */}
           <motion.hr className="mb-[clamp(32px,min(3.5vw,5vh),56px)] border-[#E4E7EC]" variants={fieldSlideUp} />
 
           {/* ────────────────────────────────────────
@@ -1130,7 +1130,6 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* Company Name / Website */}
           <motion.div
             className="grid grid-cols-1 md:grid-cols-2"
             style={{
@@ -1165,7 +1164,6 @@ export default function GetInvestmentForm() {
             </div>
           </motion.div>
 
-          {/* One-line description */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required htmlFor="oneLiner">
               One-line description <span className="font-normal text-[#98A2B3]">(≤ 15 words)</span>
@@ -1184,7 +1182,6 @@ export default function GetInvestmentForm() {
             </p>
           </motion.div>
 
-          {/* Problem statement */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required htmlFor="problem">
               What problem are you solving, and why does it matter now?
@@ -1199,7 +1196,6 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* Industry / sector */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required>
               Industry / sector <span className="font-normal text-[#98A2B3]">(select all that apply)</span>
@@ -1211,21 +1207,18 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* Current stage */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel htmlFor="currentStage">Current stage</FieldLabel>
+            <FieldLabel required htmlFor="currentStage">Current stage</FieldLabel>
             <TextInput id="currentStage" placeholder="e.g. Pre-seed, Seed, Series A" value={currentStage} onChange={setCurrentStage} />
           </motion.div>
 
-          {/* How much raising */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel htmlFor="raisingAmount">How much are you raising? (in Rs.)</FieldLabel>
+            <FieldLabel required htmlFor="raisingAmount">How much are you raising? (in Rs.)</FieldLabel>
             <TextInput id="raisingAmount" placeholder="e.g. 2,00,00,000" value={raisingAmount} onChange={setRaisingAmount} />
           </motion.div>
 
-          {/* Raised before */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel>Have you raised before?</FieldLabel>
+            <FieldLabel required>Have you raised before?</FieldLabel>
             <CheckboxGroup
               options={RAISED_BEFORE_OPTIONS}
               selected={raisedBefore}
@@ -1233,15 +1226,13 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* Pitch deck upload */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required>Pitch deck <span className="font-normal text-[#98A2B3]">(PDF, PPT, DOC, or image)</span></FieldLabel>
             <FileUpload file={pitchDeck} onFile={setPitchDeck} />
           </motion.div>
 
-          {/* How did you hear about us */}
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel htmlFor="hearAbout">How did you hear about us?</FieldLabel>
+            <FieldLabel required htmlFor="hearAbout">How did you hear about us?</FieldLabel>
             <TextInput
               id="hearAbout"
               placeholder="Founder Referral, Linkedin, Website, News, Other"
@@ -1250,9 +1241,8 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* Anything else */}
           <motion.div style={{ marginBottom: "clamp(32px, min(3.5vw, 5vh), 48px)" }} variants={fieldSlideUp}>
-            <FieldLabel htmlFor="anythingElse">Anything else you want us to know?</FieldLabel>
+            <FieldLabel required htmlFor="anythingElse">Anything else you want us to know?</FieldLabel>
             <TextArea
               id="anythingElse"
               placeholder="A contrarian belief about your market, a risk you're thinking hard about, what keeps you up at night — or just something about you as a person."
@@ -1263,7 +1253,7 @@ export default function GetInvestmentForm() {
             />
           </motion.div>
 
-          {/* ── Submit button (cursor-spotlight, same as Hero "Get Investment") ── */}
+          {/* ── Submit button ── */}
           <motion.div className="flex flex-col items-center" variants={fieldSlideUp}>
             <motion.button
               type="submit"
@@ -1284,7 +1274,6 @@ export default function GetInvestmentForm() {
                 e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
               }}
             >
-              {/* Spotlight gradient layer */}
               <div
                 className="absolute inset-0 z-0 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
                 style={{
@@ -1305,7 +1294,6 @@ export default function GetInvestmentForm() {
               )}
             </motion.button>
 
-            {/* Closing message */}
             <motion.div
               className="mt-[clamp(24px,min(2.5vw,3.7vh),40px)] text-center"
               initial={{ opacity: 0 }}
@@ -1331,7 +1319,6 @@ export default function GetInvestmentForm() {
         </motion.form>
         )}
 
-        {/* ── Submit error toast ── */}
         {submitError && (
           <motion.div
             className="mt-[16px] w-full max-w-[940px] rounded-[10px] border border-[#FCA5A5] bg-[#FEF2F2] px-[20px] py-[14px] font-['Poppins',_sans-serif] text-[14px] text-[#991B1B]"
