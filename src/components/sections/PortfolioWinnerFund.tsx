@@ -33,7 +33,7 @@ const portfolioCompanies = [
   {
     name: "Giva",
     logo: "/images/logos_backup/GIVA.webp",
-    category: "Automobile platform",
+    category: "Jewellery and Fashion Accessories",
     logoW: "33%", logoH: "33%",   // 1:1    square icon with solid purple bg — heaviest
   },
   {
@@ -200,7 +200,7 @@ export default function PortfolioWinnerFund() {
               className="relative z-10 font-['Libre_Baskerville',_serif] font-semibold italic leading-[110%] text-[#001A4D] max-md:!text-[28px]"
               style={{ fontSize: "var(--heading-xl)" }}
             >
-              Portfolio Company
+              Winners Fund
             </span>
           </motion.div>
 
@@ -217,7 +217,7 @@ export default function PortfolioWinnerFund() {
               },
             }}
           >
-            Winners Fund
+            Portfolio Companies
           </motion.h2>
         </motion.div>
 

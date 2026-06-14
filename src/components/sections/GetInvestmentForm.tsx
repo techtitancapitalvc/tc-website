@@ -954,7 +954,7 @@ export default function GetInvestmentForm() {
             custom={0}
             variants={fadeUp}
           >
-            Build something
+            Build Something
           </motion.h2>
 
           <motion.div
@@ -974,7 +974,7 @@ export default function GetInvestmentForm() {
               className="relative z-10 font-['Libre_Baskerville',_serif] font-semibold italic leading-[115%] text-[#001A4D] max-md:!text-[28px]"
               style={{ fontSize: "var(--heading-xl)" }}
             >
-              the world needs.
+              The World Needs.
             </span>
           </motion.div>
 
@@ -1014,7 +1014,7 @@ export default function GetInvestmentForm() {
               className="mt-[clamp(12px,1.2vw,20px)] max-w-[460px] font-['Poppins',_sans-serif] font-normal leading-[1.6] text-[#667085]"
               style={{ fontSize: "clamp(14px, min(1.25vw, 1.85vh), 18px)" }}
             >
-              We read every application personally. You&apos;ll hear from us soon.
+              We read every application. You&apos;ll hear from us soon.
             </p>
           </motion.div>
         ) : (

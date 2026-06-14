@@ -10,6 +10,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const ITEMS_PER_PAGE = 300;
 
+/* Sample founder image used on every card's hover state. Swap in real
+   per-company data however you prefer (sheet column, mapping, etc). */
+const SAMPLE_FOUNDER_IMAGE = "/images/portfolio_founders/and_founder2.jpeg";
+
 /* ═══════════════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════════════ */
@@ -355,6 +359,10 @@ function FilterDropdown({
    ═══════════════════════════════════════════════════════ */
 
    function CompanyCard({ company }: { company: Company }) {
+    /* SAMPLE — every card shows the same founder image on hover. Wire your real
+       per-company data here when you're ready. */
+    const founderImage = SAMPLE_FOUNDER_IMAGE;
+
     return (
       <div
         className="group relative flex items-center justify-center overflow-hidden rounded-[clamp(8px,0.83vw,12px)] border border-[#F0F0F0] bg-white transition-shadow duration-300 hover:shadow-[0_2px_16px_rgba(0,0,0,0.08)]"
@@ -362,7 +370,7 @@ function FilterDropdown({
       >
         {company.tags && company.tags !== "Active" && (
           <div
-            className="absolute left-0 z-10 flex items-center text-white"
+            className="absolute left-0 z-20 flex items-center text-white"
             style={{
               top: "clamp(10px, min(1.2vw, 1.8vh), 18px)",
               width: "clamp(100px, min(9.65vw, 14.2vh), 139px)",
@@ -383,32 +391,53 @@ function FilterDropdown({
             {company.tags === "Recent Investment" ? "Recent investment" : company.tags}
           </div>
         )}
-  
+
+        {/* ── LOGO (default) — fades out + shrinks slightly on hover ── */}
         {company.logo ? (
-          <div
-            className="relative flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-            /* FIXED: 55% width * 55% height = ~30% total area of the card.
-               This creates a perfect, uniform square box in the center.
-            */
-            style={{ width: "35%", height: "35%" }}
-          >
-            <Image
-              src={company.logo}
-              alt={company.brandName}
-              fill
-              sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 16vw"
-              /* object-contain forces the image to stretch/shrink to the edges of the 55% box */
-              className="object-contain"
-            />
-          </div>
+          <Image
+            src={company.logo}
+            alt={company.brandName}
+            width={400}
+            height={400}
+            sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 16vw"
+            className="object-contain transition-all duration-300 group-hover:scale-90 group-hover:opacity-0"
+            style={{ width: "50%", height: "auto", maxHeight: "50%" }}
+          />
         ) : (
           <span
-            className="font-['Poppins',_sans-serif] font-semibold text-[#001A4D] px-4 text-center"
+            className="font-['Poppins',_sans-serif] font-semibold text-[#001A4D] px-4 text-center transition-opacity duration-300 group-hover:opacity-0"
             style={{ fontSize: "clamp(14px, min(1.4vw, 2vh), 20px)" }}
           >
             {company.brandName}
           </span>
         )}
+
+        {/* ── FOUNDER PORTRAIT (hover) — full-bleed crossfade in ── */}
+        <div className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <Image
+            src={founderImage}
+            alt={`${company.brandName} founder`}
+            fill
+            sizes="(max-width: 640px) 40vw, (max-width: 1024px) 25vw, 16vw"
+            className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+          />
+          {/* Brand name pinned over a soft gradient */}
+          <div
+            className="absolute inset-x-0 bottom-0 flex items-end"
+            style={{
+              background: "linear-gradient(to top, rgba(0,26,77,0.85) 0%, rgba(0,26,77,0) 100%)",
+              padding: "clamp(8px, min(0.9vw, 1.3vh), 14px)",
+              paddingTop: "clamp(20px, min(2.5vw, 3.6vh), 36px)",
+            }}
+          >
+            <span
+              className="font-['Poppins',_sans-serif] font-medium leading-tight text-white"
+              style={{ fontSize: "clamp(10px, min(0.95vw, 1.4vh), 14px)" }}
+            >
+              {company.brandName}
+            </span>
+          </div>
+        </div>
       </div>
     );
   }

@@ -150,7 +150,7 @@ export default function GetInvestmentFAQ() {
               },
             }}
           >
-            You&apos;ve got questions
+            You&apos;ve Got Questions
           </motion.h2>
 
           <motion.div
@@ -179,7 +179,7 @@ export default function GetInvestmentFAQ() {
               className="relative z-10 font-['Libre_Baskerville',_serif] font-semibold italic leading-[115%] text-[#001A4D] max-md:!text-[28px]"
               style={{ fontSize: "var(--heading-xl)" }}
             >
-              We&apos;ve got answers
+              We&apos;ve Got Answers
             </span>
           </motion.div>
         </motion.div>

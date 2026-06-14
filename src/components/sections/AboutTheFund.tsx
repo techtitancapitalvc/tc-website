@@ -170,7 +170,7 @@ export default function AboutTheFund() {
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -40 }}
               transition={{ duration: 0.9, ease: "easeOut" }}
             >
-              About the
+              About The
             </motion.h2>
             <motion.span
               className="relative inline-flex items-center justify-center overflow-hidden bg-transparent px-[4px] py-[8px] md:px-[6px] md:py-[10px]"
@@ -186,7 +186,7 @@ export default function AboutTheFund() {
                 transition={{ duration: 0.6, ease: "easeInOut", delay: 0.7 }}
               />
               <span className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] max-md:!text-[28px] font-semibold italic leading-none text-[#001A4D]">
-                fund
+                Fund
               </span>
             </motion.span>
           </div>

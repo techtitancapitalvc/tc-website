@@ -10,14 +10,14 @@ const cardsData = [
   },
   {
     title: "Founders Helping Founders",
-    desc: "A 650+ strong founder community that shares what actually works; playbooks, templates, and hard-won lessons.",
+    desc: "A strong founder community that shares what actually works; playbooks, templates, and hard-won lessons.",
   },
   {
     title: "Warm Introduction",
     desc: "Every introduction we make is personal. Our network picks up for you.",
   },
   {
-    title: "Follow-On Oppurtunity",
+    title: "Follow-On Opportunity",
     desc: "For companies that break out, we show up again, through our Winners Fund.",
   },
 ];

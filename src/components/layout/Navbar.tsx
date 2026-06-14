@@ -14,31 +14,31 @@ const subItemHrefs: Record<string, string> = {
 
 // Pre-configured mock data matching the screenshot categories
 const menuData = [
-  {
-    id: "about",
-    title: "ABOUT",
-    subItems: ["Our Story", "Team", "Indicorns"],
-  },
+  // {
+  //   id: "about",
+  //   title: "ABOUT",
+  //   subItems: ["Our Story", "Team", "Indicorns"],
+  // },
   {
     id: "for-founders",
     title: "FOR FOUNDERS",
-    subItems: ["Get Investment", "Beyond The Cheque", "Titan Seed Fund", "Titan Winners Fund"],
+    subItems: ["Get Investment", "Titan Seed Fund", "Titan Winners Fund"], //"Beyond The Cheque",
   },
   {
     id: "portfolio",
     title: "PORTFOLIO",
     subItems: [], // REMOVED SUBCATEGORIES
   },
-  {
-    id: "community",
-    title: "COMMUNITY",
-    subItems: ["Founder Stories", "Titan Ecosystem"],
-  },
-  {
-    id: "perspective",
-    title: "PERSPECTIVE",
-    subItems: ["Blogs", "News", "Events"],
-  },
+  // {
+  //   id: "community",
+  //   title: "COMMUNITY",
+  //   subItems: ["Founder Stories", "Titan Ecosystem"],
+  // },
+  // {
+  //   id: "perspective",
+  //   title: "PERSPECTIVE",
+  //   subItems: ["Blogs", "News", "Events"],
+  // },
 ];
 
 export default function Navbar() {

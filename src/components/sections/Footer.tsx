@@ -23,11 +23,11 @@ const footerHrefs: Record<string, string> = {
 
 const navLinks = [
   { title: "Home", links: ["Home Page"] },
-  { title: "About", links: ["Our Story", "Teams", "Indicorns"] },
-  { title: "For Founder", links: ["Get Investment", "Beyond Cheque", "Titan Seed Fund", "Titan Winners Fund"] },
+  // { title: "About", links: ["Our Story", "Teams", "Indicorns"] },//Our Story, Teams, Indicorns
+  { title: "For Founder", links: ["Get Investment","Titan Seed Fund", "Titan Winners Fund"] },//"Beyond Cheque"
   { title: "Portfolio", links: ["Our Portfolio"] },
-  { title: "Community", links: ["Founder Story", "Titan Ecosystem"] },
-  { title: "Perspective", links: ["Blogs","News","Events"] },
+  // { title: "Community", links: ["Founder Story", "Titan Ecosystem"] },
+  // { title: "Perspective", links: ["Blogs","News","Events"] },
 ];
 
 export default function Footer() {

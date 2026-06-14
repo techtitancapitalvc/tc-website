@@ -71,9 +71,9 @@ export default function Hero() {
           className="relative z-10 mx-auto w-full text-center font-['Libre_Baskerville',_serif] font-normal leading-[110%] text-black text-[clamp(32px,11vw,64px)] lg:text-[length:calc(var(--heading-xl)_*_1.05)]"
           style={{ maxWidth: "720px" }}
         >
-          <span className="block whitespace-nowrap">300+ bets.</span>
+          <span className="block whitespace-nowrap">300+ Bets.</span>
           <span className="block whitespace-nowrap">
-            All on{" "}
+            All On{" "}
             <span className="font-semibold italic text-[#001A4D]">
               Founders
             </span>

@@ -75,7 +75,7 @@ export default function BackedBefore() {
                 }
               }}
             />
-            <span className="relative z-20 whitespace-nowrap">Backed before</span>
+            <span className="relative z-20 whitespace-nowrap">Backed Before</span>
           </motion.div>
         </motion.h2>
 
@@ -87,7 +87,7 @@ export default function BackedBefore() {
           viewport={{ once: true, amount: 0.8 }}
           transition={{ duration: 0.9, ease: "easeOut", delay: 0.7 }}
         >
-          anyone else did
+          Anyone Else Did
         </motion.h2>
       </div>
 

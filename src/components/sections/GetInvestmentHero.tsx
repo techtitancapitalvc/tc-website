@@ -235,7 +235,7 @@ export default function GetInvestmentHero() {
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } }
           }}
         >
-          If you're building something that matters, a company you believe in enough to give the next decade of your life to, we want to hear about it.
+          If you're building something that matters, a company you believe in enough to give the next decade of your life to, we would want to hear about it.
         </motion.p>
 
       </motion.div>

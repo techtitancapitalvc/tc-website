@@ -575,7 +575,7 @@ export default function BackedEarly() {
             <span
               className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] max-md:!text-[28px] font-semibold italic leading-[115%] text-[#001A4D]"
             >
-              Built to last
+              Built To Last
             </span>
           </motion.div>
         </motion.div>

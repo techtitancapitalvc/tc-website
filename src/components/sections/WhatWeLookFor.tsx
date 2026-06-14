@@ -144,7 +144,7 @@ export default function WhatWeLookFor() {
               }}
             />
             <span className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] max-md:!text-[28px] font-semibold italic leading-none text-[#001A4D]">
-              Look for
+              Look For
             </span>
           </motion.span>
         </motion.div>

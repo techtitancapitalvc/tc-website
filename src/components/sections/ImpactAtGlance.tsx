@@ -19,7 +19,7 @@ const slides = [
     role: "Co-Founder & CEO, Ofbusiness",
     image: "/images/misc/5.webp",
     logo: "/images/logos/Ofbusiness.png",
-    text: `"I like businesses that are under the radar. I make products that are far away from the limelight, because that is where a business is to be made."`,
+    text: `"Building anything meaningful demands everything you have. It's never easy, but it's always worth it."`,
   },
   {
     name: "Abhishek Bansal",
@@ -44,18 +44,13 @@ export default function ImpactAndStories() {
   const [isHoveringCenter, setIsHoveringCenter] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  /* Cooldown lock — prevents rapid-fire shifts when the mouse
-     stays still and items slide underneath the cursor. One hover
-     gesture = one shift. The lock resets when the mouse moves back
-     to the center zone (or leaves the carousel entirely). */
-  const shiftLock = useRef(false);
-
-  /* Auto-advance impact carousel every 2s */
+  /* Auto-advance impact carousel every 2.5s — pauses when user
+     is interacting (hovering the centre item or after a click). */
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(() => {
       setCenterIndex((prev) => (prev + 1) % impactData.length);
-    }, 2000);
+    }, 2500);
     return () => clearInterval(timer);
   }, [isPaused]);
 
@@ -81,51 +76,59 @@ export default function ImpactAndStories() {
     [centerIndex]
   );
 
-  /* HOVER a side item → shift ONE item, then lock (desktop only).
-     The lock prevents chain-shifts when items slide under a stationary cursor. */
-  const handleSideHover = useCallback(
-    (index: number) => {
-      if (shiftLock.current) return;
-      shiftLock.current = true;
-      setCenterIndex(index);
-      setIsPaused(true);
-      setIsHoveringCenter(false);
-    },
-    []
-  );
-
-  /* CLICK / TAP a side item → always shift, no lock (works on mobile & desktop) */
+  /* CLICK / TAP a side item → that item slides to the centre.
+     Works the same on mobile and desktop. Pauses auto-scroll so
+     the user has time to actually read what they just selected.
+     IMPORTANT: clicking does NOT light up the glow — the glow is
+     reserved exclusively for hovering the centre item. */
   const handleSideClick = useCallback(
     (index: number) => {
-      shiftLock.current = false;          // reset lock so next hover works
       setCenterIndex(index);
       setIsPaused(true);
-      setIsHoveringCenter(true);          // Ensures the glow effect appears immediately
     },
     []
   );
 
-  /* CLICK / TAP center item → toggle gradient (for mobile, since no hover) */
+  /* CLICK / TAP center item → just pause auto-scroll. No glow toggle. */
   const handleCenterClick = useCallback(() => {
-    setIsHoveringCenter((prev) => !prev);
     setIsPaused(true);
   }, []);
 
-  /* Mouse enters the center zone → unlock shifts & show gradient */
-  const handleCenterEnter = useCallback(() => {
-    shiftLock.current = false;
-    setIsHoveringCenter(true);
-    setIsPaused(true);
-  }, []);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
-  /* Mouse leaves center zone */
-  const handleCenterLeave = useCallback(() => {
-    setIsHoveringCenter(false);
-  }, []);
+  /* Track the mouse position inside the carousel area and check
+     whether it overlaps the centre item's bounding box. This avoids
+     relying on mouseEnter/mouseLeave on individual items — those
+     events misfire during the 0.6s slide animation. */
+  const handleCarouselMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!carouselRef.current) return;
+      const items = carouselRef.current.querySelectorAll<HTMLElement>("[data-carousel-item]");
+      let overCenter = false;
+      items.forEach((el) => {
+        if (el.dataset.carouselCenter !== "true") return;
+        const rect = el.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          overCenter = true;
+        }
+      });
+      if (overCenter && !isHoveringCenter) {
+        setIsHoveringCenter(true);
+        setIsPaused(true);
+      } else if (!overCenter && isHoveringCenter) {
+        setIsHoveringCenter(false);
+      }
+    },
+    [isHoveringCenter]
+  );
 
-  /* Mouse leaves the whole carousel → reset everything */
+  /* Mouse leaves the whole carousel → resume auto-scroll */
   const handleCarouselLeave = useCallback(() => {
-    shiftLock.current = false;
     setIsPaused(false);
     setIsHoveringCenter(false);
   }, []);
@@ -177,22 +180,27 @@ export default function ImpactAndStories() {
                 <span className="relative z-10 leading-none">Impact</span>
               </span>
               <span className="text-[clamp(28px,7vw,var(--heading-xl))] text-[#001A4D] font-['Libre_Baskerville',_serif] font-bold not-italic leading-none ml-2 md:ml-3">
-                at a glance
+                At A Glance
               </span>
             </motion.h2>
           </motion.div>
         </div>
 
         {/* CAROUSEL AREA */}
-        <div className="relative w-full flex-1 flex items-center justify-center">
+        <div
+          ref={carouselRef}
+          className="relative w-full flex-1 flex items-center justify-center"
+          onMouseMove={handleCarouselMouseMove}
+        >
 
-          {/* GRADIENT BLOB — hidden by default, appears on hover of center item */}
+          {/* GRADIENT GLOW — small soft halo behind the centred stat on hover */}
           <div
-            className="absolute left-1/2 top-[45%] max-md:!top-[50%] w-[160px] h-[160px] md:w-[200px] md:h-[200px] bg-[#D3E2FF] blur-[30px] md:blur-[50px] rounded-full pointer-events-none z-0"
+            className="absolute left-1/2 top-[45%] max-md:!top-[50%] w-[110px] h-[110px] md:w-[140px] md:h-[140px] bg-[#D3E2FF] blur-[30px] md:blur-[44px] rounded-full pointer-events-none z-0"
             style={{
-              transform: `translate(-50%, -50%) scale(${isHoveringCenter ? 1 : 0})`,
+              transform: `translate(-50%, -50%) scale(${isHoveringCenter ? 1 : 0.5})`,
               opacity: isHoveringCenter ? 1 : 0,
-              transition: "transform 0.4s ease-in-out, opacity 0.4s ease-in-out",
+              transition:
+                "transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           />
 
@@ -212,6 +220,8 @@ export default function ImpactAndStories() {
             return (
               <div
                 key={i}
+                data-carousel-item
+                data-carousel-center={isCenter ? "true" : "false"}
                 className="absolute left-1/2 top-1/2 flex flex-col items-center justify-start text-center w-[90%] max-w-[700px] max-md:[--base-y:-10px] max-md:[--y-spread:65px] md:[--base-y:50px] md:[--y-spread:clamp(25px,10vw,75px)]"
                 style={{
                   transform: `translate(-50%, -50%) translate(calc(${sinVal.toFixed(5)} * clamp(150px, 45vw, 650px)), calc(var(--base-y) - ${diffSq.toFixed(5)} * var(--y-spread))) scale(${scale.toFixed(5)})`,
@@ -223,13 +233,6 @@ export default function ImpactAndStories() {
                 onClick={() => {
                   if (isSide) handleSideClick(i);
                   if (isCenter) handleCenterClick();
-                }}
-                onMouseEnter={() => {
-                  if (isSide) handleSideHover(i);
-                  if (isCenter) handleCenterEnter();
-                }}
-                onMouseLeave={() => {
-                  if (isCenter) handleCenterLeave();
                 }}
               >
                 <h2
@@ -295,7 +298,7 @@ export default function ImpactAndStories() {
                 style={{ transformOrigin: "left" }}
                 className="absolute inset-0 z-0 bg-[#D3E2FF]"
               />
-              <span className="relative z-10 leading-none">Their stories,</span>
+              <span className="relative z-10 leading-none">Their Stories,</span>
             </span>
           </motion.h2>
 
@@ -306,7 +309,7 @@ export default function ImpactAndStories() {
             }}
             className="m-0 mt-2 md:mt-3 text-center font-['Libre_Baskerville',_serif] font-semibold leading-[1.2] text-[#001A4D] text-[clamp(28px,7vw,var(--heading-xl))]"
           >
-            our credentials
+            Our Credentials
           </motion.h2>
         </motion.div>
 

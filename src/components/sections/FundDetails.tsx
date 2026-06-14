@@ -369,7 +369,7 @@ export default function FundDetails() {
           ))}
         </motion.div>
 
-        {/* ── MANDATORY DISCLAIMER ── */}
+        {/* ── MANDATORY DISCLAIMER ──
         <motion.div
           className="mt-[clamp(24px,3vw,48px)] w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -382,7 +382,6 @@ export default function FundDetails() {
             className="flex w-full cursor-pointer items-center gap-[clamp(10px,1vw,16px)] border-none bg-transparent py-[clamp(12px,1.5vw,20px)] text-left"
             style={{ borderTop: "1px solid #E0E0E0" }}
           >
-            {/* Info icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -409,7 +408,6 @@ export default function FundDetails() {
               Mandatory disclaimer
             </span>
 
-            {/* Chevron */}
             <motion.svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -430,7 +428,7 @@ export default function FundDetails() {
             </motion.svg>
           </button>
 
-          {/* Disclaimer content */}
+
           <AnimatePresence initial={false}>
             {disclaimerOpen && (
               <motion.div
@@ -454,7 +452,7 @@ export default function FundDetails() {
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </motion.div> */}
 
       </div>
     </section>

@@ -199,7 +199,7 @@ export default function TitanSeedHero() {
               }}
             />
             <span className="relative z-10 italic">
-              first believer
+              First Believer
             </span>
           </motion.span>
         </motion.h1>

@@ -211,7 +211,7 @@ export default function WinnersHero() {
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
           }}
         >
-          Doubling Down on
+          Doubling Down On
         </motion.h1>
 
         {/* ── HIGHLIGHTED LINE ── */}

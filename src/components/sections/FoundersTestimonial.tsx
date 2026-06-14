@@ -246,7 +246,7 @@ export default function FounderTestimonial() {
             }}
             variants={t1}
           >
-            What our
+            What Our
           </motion.h2>
 
           <motion.h2
@@ -265,7 +265,7 @@ export default function FounderTestimonial() {
                 style={{ transformOrigin: "left" }}
                 variants={hl}
               />
-              <span className="relative z-10">Founders say</span>
+              <span className="relative z-10">Founders Say</span>
             </span>
           </motion.h2>
         </motion.div>
@@ -396,7 +396,7 @@ export default function FounderTestimonial() {
                 style={{ transformOrigin: "left" }}
                 variants={{ hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.5, ease: "easeInOut", delay: 0.6 } } }}
               />
-              <span className="relative z-10">We&apos;re listening.</span>
+              <span className="relative z-10">We&apos;re Listening.</span>
             </span>
           </motion.h2>
 
@@ -408,7 +408,7 @@ export default function FounderTestimonial() {
             }}
             variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 1.1 } } }}
           >
-            Tell us what you&apos;re building.
+            Tell Us What You&apos;re Building.
           </motion.h2>
         </motion.div>
 

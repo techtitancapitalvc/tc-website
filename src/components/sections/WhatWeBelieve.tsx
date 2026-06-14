@@ -16,7 +16,7 @@ const beliefs = [
       "The best companies look obvious only in hindsight. We make decisions on first principles, not on what is already crowded or consensus-driven.",
   },
   {
-    title: "Built for Endurance",
+    title: "Built For Endurance",
     description:
       "We are not chasing the next round. We are building partnerships that compound over a decade, through every market, every cycle.",
   },
@@ -123,7 +123,7 @@ export default function WhatWeBelieve() {
           />
           
           <span className="relative z-10 font-['Libre_Baskerville',_serif] text-[length:var(--heading-xl)] max-md:!text-[28px] font-semibold italic leading-none text-[#001A4D]">
-            We believe
+            We Believe
           </span>
         </motion.span>
       </motion.div>

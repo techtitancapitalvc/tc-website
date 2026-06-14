@@ -62,6 +62,23 @@ function parseCSVRow(row: string): string[] {
   return fields;
 }
 
+/**
+ * Remap logo path from /images/logos/X.ext → /images/portfolio_grid/X.png
+ * The portfolio_grid versions are uniformly sized 400×400 PNGs with
+ * white backgrounds removed and logos centered.
+ */
+function remapLogo(raw: string): string {
+  if (!raw) return raw;
+  // Normalise: ensure leading slash
+  const normalised = raw.startsWith("/") ? raw : `/${raw}`;
+  // Extract filename without extension, swap folder and extension
+  const match = normalised.match(/^\/images\/logos\/(.+)\.\w+$/);
+  if (match) {
+    return `/images/portfolio_grid/${match[1]}.png`;
+  }
+  return normalised;
+}
+
 function rowToCompany(fields: string[]): PortfolioCompany | null {
   const get = (idx: number) => (fields[idx] || "").trim();
 
@@ -76,7 +93,7 @@ function rowToCompany(fields: string[]): PortfolioCompany | null {
     tags: get(4),
     investmentStage: titleCase(get(5)),
     fundType: get(6),
-    logo: get(7),
+    logo: remapLogo(get(7)),
   };
 }
 
@@ -123,7 +140,7 @@ function getRecentYears(companies: PortfolioCompany[]): Set<string> {
 
 export async function GET() {
   try {
-    const res = await fetch(CSV_URL, { next: { revalidate: 300 } });
+    const res = await fetch(CSV_URL, { next: { revalidate: 60 } });
     if (!res.ok) {
       return Response.json(
         { error: "Failed to fetch Google Sheet" },

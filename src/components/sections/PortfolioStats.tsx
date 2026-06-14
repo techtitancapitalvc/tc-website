@@ -9,10 +9,10 @@ import { motion } from "framer-motion";
 */
 
 const stats = [
-  { value: "300+", label: "companies backed" },
+  { value: "300+", label: "Companies Backed" },
   { value: "7", label: "Unicorns" },
   { value: "4", label: "IPOs" },
-  { value: "$4B+", label: "Capital raised by Portfolio" },
+  { value: "$4B+", label: "Capital Raised By Portfolio" },
 ];
 
 /* Helper function to split strings like "$4B+" into:
