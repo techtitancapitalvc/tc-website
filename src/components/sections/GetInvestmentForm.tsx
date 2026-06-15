@@ -1046,7 +1046,7 @@ export default function GetInvestmentForm() {
           <motion.div variants={fieldSlideUp}>
             <SectionHeading
               label="About You"
-              title="The founder"
+              title="The Founder"
               subtitle="We invest in people first. Tell us who you are."
             />
           </motion.div>
@@ -1124,7 +1124,7 @@ export default function GetInvestmentForm() {
           <motion.div variants={fieldSlideUp}>
             <SectionHeading
               label="The Company"
-              title="What are you building?"
+              title="What Are You Building?"
               subtitle=""
             />
           </motion.div>
