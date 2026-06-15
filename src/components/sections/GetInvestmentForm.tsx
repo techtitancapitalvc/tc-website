@@ -1105,7 +1105,7 @@ export default function GetInvestmentForm() {
             }}
             variants={fieldSlideUp}
           >
-            <FieldLabel required htmlFor="linkedin">LinkedIn or personal site</FieldLabel>
+            <FieldLabel required htmlFor="linkedin">LinkedIn or Personal Site</FieldLabel>
             <UrlInput
               id="linkedin"
               placeholder="linkedin.com/in/jane"
@@ -1138,11 +1138,11 @@ export default function GetInvestmentForm() {
             variants={fieldSlideUp}
           >
             <div>
-              <FieldLabel required htmlFor="companyName">Company name</FieldLabel>
+              <FieldLabel required htmlFor="companyName">Company Name</FieldLabel>
               <TextInput id="companyName" placeholder="Acme Inc." value={companyName} onChange={setCompanyName} />
             </div>
             <div>
-              <FieldLabel required htmlFor="websiteUrl">Website or product URL</FieldLabel>
+              <FieldLabel required htmlFor="websiteUrl">Website or Product URL</FieldLabel>
               <UrlInput
                 id="websiteUrl"
                 placeholder="https://acme.com"
@@ -1165,7 +1165,7 @@ export default function GetInvestmentForm() {
 
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required htmlFor="oneLiner">
-              One-line description <span className="font-normal text-[#98A2B3]">(≤ 15 words)</span>
+              One-line Description <span className="font-normal text-[#98A2B3]">(≤ 15 words)</span>
             </FieldLabel>
             <TextInput
               id="oneLiner"
@@ -1197,7 +1197,7 @@ export default function GetInvestmentForm() {
 
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
             <FieldLabel required>
-              Industry / sector <span className="font-normal text-[#98A2B3]">(select all that apply)</span>
+              Industry / Sector <span className="font-normal text-[#98A2B3]">(select all that apply)</span>
             </FieldLabel>
             <CheckboxGroup
               options={INDUSTRY_OPTIONS}
@@ -1207,7 +1207,7 @@ export default function GetInvestmentForm() {
           </motion.div>
 
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel required htmlFor="currentStage">Current stage</FieldLabel>
+            <FieldLabel required htmlFor="currentStage">Current Stage</FieldLabel>
             <TextInput id="currentStage" placeholder="e.g. Pre-seed, Seed, Series A" value={currentStage} onChange={setCurrentStage} />
           </motion.div>
 
@@ -1226,7 +1226,7 @@ export default function GetInvestmentForm() {
           </motion.div>
 
           <motion.div style={{ marginBottom: "clamp(20px, min(2vw, 3vh), 32px)" }} variants={fieldSlideUp}>
-            <FieldLabel required>Pitch deck <span className="font-normal text-[#98A2B3]">(PDF, PPT, DOC, or image)</span></FieldLabel>
+            <FieldLabel required>Pitch Deck <span className="font-normal text-[#98A2B3]">(PDF, PPT, DOC, or image)</span></FieldLabel>
             <FileUpload file={pitchDeck} onFile={setPitchDeck} />
           </motion.div>
 
