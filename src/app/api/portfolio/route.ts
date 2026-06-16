@@ -100,21 +100,65 @@ function rowToCompany(fields: string[]): PortfolioCompany | null {
 }
 
 function parseCSV(csv: string): PortfolioCompany[] {
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) return [];
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = "";
+  let inQuotes = false;
+
+  // 1. Parse character by character to respect quotes
+  for (let i = 0; i < csv.length; i++) {
+    const char = csv[i];
+
+    if (inQuotes) {
+      // Handle escaped quotes ("")
+      if (char === '"' && csv[i + 1] === '"') {
+        currentField += '"';
+        i++; // skip the second quote
+      } else if (char === '"') {
+        inQuotes = false; // Close quote
+      } else {
+        currentField += char; // Keep newlines and commas if inside quotes
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true; // Open quote
+      } else if (char === ',') {
+        currentRow.push(currentField.trim());
+        currentField = "";
+      } else if (char === '\n' || char === '\r') {
+        // Handle Windows (\r\n) or Unix (\n) line breaks
+        if (char === '\r' && csv[i + 1] === '\n') {
+          i++;
+        }
+        currentRow.push(currentField.trim());
+        rows.push(currentRow);
+        currentRow = [];
+        currentField = "";
+      } else {
+        currentField += char;
+      }
+    }
+  }
+
+  // Flush the very last row if the file doesn't end with a newline
+  if (currentField !== "" || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    rows.push(currentRow);
+  }
 
   const companies: PortfolioCompany[] = [];
-
-  // Skip row 0 (header row)
-  for (let i = 1; i < lines.length; i++) {
-    const fields = parseCSVRow(lines[i]);
-    const company = rowToCompany(fields);
+  
+  // 2. Loop through rows, starting at index 1 to skip the header
+  for (let i = 1; i < rows.length; i++) {
+    // Skip completely empty lines
+    if (rows[i].length === 1 && rows[i][0] === "") continue;
+    
+    const company = rowToCompany(rows[i]);
     if (company) companies.push(company);
   }
 
   return companies;
 }
-
 /** Extract unique non-empty values for a given key. */
 function distinctValues(
   companies: PortfolioCompany[],

@@ -517,7 +517,7 @@ function SkeletonGrid() {
    Main Component
    ═══════════════════════════════════════════════════════ */
 
-export default function PortfolioGrid() {
+export default function PortfolioGrid2() {
   const [data, setData] = useState<APIResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
