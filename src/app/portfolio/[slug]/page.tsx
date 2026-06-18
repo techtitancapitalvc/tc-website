@@ -700,26 +700,23 @@ export default async function PortfolioCompanyPage({
           </div>
 
           {/* ── Row 2: Brand logo, centered.
-                 Design ref: 459×93 at 1440 viewport (aspect ratio 153/31).
-                 width scales with the rest of the site's clamp pattern;
-                 aspect-ratio derives height so the logo never distorts on
-                 any of the multiview viewports (1097×617 → 2560×1600+).
-                 sizes prop matches the responsive width so next/image
-                 picks the right CDN render once Hygraph is wired in. ── */}
+                 Slimmer than the original Figma spec — design ref now
+                 ~370×75 at 1440 viewport, aspect ratio locked at 153/31
+                 so the logo never distorts on any multiview viewport. ── */}
           <div
             className="mx-auto"
             style={{
-              width: "clamp(240px, min(31.88vw, 46.74vh), 459px)",
+              width: "clamp(200px, min(25.69vw, 37.68vh), 370px)",
               aspectRatio: "153 / 31",
-              marginTop: "clamp(24px, min(3vw, 4.4vh), 48px)",
+              marginTop: "clamp(20px, min(2.5vw, 3.7vh), 40px)",
             }}
           >
             <Image
               src={company.logo}
               alt={`${company.brandName} logo`}
-              width={918}
-              height={186}
-              sizes="(max-width: 640px) 240px, (max-width: 1024px) 32vw, 459px"
+              width={740}
+              height={150}
+              sizes="(max-width: 640px) 200px, (max-width: 1024px) 26vw, 370px"
               priority
               className="h-full w-full object-contain"
             />
@@ -733,14 +730,14 @@ export default async function PortfolioCompanyPage({
       <section
         className="flex w-full items-center justify-center bg-[#001A4D]"
         style={{
-          padding: "clamp(8px, min(0.7vw, 1vh), 10px) clamp(16px, 2vw, 32px) clamp(6px, min(0.4vw, 0.6vh), 6px) clamp(16px, 2vw, 32px)",
+          padding: "clamp(7px, min(0.6vw, 0.9vh), 9px) clamp(16px, 2vw, 32px)",
         }}
       >
         <p
           className="m-0 text-center font-['Libre_Baskerville',_serif] font-medium text-white"
           style={{
-            maxWidth: "clamp(280px, min(63.43vw, 92.99vh), 913px)",
-            fontSize: "clamp(14px, min(1.94vw, 2.85vh), 28px)",
+            maxWidth: "clamp(260px, min(52.08vw, 76.35vh), 750px)",
+            fontSize: "clamp(13px, min(1.67vw, 2.44vh), 24px)",
             lineHeight: "150%",
           }}
         >
