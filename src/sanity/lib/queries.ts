@@ -44,6 +44,92 @@ export const indicornSpotlightQuery = groq`
 `;
 
 /**
+ * Global — Footer. Singleton.
+ */
+export const footerQuery = groq`
+  *[_type == "footer"][0]{
+    address,
+    email,
+    copyright,
+    privacyPolicyLabel,
+    grievanceLabel,
+    newsletterTitle,
+    newsletterPlaceholder,
+    newsletterButtonLabel
+  }
+`;
+
+/**
+ * Winners Fund page — Hero section.
+ */
+export const winnersHeroQuery = groq`
+  *[_type == "winnersHero"][0]{
+    headingFirst,
+    headingSecond,
+    subtitle
+  }
+`;
+
+/**
+ * Winners Fund page — About The Fund section.
+ */
+export const aboutTheFundQuery = groq`
+  *[_type == "aboutTheFund"][0]{
+    headingFirst,
+    headingSecond,
+    paragraphs,
+    pills[]{
+      id,
+      label,
+      type,
+      rotate,
+      x,
+      y
+    }
+  }
+`;
+
+/**
+ * Winners Fund page — Portfolio Companies section. Logo asset URLs are
+ * resolved in the query so the frontend just receives plain strings.
+ */
+export const portfolioWinnerFundQuery = groq`
+  *[_type == "portfolioWinnerFund"][0]{
+    headingFirst,
+    headingSecond,
+    companies[]{
+      name,
+      category,
+      logoW,
+      logoH,
+      "logo": logo.asset->url
+    }
+  }
+`;
+
+/**
+ * Winners Fund page — Fund Details section.
+ */
+export const fundDetailsQuery = groq`
+  *[_type == "fundDetails"][0]{
+    headingFirst,
+    headingSecond,
+    funds[]{
+      title,
+      aifName,
+      sebiNumber,
+      category,
+      fundManager,
+      officeAddress,
+      bottomLabels[]{
+        heading,
+        value
+      }
+    }
+  }
+`;
+
+/**
  * Titan Seed page — Hero section.
  */
 export const titanSeedHeroQuery = groq`
@@ -187,6 +273,49 @@ export const heroQuery = groq`
 `;
 
 /**
+ * Get Investment page — Hero section.
+ */
+export const getInvestmentHeroQuery = groq`
+  *[_type == "getInvestmentHero"][0]{
+    headingFirst,
+    headingSecond,
+    subtitle
+  }
+`;
+
+/**
+ * Get Investment page — Form section.
+ */
+export const getInvestmentFormQuery = groq`
+  *[_type == "getInvestmentForm"][0]{
+    section1Label,
+    section1Title,
+    section1Subtitle,
+    section2Label,
+    section2Title,
+    section2Subtitle,
+    submitButtonLabel,
+    successTitle,
+    successMessage
+  }
+`;
+
+/**
+ * Get Investment page — FAQ section.
+ */
+export const getInvestmentFAQQuery = groq`
+  *[_type == "getInvestmentFAQ"][0]{
+    headingFirst,
+    headingSecond,
+    items[]{
+      id,
+      question,
+      answer
+    }
+  }
+`;
+
+/**
  * One Company document by slug. The projection shape (the {...} part) is
  * deliberately chosen to match the `CompanyDetail` interface in
  * src/app/portfolio/[slug]/page.tsx so the page doesn't need to remap fields.
@@ -238,3 +367,15 @@ export const allCompaniesForGridQuery = groq`
     areaOfFocus
   }
 `;
+
+export const portfoliGridQuery = `*[_type == "company"] {
+  brandName,
+  year,
+  sector,
+  status,
+  tags,
+  investmentStage,
+  fundType,
+  "logo": logo.asset->url,
+  "founderImage": founderImage.asset->url
+}`;
