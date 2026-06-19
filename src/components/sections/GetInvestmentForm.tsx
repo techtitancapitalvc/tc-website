@@ -801,7 +801,32 @@ function SectionHeading({
    Main form component
    ═══════════════════════════════════════════════════════ */
 
-export default function GetInvestmentForm() {
+export interface GetInvestmentFormData {
+  section1Label?: string;
+  section1Title?: string;
+  section1Subtitle?: string;
+  section2Label?: string;
+  section2Title?: string;
+  section2Subtitle?: string;
+  submitButtonLabel?: string;
+  successTitle?: string;
+  successMessage?: string;
+}
+
+export default function GetInvestmentForm({
+  data,
+}: {
+  data?: GetInvestmentFormData | null;
+}) {
+  const section1Label = data?.section1Label || "About You";
+  const section1Title = data?.section1Title || "The Founder";
+  const section1Subtitle = data?.section1Subtitle || "We invest in people first. Tell us who you are.";
+  const section2Label = data?.section2Label || "The Company";
+  const section2Title = data?.section2Title || "What Are You Building?";
+  const section2Subtitle = data?.section2Subtitle || "";
+  const submitButtonLabel = data?.submitButtonLabel || "Submit Application";
+  const successTitle = data?.successTitle || "Application submitted";
+  const successMessage = data?.successMessage || "We read every application. You'll hear from us soon.";
   /* ── Form state ── */
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -1014,13 +1039,13 @@ export default function GetInvestmentForm() {
               className="font-['Libre_Baskerville',_serif] font-semibold text-[#001A4D]"
               style={{ fontSize: "clamp(22px, min(2.2vw, 3.3vh), 32px)" }}
             >
-              Application submitted
+              {successTitle}
             </h3>
             <p
               className="mt-[clamp(12px,1.2vw,20px)] max-w-[460px] font-['Poppins',_sans-serif] font-normal leading-[1.6] text-[#667085]"
               style={{ fontSize: "clamp(14px, min(1.25vw, 1.85vh), 18px)" }}
             >
-              We read every application. You&apos;ll hear from us soon.
+              {successMessage}
             </p>
           </motion.div>
         ) : (
@@ -1045,9 +1070,9 @@ export default function GetInvestmentForm() {
               ──────────────────────────────────────── */}
           <motion.div variants={fieldSlideUp}>
             <SectionHeading
-              label="About You"
-              title="The Founder"
-              subtitle="We invest in people first. Tell us who you are."
+              label={section1Label}
+              title={section1Title}
+              subtitle={section1Subtitle}
             />
           </motion.div>
 
@@ -1123,9 +1148,9 @@ export default function GetInvestmentForm() {
               ──────────────────────────────────────── */}
           <motion.div variants={fieldSlideUp}>
             <SectionHeading
-              label="The Company"
-              title="What Are You Building?"
-              subtitle=""
+              label={section2Label}
+              title={section2Title}
+              subtitle={section2Subtitle}
             />
           </motion.div>
 
@@ -1289,7 +1314,7 @@ export default function GetInvestmentForm() {
                   Submitting…
                 </span>
               ) : (
-                <span className="relative z-10">Submit Application</span>
+                <span className="relative z-10">{submitButtonLabel}</span>
               )}
             </motion.button>
 

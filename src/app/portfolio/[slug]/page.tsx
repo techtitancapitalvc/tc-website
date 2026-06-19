@@ -69,55 +69,94 @@ interface NewsBlog {
 }
 
 /* ─────────────────────────────────────────────────────────
-   TEMPORARY mock data — lets you click a card on /portfolio
-   today and land on a real-looking detail page without any
-   CMS auth. Add more entries as you populate them.
-   Swap this whole block for a Hygraph fetch when ready.
+   Fetch company from Sanity portfolioGrid singleton.
    ───────────────────────────────────────────────────────── */
-const MOCK_COMPANIES: Record<string, CompanyDetail> = {
-  anveshan: {
-    brandName: "anveshan",
-    slug: "anveshan",
-    oneLiner: "Traceable, traditional and completely natural food products",
-    logo: "/images/portfolio_grid/anveshan.png",
-    about:
-      "Revolutionizing the food industry through technology, Anveshan is a food-tech startup aiming to provide high quality deeply traceable food products. They leverage technologies based on image processing, spectroscopy, blockchain and IOT to provide the best quality food products made traditionally.",
-    links: [
-      { label: "anveshan.farm", url: "https://anveshan.farm", type: "website" },
-      { label: "anveshan.farm", url: "https://www.linkedin.com/company/anveshan", type: "linkedin" },
-      { label: "anveshan.farm", url: "https://www.instagram.com/anveshan", type: "instagram" },
-    ],
-    areaOfFocus: "Consumer Brand",
-    investedIn: "2019",
-    milestones: ["Partnered 2012", "Founded 2011", "IPO 2018"],
-    /* Mock gallery — reusing the existing founder portrait so the
-       layout is testable today. Replace with real URLs from Hygraph. */
-    gallery: [
-      "/images/portfolio_grid_founders/Anveshan.png",
-      "/images/portfolio_grid_founders/Anveshan.png",
-      "/images/portfolio_grid_founders/Anveshan.png",
-      "/images/portfolio_grid_founders/Anveshan.png",
-      "/images/portfolio_grid_founders/Anveshan.png",
-      "/images/portfolio_grid_founders/Anveshan.png",
-    ],
-    founders: [
-      { name: "Aayushi Khandelwal", linkedin: "https://www.linkedin.com/in/aayushi-khandelwal" },
-      { name: "Kuldeep Parewa", linkedin: "https://www.linkedin.com/in/kuldeep-parewa" },
-      {
-        name: "Akhil Kansal",
-        linkedin: "https://www.linkedin.com/in/akhil-kansal",
-        avatar: "/images/portfolio_grid_founders/Anveshan.png",
-      },
-    ],
-    /* Placeholder cards — empty boxes until the real news/blog content is published. */
-    newsBlogs: [{}, {}, {}],
-  },
-  // Add more as you populate them, e.g.:
-  // razorpay: { ... },
-};
+import { sanityFetch } from "@/sanity/lib/client";
+import { portfolioGridQuery } from "@/sanity/lib/queries";
+
+interface SanityCompany {
+  brandName: string;
+  year?: string;
+  sector?: string;
+  status?: string;
+  tags?: string;
+  investmentStage?: string;
+  fundType?: string;
+  logo?: string;
+  founderImage?: string;
+  foundingYear?: string;
+  oneLiner?: string;
+  about?: string;
+  website?: string;
+  newsBlogs?: string;
+  youtube?: string;
+  milestones?: string;
+  companyLinkedin?: string;
+  gallery?: string[];
+  founders?: { name: string; linkedin?: string }[];
+}
+
+function companySlug(name: string): string {
+  return name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
 
 async function getCompany(slug: string): Promise<CompanyDetail | null> {
-  return MOCK_COMPANIES[slug] ?? null;
+  const result = await sanityFetch<{ companies: SanityCompany[] } | null>({
+    query: portfolioGridQuery,
+    revalidate: 60,
+  });
+
+  const companies = result?.companies || [];
+  const match = companies.find((c) => companySlug(c.brandName) === slug);
+  if (!match) return null;
+
+  // Build links array from available URLs
+  const links: CompanyLink[] = [];
+  if (match.website) links.push({ label: match.website.replace(/^https?:\/\//, "").replace(/\/$/, ""), url: match.website.startsWith("http") ? match.website : `https://${match.website}`, type: "website" });
+  if (match.companyLinkedin) links.push({ label: "LinkedIn", url: match.companyLinkedin.startsWith("http") ? match.companyLinkedin : `https://${match.companyLinkedin}`, type: "linkedin" });
+  if (match.youtube) links.push({ label: "YouTube", url: match.youtube.startsWith("http") ? match.youtube : `https://${match.youtube}`, type: "youtube" });
+
+  return {
+    brandName: match.brandName,
+    slug,
+    oneLiner: match.oneLiner || "",
+    logo: match.logo || "",
+    about: match.about || "",
+    links,
+    areaOfFocus: match.sector || "",
+    investedIn: match.year || "",
+    milestones: buildMilestones(match),
+    gallery: match.gallery || [],
+    founders: (match.founders || []).map((f) => ({ name: f.name, linkedin: f.linkedin })),
+    newsBlogs: match.newsBlogs ? [{ title: "Read more", url: match.newsBlogs }] : [],
+  };
+}
+
+/**
+ * Derive the milestone list from existing structured fields instead of a
+ * free-text column. Three rules, in order:
+ *   1. "Founded in <foundingYear>" — when foundingYear is set
+ *   2. "Invested in <YYYY>"        — first 4 chars of `year` (e.g. "2023-24" → "2023")
+ *   3. "IPO"                       — when `tags` contains the word IPO (case-insensitive)
+ * Each entry is only added when its source data is present.
+ */
+function buildMilestones(c: SanityCompany): string[] {
+  const out: string[] = [];
+
+  if (c.foundingYear && c.foundingYear.trim()) {
+    out.push(`Founded in ${c.foundingYear.trim()}`);
+  }
+
+  if (c.year && c.year.trim()) {
+    const investedYear = c.year.trim().slice(0, 4);
+    if (investedYear) out.push(`Invested in ${investedYear}`);
+  }
+
+  if (c.tags && /\bipo\b/i.test(c.tags)) {
+    out.push("IPO");
+  }
+
+  return out;
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -727,6 +766,7 @@ export default async function PortfolioCompanyPage({
       {/* ════════════════════════════════════════════════
           ONE-LINER BANNER — full-width navy stripe
           ════════════════════════════════════════════════ */}
+      {company.oneLiner && (
       <section
         className="flex w-full items-center justify-center bg-[#001A4D]"
         style={{
@@ -744,6 +784,7 @@ export default async function PortfolioCompanyPage({
           {company.oneLiner}
         </p>
       </section>
+      )}
 
       {/* ════════════════════════════════════════════════
           ABOUT — two-column layout:
@@ -816,17 +857,23 @@ export default async function PortfolioCompanyPage({
       {/* ════════════════════════════════════════════════
           GALLERY — horizontal scrolling brand images
           ════════════════════════════════════════════════ */}
-      <Gallery images={company.gallery} brandName={company.brandName} />
+      {company.gallery.length > 0 && (
+        <Gallery images={company.gallery} brandName={company.brandName} />
+      )}
 
       {/* ════════════════════════════════════════════════
           FOUNDING TEAM
           ════════════════════════════════════════════════ */}
-      <FoundingTeam founders={company.founders} />
+      {company.founders.length > 0 && (
+        <FoundingTeam founders={company.founders} />
+      )}
 
       {/* ════════════════════════════════════════════════
           NEWS / BLOGS
           ════════════════════════════════════════════════ */}
-      <NewsBlogs items={company.newsBlogs} brandName={company.brandName} />
+      {company.newsBlogs.length > 0 && (
+        <NewsBlogs items={company.newsBlogs} brandName={company.brandName} />
+      )}
 
       <Footer />
     </main>

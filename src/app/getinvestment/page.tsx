@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Footer from "@/components/sections/Footer";
 import GetInvestmentHero from "@/components/sections/GetInvestmentHero";
-import GetInvestmentForm from "@/components/sections/GetInvestmentForm";
+import GetInvestmentForm from "@/components/sections/GetInvestmentFormServer";
 import GetInvestmentFAQ from "@/components/sections/GetInvestmentFAQ";
 
 export const metadata: Metadata = {

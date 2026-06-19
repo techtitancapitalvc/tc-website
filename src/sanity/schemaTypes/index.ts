@@ -17,6 +17,7 @@ import { whyTitanSeed } from "./whyTitanSeed";
 import { getInvestmentFAQ } from "./getInvestmentFAQ";
 import { getInvestmentForm } from "./getInvestmentForm";
 import { getInvestmentHero } from "./getInvestmentHero";
+import { portfolioGrid } from "./portfolioGrid";
 import { winnersHero } from "./winnersHero";
 
 /**
@@ -49,4 +50,5 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   footer,
   /* Portfolio */
   company,
+  portfolioGrid,
 ];

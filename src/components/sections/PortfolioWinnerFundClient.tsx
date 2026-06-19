@@ -35,7 +35,14 @@ const FALLBACK_COMPANIES: PortfolioCompany[] = [
   { name: "Zouk", logo: "/images/logos_backup/zouk_new_logo.webp", category: "Vegan leather goods", logoW: "40%", logoH: "15%" },
 ];
 
-/* ── Card component ── */
+/* ── Card component ──
+   Default: white card, colored logo centred, nothing else.
+   Hover  : navy bg, logo flips to white via `brightness(0) invert(1)`
+            and slides to the top, description + READ link fade in below.
+   The brightness/invert filter only renders cleanly on logos uploaded
+   with transparent backgrounds — logos with solid coloured backgrounds
+   (e.g. GIVA's purple square) will read as solid white blocks on navy.
+   Re-export those with transparency if you want a cleaner hover. */
 function PortfolioCard({ company, index }: { company: PortfolioCompany; index: number }) {
   const [isActive, setIsActive] = useState(false);
 
@@ -57,19 +64,26 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
       onTouchStart={() => setIsActive(true)}
       onTouchEnd={() => setIsActive(false)}
       onTouchCancel={() => setIsActive(false)}
-      className="group relative flex cursor-pointer flex-col items-center overflow-hidden bg-white"
-      style={{ boxShadow: "0 2px 12px 0 rgba(0,0,0,0.04)", width: "100%", aspectRatio: "1 / 1" }}
+      className="group relative flex cursor-pointer flex-col overflow-hidden"
+      style={{
+        boxShadow: "0 2px 12px 0 rgba(0,0,0,0.04)",
+        width: "100%",
+        aspectRatio: "1 / 1",
+        backgroundColor: isActive ? "#001A4D" : "#FFFFFF",
+        transition: "background-color 0.5s ease-out",
+      }}
     >
-      <p
-        className="relative z-10 w-full text-center font-['Poppins',_sans-serif] font-normal text-[#323232] transition-colors duration-300"
-        style={{ paddingTop: "clamp(16px, min(2.5vw, 3.5vh), 32px)", fontSize: "clamp(11px, min(1.1vw, 1.6vh), 16px)" }}
+      {/* ── LOGO — fills the card by default; shrinks to top on hover ── */}
+      <motion.div
+        className="flex w-full shrink-0 items-center justify-center"
+        animate={{ height: isActive ? "45%" : "100%" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{ paddingTop: isActive ? "clamp(14px, 1.8vw, 22px)" : 0 }}
       >
-        {company.category}
-      </p>
-
-      <div className="relative z-10 flex flex-1 w-full items-center justify-center">
         <div
-          className={`relative transition-[filter] duration-500 ease-out ${isActive ? "grayscale-0" : "grayscale"}`}
+          className={`relative transition-[filter] duration-500 ease-out ${
+            isActive ? "[filter:brightness(0)_invert(1)]" : ""
+          }`}
           style={{ width: company.logoW, height: company.logoH }}
         >
           <Image
@@ -80,7 +94,43 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
             className="object-contain"
           />
         </div>
-      </div>
+      </motion.div>
+
+      {/* ── DESCRIPTION + READ — only on hover ── */}
+      <motion.div
+        className="flex w-full flex-1 flex-col justify-between text-white"
+        style={{ padding: "clamp(12px, 1.8vw, 22px)" }}
+        animate={{ opacity: isActive ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: isActive ? 0.15 : 0 }}
+      >
+        <p
+          className="m-0 font-['Poppins',_sans-serif] font-normal leading-[1.45]"
+          style={{ fontSize: "clamp(11px, min(1vw, 1.5vh), 14px)" }}
+        >
+          {company.category}
+        </p>
+        <div className="mt-auto flex items-center gap-[6px] pt-2">
+          <span
+            className="font-['Poppins',_sans-serif] font-medium uppercase tracking-wide"
+            style={{ fontSize: "clamp(9px, min(0.85vw, 1.25vh), 12px)" }}
+          >
+            Read
+          </span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

@@ -1,18 +1,27 @@
 /*
   API Route: /api/portfolio
-  Fetches the public Google Sheet as CSV, parses it, and returns structured JSON.
-  Caches for 5 minutes via Next.js revalidation to avoid hammering the sheet.
-
-  Sheet: https://docs.google.com/spreadsheets/d/1LvHYkFm6HUzlXJbr_3Xuhs7k5YxtSUcDw6aiyZ8X8G4
-  Columns (0-indexed):
-    0: Brand Name | 1: Year | 2: Sector | 3: Status | 4: Tags |
-    5: Investment Stage | 6: Fund Type | 7: Logo | 8: Founders Image
-
-  Row 0 is a proper header row and is skipped during parsing.
+  Fetches portfolio grid companies from the "portfolioGrid" singleton in Sanity.
 */
 
-const SHEET_ID = "1LvHYkFm6HUzlXJbr_3Xuhs7k5YxtSUcDw6aiyZ8X8G4";
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+import { sanityFetch } from "@/sanity/lib/client";
+import { portfolioGridQuery } from "@/sanity/lib/queries";
+
+interface SanityGridCompany {
+  brandName: string;
+  year: string | null;
+  sector: string | null;
+  status: string | null;
+  tags: string | null;
+  investmentStage: string | null;
+  fundType: string | null;
+  logo: string | null;
+  founderImage: string | null;
+  foundingYear: string | null;
+  oneLiner: string | null;
+  about: string | null;
+  website: string | null;
+  founders: { name: string; linkedin: string | null }[] | null;
+}
 
 export interface PortfolioCompany {
   brandName: string;
@@ -24,146 +33,20 @@ export interface PortfolioCompany {
   fundType: string;
   logo: string;
   founderImage: string;
+  isRecent: boolean;
 }
 
-/** Title-case a string, handling hyphens (e.g. "pre-seed" → "Pre-Seed"). */
-function titleCase(s: string): string {
-  return s.replace(/[a-zA-Z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+function getRecentYears(companies: SanityGridCompany[]): Set<string> {
+  const years = companies
+    .map((c) => c.year || "")
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  const uniqueYears = [...new Set(years)];
+  return new Set(uniqueYears.slice(0, 2));
 }
 
-/** Simple CSV parser that handles quoted fields. */
-function parseCSVRow(row: string): string[] {
-  const fields: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < row.length; i++) {
-    const ch = row[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (i + 1 < row.length && row[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        current += ch;
-      }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ",") {
-      fields.push(current.trim());
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  fields.push(current.trim());
-  return fields;
-}
-
-/**
- * Remap logo path from /images/logos/X.ext → /images/portfolio_grid/X.png
- * The portfolio_grid versions are uniformly sized 400×400 PNGs with
- * white backgrounds removed and logos centered.
- */
-function remapLogo(raw: string): string {
-  if (!raw) return raw;
-  // Normalise: ensure leading slash
-  const normalised = raw.startsWith("/") ? raw : `/${raw}`;
-  // Extract filename without extension, swap folder and extension
-  const match = normalised.match(/^\/images\/logos\/(.+)\.\w+$/);
-  if (match) {
-    return `/images/portfolio_grid/${match[1]}.png`;
-  }
-  return normalised;
-}
-
-function rowToCompany(fields: string[]): PortfolioCompany | null {
-  const get = (idx: number) => (fields[idx] || "").trim();
-
-  const brandName = get(0);
-  if (!brandName) return null;
-
-  return {
-    brandName,
-    year: get(1),
-    sector: get(2),
-    status: get(3),
-    tags: get(4),
-    investmentStage: titleCase(get(5)),
-    fundType: get(6),
-    logo: remapLogo(get(7)),
-    founderImage: get(8),
-  };
-}
-
-function parseCSV(csv: string): PortfolioCompany[] {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = "";
-  let inQuotes = false;
-
-  // 1. Parse character by character to respect quotes
-  for (let i = 0; i < csv.length; i++) {
-    const char = csv[i];
-
-    if (inQuotes) {
-      // Handle escaped quotes ("")
-      if (char === '"' && csv[i + 1] === '"') {
-        currentField += '"';
-        i++; // skip the second quote
-      } else if (char === '"') {
-        inQuotes = false; // Close quote
-      } else {
-        currentField += char; // Keep newlines and commas if inside quotes
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true; // Open quote
-      } else if (char === ',') {
-        currentRow.push(currentField.trim());
-        currentField = "";
-      } else if (char === '\n' || char === '\r') {
-        // Handle Windows (\r\n) or Unix (\n) line breaks
-        if (char === '\r' && csv[i + 1] === '\n') {
-          i++;
-        }
-        currentRow.push(currentField.trim());
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = "";
-      } else {
-        currentField += char;
-      }
-    }
-  }
-
-  // Flush the very last row if the file doesn't end with a newline
-  if (currentField !== "" || currentRow.length > 0) {
-    currentRow.push(currentField.trim());
-    rows.push(currentRow);
-  }
-
-  const companies: PortfolioCompany[] = [];
-  
-  // 2. Loop through rows, starting at index 1 to skip the header
-  for (let i = 1; i < rows.length; i++) {
-    // Skip completely empty lines
-    if (rows[i].length === 1 && rows[i][0] === "") continue;
-    
-    const company = rowToCompany(rows[i]);
-    if (company) companies.push(company);
-  }
-
-  return companies;
-}
-/** Extract unique non-empty values for a given key. */
-function distinctValues(
-  companies: PortfolioCompany[],
-  key: keyof PortfolioCompany
-): string[] {
+function distinctValues(companies: SanityGridCompany[], key: keyof SanityGridCompany): string[] {
   const set = new Set<string>();
   for (const c of companies) {
     const val = c[key];
@@ -172,36 +55,35 @@ function distinctValues(
   return Array.from(set).sort();
 }
 
-/** Determine "recently invested" companies (last 2 financial years). */
-function getRecentYears(companies: PortfolioCompany[]): Set<string> {
-  const years = companies
-    .map((c) => c.year)
-    .filter(Boolean)
-    .sort()
-    .reverse();
-
-  const uniqueYears = [...new Set(years)];
-  return new Set(uniqueYears.slice(0, 2)); // top-2 most recent year bands
-}
-
 export async function GET() {
   try {
-    const res = await fetch(CSV_URL, { next: { revalidate: 60 } });
-    if (!res.ok) {
-      return Response.json(
-        { error: "Failed to fetch Google Sheet" },
-        { status: 502 }
-      );
+    const result = await sanityFetch<{ companies: SanityGridCompany[] } | null>({
+      query: portfolioGridQuery,
+      revalidate: 60,
+    });
+
+    const companies = result?.companies || [];
+
+    if (companies.length === 0) {
+      return Response.json({
+        companies: [],
+        filters: { sector: [], year: [], status: [], tags: [], investmentStage: [], fundType: [] },
+      });
     }
 
-    const csvText = await res.text();
-    const companies = parseCSV(csvText);
     const recentYears = getRecentYears(companies);
 
-    // Tag each company with isRecent
-    const enriched = companies.map((c) => ({
-      ...c,
-      isRecent: recentYears.has(c.year),
+    const enriched: PortfolioCompany[] = companies.map((c) => ({
+      brandName: c.brandName || "",
+      year: c.year || "",
+      sector: c.sector || "",
+      status: c.status || "",
+      tags: c.tags || "",
+      investmentStage: c.investmentStage || "",
+      fundType: c.fundType || "",
+      logo: c.logo || "",
+      founderImage: c.founderImage || "",
+      isRecent: recentYears.has(c.year || ""),
     }));
 
     const filters = {

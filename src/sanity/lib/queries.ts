@@ -355,8 +355,41 @@ export const allCompanySlugsQuery = groq`
 `;
 
 /**
+ * Portfolio — All companies from the portfolioGrid singleton.
+ * Used by both the grid (/portfolio) and detail pages (/portfolio/[slug]).
+ */
+export const portfolioGridQuery = groq`
+  *[_type == "portfolioGrid"][0]{
+    companies[]{
+      brandName,
+      year,
+      sector,
+      status,
+      tags,
+      investmentStage,
+      fundType,
+      "logo": logo.asset->url,
+      "founderImage": founderImage.asset->url,
+      foundingYear,
+      oneLiner,
+      about,
+      website,
+      newsBlogs,
+      youtube,
+      milestones,
+      companyLinkedin,
+      "gallery": gallery[].asset->url,
+      founders[]{
+        name,
+        linkedin
+      }
+    }
+  }
+`;
+
+/**
  * Lightweight projection for the portfolio grid (only the fields the card needs).
- * Replaces the current Google Sheet fetch once you migrate the grid.
+ * Used by the /api/portfolio route.
  */
 export const allCompaniesForGridQuery = groq`
   *[_type == "company" && defined(slug.current)] | order(brandName asc){
