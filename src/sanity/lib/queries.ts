@@ -44,6 +44,45 @@ export const indicornSpotlightQuery = groq`
 `;
 
 /**
+ * Titan Seed page — Hero section.
+ */
+export const titanSeedHeroQuery = groq`
+  *[_type == "titanSeedHero"][0]{
+    headingFirst,
+    headingSecond,
+    subtitle
+  }
+`;
+
+/**
+ * Titan Seed page — Why Titan Seed section.
+ */
+export const whyTitanSeedQuery = groq`
+  *[_type == "whyTitanSeed"][0]{
+    headingFirst,
+    headingSecond,
+    cards[]{
+      title,
+      desc
+    }
+  }
+`;
+
+/**
+ * Titan Seed page — What We Look For section.
+ */
+export const whatWeLookForQuery = groq`
+  *[_type == "whatWeLookFor"][0]{
+    headingFirst,
+    headingSecond,
+    items[]{
+      title,
+      desc
+    }
+  }
+`;
+
+/**
  * Home — What We Believe section. Singleton: returns the first (only)
  * whatWeBelieve document. Pure text content — no asset resolution needed.
  */

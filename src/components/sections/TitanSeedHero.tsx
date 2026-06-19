@@ -1,222 +1,33 @@
-"use client";
+/**
+ * TitanSeedHero — server wrapper.
+ *
+ * Fetches the singleton "titanSeedHero" document from Sanity and hands
+ * the data to the existing presentational component. Falls back to
+ * hardcoded defaults inside the client if the fetch fails or returns null.
+ *
+ * NOTE: titanseedfund/page.tsx must import `TitanSeedHero` from this file
+ * (the server wrapper), NOT from `./TitanSeedHeroClient`. Importing the
+ * Client component directly skips the Sanity fetch.
+ */
+import { sanityFetch } from "@/sanity/lib/client";
+import { titanSeedHeroQuery } from "@/sanity/lib/queries";
+import TitanSeedHeroClient, {
+  type TitanSeedHeroData,
+} from "./TitanSeedHeroClient";
 
-import { useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
-
-/*
-  ANIMATED GRID BACKGROUND
-  Draws a grid on canvas. Grid lines near the cursor get a wavy
-  sine-wave distortion + brightness boost — effect is localised
-  to the cursor area only. Rest of the grid stays static.
-*/
-function AnimatedGrid() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -9999, y: -9999 });
-
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    mouseRef.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-  }, []);
-
-  const onMouseLeave = useCallback(() => {
-    mouseRef.current = { x: -9999, y: -9999 };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Attach mouse listeners to the PARENT section (canvas is pointer-events-none)
-    const section = canvas.parentElement;
-    if (section) {
-      section.addEventListener("mousemove", onMouseMove);
-      section.addEventListener("mouseleave", onMouseLeave);
-    }
-
-    let animationId: number;
-    const startTime = performance.now();
-
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    const GRID_SIZE = 90;
-    const BASE_ALPHA = 0.06;
-    const CURSOR_RADIUS = 180;
-    const WAVE_AMP = 6;
-
-    const draw = (now: number) => {
-      const elapsed = (now - startTime) / 1000;
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.lineWidth = 1;
-
-      // Helper: wave offset + alpha boost based on distance to cursor
-      const getWave = (px: number, py: number) => {
-        const dist = Math.sqrt((px - mx) ** 2 + (py - my) ** 2);
-        if (dist > CURSOR_RADIUS) return { offset: 0, alpha: BASE_ALPHA };
-
-        const proximity = 1 - dist / CURSOR_RADIUS;
-        const smooth = proximity * proximity;
-        const offset = Math.sin(elapsed * 3 + dist * 0.04) * WAVE_AMP * smooth;
-        const alpha = BASE_ALPHA + smooth * 0.14;
-
-        return { offset, alpha };
-      };
-
-      // ── VERTICAL LINES (displaced horizontally by wave near cursor) ──
-      for (let x = 0; x <= w; x += GRID_SIZE) {
-        ctx.beginPath();
-        let started = false;
-        for (let y = 0; y <= h; y += 4) {
-          const { offset, alpha } = getWave(x, y);
-          ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
-          const dx = x + offset;
-          if (!started) {
-            ctx.moveTo(dx, y);
-            started = true;
-          } else {
-            ctx.lineTo(dx, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(dx, y);
-          }
-        }
-        ctx.stroke();
-      }
-
-      // ── HORIZONTAL LINES (displaced vertically by wave near cursor) ──
-      for (let y = 0; y <= h; y += GRID_SIZE) {
-        ctx.beginPath();
-        let started = false;
-        for (let x = 0; x <= w; x += 4) {
-          const { offset, alpha } = getWave(x, y);
-          ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
-          const dy = y + offset;
-          if (!started) {
-            ctx.moveTo(x, dy);
-            started = true;
-          } else {
-            ctx.lineTo(x, dy);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, dy);
-          }
-        }
-        ctx.stroke();
-      }
-
-      animationId = requestAnimationFrame(draw);
-    };
-
-    resize();
-    animationId = requestAnimationFrame(draw);
-
-    window.addEventListener("resize", resize);
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animationId);
-      if (section) {
-        section.removeEventListener("mousemove", onMouseMove);
-        section.removeEventListener("mouseleave", onMouseLeave);
-      }
-    };
-  }, [onMouseMove, onMouseLeave]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      style={{ zIndex: 0 }}
-    />
-  );
+async function getTitanSeedHero(): Promise<TitanSeedHeroData | null> {
+  try {
+    return await sanityFetch<TitanSeedHeroData | null>({
+      query: titanSeedHeroQuery,
+      revalidate: 60,
+    });
+  } catch (err) {
+    console.error("[TitanSeedHero] Sanity fetch failed, using fallback:", err);
+    return null;
+  }
 }
 
-export default function TitanSeedHero() {
-  return (
-    <section
-      className="relative flex w-full items-center justify-center overflow-hidden bg-[#FBF7F0] max-md:h-[50svh]"
-      style={{
-        marginTop: "var(--nav-height)",
-        height: "clamp(320px, 52vh, 520px)",
-        paddingTop: "clamp(20px, min(3vw, 4vh), 60px)",
-        paddingBottom: "clamp(20px, min(3vw, 4vh), 60px)",
-        paddingLeft: "var(--section-px-wide)",
-        paddingRight: "var(--section-px-wide)",
-      }}
-    >
-
-      {/* ── ANIMATED GRID BACKGROUND ── */}
-      <AnimatedGrid />
-
-      {/* ── CONTENT ── */}
-      <motion.div
-        className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center text-center"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.5 }}
-      >
-
-        {/* ── HEADING: "We Are Your" + "first believer" on same line ── */}
-        <motion.h1
-          className="m-0 flex flex-row flex-wrap items-center justify-center gap-x-3 max-md:gap-x-2 font-['Libre_Baskerville',_serif] font-semibold leading-[110%] text-[#001A4D] max-md:!text-[28px]"
-          style={{ fontSize: "var(--heading-xl)" }}
-          variants={{
-            hidden: { opacity: 0, y: 40 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-          }}
-        >
-          <span>We Are Your</span>
-          <motion.span
-            className="relative inline-flex items-center justify-center overflow-hidden px-[4px] py-[6px] md:px-[6px] md:py-[8px] bg-transparent"
-            variants={{
-              hidden: { opacity: 0, x: -40 },
-              visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.3 } }
-            }}
-          >
-            <motion.span
-              className="absolute inset-0 z-0 bg-[#D3E2FF] h-full w-full"
-              style={{ transformOrigin: "left" }}
-              variants={{
-                hidden: { scaleX: 0 },
-                visible: { scaleX: 1, transition: { duration: 0.6, ease: "easeInOut", delay: 0.8 } }
-              }}
-            />
-            <span className="relative z-10 italic">
-              First Believer
-            </span>
-          </motion.span>
-        </motion.h1>
-
-        {/* ── SUBTITLE ── */}
-        <motion.p
-          className="mt-[clamp(16px,min(2.5vw,4vh),36px)] max-w-[600px] font-['Poppins',_sans-serif] font-normal leading-[1.6] text-[#323232] text-center"
-          style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}
-          variants={{
-            hidden: { opacity: 0, y: 30 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } }
-          }}
-        >
-          We back founders when belief matters the most, before the headlines, before the scale, before everyone else catches on.
-        </motion.p>
-
-      </motion.div>
-    </section>
-  );
+export default async function TitanSeedHero() {
+  const data = await getTitanSeedHero();
+  return <TitanSeedHeroClient data={data} />;
 }
