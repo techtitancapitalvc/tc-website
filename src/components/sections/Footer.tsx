@@ -16,9 +16,9 @@ import { motion } from "framer-motion";
 
 /* Map specific footer link labels to custom routes */
 const footerHrefs: Record<string, string> = {
-  "Titan Winners Fund": "/winnerFund",
+  "Titan Winners Fund": "/winnersFund",
   "Our Portfolio": "/portfolio",
-  "Titan Seed Fund": "/titanseedfund",
+  "Titan Seed Fund": "/titanSeedFund",
   "Home Page": "/",
   "Get Investment": "/getinvestment"
 };

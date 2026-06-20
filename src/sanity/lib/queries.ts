@@ -44,6 +44,27 @@ export const indicornSpotlightQuery = groq`
 `;
 
 /**
+ * Global — Navbar. Singleton.
+ * Each sub-item carries its own URL so editors can rename labels without
+ * breaking link lookups.
+ */
+export const navbarQuery = groq`
+  *[_type == "navbar"][0]{
+    sections[]{
+      id,
+      title,
+      directUrl,
+      subItems[]{
+        label,
+        url
+      }
+    },
+    ctaLabel,
+    ctaUrl
+  }
+`;
+
+/**
  * Global — Footer. Singleton.
  */
 export const footerQuery = groq`

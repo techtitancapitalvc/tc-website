@@ -144,12 +144,12 @@ function buildMilestones(c: SanityCompany): string[] {
   const out: string[] = [];
 
   if (c.foundingYear && c.foundingYear.trim()) {
-    out.push(`Founded in ${c.foundingYear.trim()}`);
+    out.push(`Founded ${c.foundingYear.trim()}`);
   }
 
   if (c.year && c.year.trim()) {
     const investedYear = c.year.trim().slice(0, 4);
-    if (investedYear) out.push(`Invested in ${investedYear}`);
+    if (investedYear) out.push(`Partnered ${investedYear}`);
   }
 
   if (c.tags && /\bipo\b/i.test(c.tags)) {
