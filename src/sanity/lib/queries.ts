@@ -44,6 +44,33 @@ export const indicornSpotlightQuery = groq`
 `;
 
 /**
+ * SEO — Sitewide defaults (singleton). Image URL resolved here.
+ */
+export const siteSeoQuery = groq`
+  *[_type == "siteSeo"][0]{
+    siteName,
+    siteUrl,
+    defaultTitle,
+    defaultDescription,
+    "defaultShareImage": defaultShareImage.asset->url,
+    keywords
+  }
+`;
+
+/**
+ * SEO — Per-page override. Looked up by stable `pageKey` so renaming the
+ * Studio doc title can't break anything.
+ */
+export const pageSeoByKeyQuery = groq`
+  *[_type == "pageSeo" && pageKey == $pageKey][0]{
+    pageKey,
+    metaTitle,
+    metaDescription,
+    "shareImage": shareImage.asset->url
+  }
+`;
+
+/**
  * Global — Navbar. Singleton.
  * Each sub-item carries its own URL so editors can rename labels without
  * breaking link lookups.

@@ -73,6 +73,7 @@ interface NewsBlog {
    ───────────────────────────────────────────────────────── */
 import { sanityFetch } from "@/sanity/lib/client";
 import { portfolioGridQuery } from "@/sanity/lib/queries";
+import { buildMetadata } from "@/sanity/lib/seo";
 
 interface SanityCompany {
   brandName: string;
@@ -648,6 +649,45 @@ function NewsBlogs({ items, brandName }: { items: NewsBlog[]; brandName: string 
       </div>
     </section>
   );
+}
+
+/**
+ * Per-company metadata — title and description come from the company's own
+ * Sanity fields (brandName, oneLiner). Share image uses the company logo
+ * if present. Everything else (siteName, fallbacks) inherits from siteSeo.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const company = await getCompany(slug);
+  const base = await buildMetadata();
+  if (!company) return base;
+
+  const title = company.brandName;
+  const description = company.oneLiner || base.description || "";
+
+  return {
+    ...base,
+    title,
+    description,
+    openGraph: {
+      ...base.openGraph,
+      title,
+      description,
+      images: company.logo
+        ? [{ url: company.logo, width: 1200, height: 630 }]
+        : base.openGraph?.images,
+    },
+    twitter: {
+      ...base.twitter,
+      title,
+      description,
+      images: company.logo ? [company.logo] : base.twitter?.images,
+    },
+  };
 }
 
 /* ═════════════════════════════════════════════════════════

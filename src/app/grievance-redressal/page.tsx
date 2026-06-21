@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
 import LegalContent from "@/components/sections/LegalContent";
 import Footer from "@/components/sections/Footer";
+import { buildMetadata } from "@/sanity/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Grievance Redressal",
-  description:
-    "Titan Capital's grievance redressal mechanism — escalation channels, SEBI SCORES, ODR, and fund-level details for Winners Fund I and II.",
-};
+export async function generateMetadata() {
+  return buildMetadata("grievance");
+}
 
 export default function GrievanceRedressalPage() {
   return (

@@ -365,9 +365,35 @@ function FilterDropdown({
    Company Card
    ═══════════════════════════════════════════════════════ */
 
+/**
+ * Brands whose logo doesn't survive a plain `brightness(0) invert(1)`
+ * filter on the card's back face (because they're monogram-style: a
+ * filled tile with a glyph painted on top). For each one we ship a
+ * pre-rendered "flipped variant" PNG that already has the white
+ * silhouette + transparent interior baked in, so the back face renders
+ * it as-is without any CSS filter.
+ *
+ * The lookup is case- and whitespace-insensitive so "HomeRun",
+ * "Home Run", and "homerun" all resolve to the same variant. Add new
+ * brands here as needed.
+ */
+const FLIPPED_VARIANTS: Record<string, string> = {
+  "homerun": "/images/portfolio_grid_flipped/homerun.png",
+  "smylo": "/images/portfolio_grid_flipped/smylo.png",
+  "nathabit": "/images/portfolio_grid_flipped/nat_habit.png",
+  "nathabbit": "/images/portfolio_grid_flipped/nat_habit.png",
+  "indiansnackhouse": "/images/portfolio_grid_flipped/indian_snack_house.png",
+};
+
+function flippedVariantFor(brandName: string): string | undefined {
+  const key = brandName.toLowerCase().replace(/\s+/g, "");
+  return FLIPPED_VARIANTS[key];
+}
+
    function CompanyCard({ company }: { company: Company }) {
     const founderImage = company.founderImage;
     const cardRadius = "clamp(8px,0.83vw,12px)";
+    const flippedLogoSrc = flippedVariantFor(company.brandName);
 
     return (
       <Link
@@ -454,7 +480,7 @@ function FilterDropdown({
                   }}
                 >
                   <Image
-                    src={company.logo}
+                    src={flippedLogoSrc ?? company.logo}
                     alt={`${company.brandName} logo`}
                     width={120}
                     height={120}
@@ -463,7 +489,7 @@ function FilterDropdown({
                     style={{
                       width: "100%",
                       height: "100%",
-                      filter: "brightness(0) invert(1)",
+                      ...(flippedLogoSrc ? {} : { filter: "brightness(0) invert(1)" }),
                     }}
                   />
                 </div>

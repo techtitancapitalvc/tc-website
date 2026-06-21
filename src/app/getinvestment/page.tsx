@@ -1,14 +1,12 @@
-import type { Metadata } from "next";
 import Footer from "@/components/sections/Footer";
 import GetInvestmentHero from "@/components/sections/GetInvestmentHero";
 import GetInvestmentForm from "@/components/sections/GetInvestmentFormServer";
 import GetInvestmentFAQ from "@/components/sections/GetInvestmentFAQ";
+import { buildMetadata } from "@/sanity/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Get Investment",
-  description:
-    "Apply for early stage funding from Titan Capital. Submit your pitch and connect with Kunal Bahl & Rohit Bansal.",
-};
+export async function generateMetadata() {
+  return buildMetadata("getinvestment");
+}
 
 export default function GetInvestmentPage() {
   return (

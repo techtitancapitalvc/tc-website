@@ -7,6 +7,8 @@ import { foundersTestimonial } from "./foundersTestimonial";
 import { fundDetails } from "./fundDetails";
 import { hero } from "./hero";
 import { navbar } from "./navbar";
+import { pageSeo } from "./pageSeo";
+import { siteSeo } from "./siteSeo";
 import { impactAtGlance } from "./impactAtGlance";
 import { indicornSpotlight } from "./indicornSpotlight";
 import { portfolioWinnerFund } from "./portfolioWinnerFund";
@@ -50,6 +52,9 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   /* Global */
   navbar,
   footer,
+  /* SEO */
+  siteSeo,
+  pageSeo,
   /* Portfolio */
   company,
   portfolioGrid,

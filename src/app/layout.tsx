@@ -1,7 +1,17 @@
-import type { Metadata, Viewport } from "next";
+import type { Viewport } from "next";
 import { Geist, Libre_Baskerville, Poppins, Inter, Plus_Jakarta_Sans, Montserrat, DM_Sans } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
+import { buildMetadata } from "@/sanity/lib/seo";
 import "./globals.css";
+
+/**
+ * Sitewide metadata — fetched from Sanity at build/request time. The
+ * fields managed in Studio under "SEO — Sitewide Defaults" populate the
+ * defaults that every page inherits unless it sets its own override.
+ */
+export async function generateMetadata() {
+  return buildMetadata();
+}
 
 /*
   FONTS:
@@ -49,71 +59,6 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["800"],
 });
-
-export const metadata: Metadata = {
-  title: {
-    default: "Titan Capital",
-    template: "%s - Titan Capital",
-  },
-  description:
-    "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
-  keywords: [
-    "Titan Capital",
-    "venture capital",
-    "early stage",
-    "seed funding",
-    "Kunal Bahl",
-    "Rohit Bansal",
-    "startup investment",
-    "India VC",
-  ],
-  authors: [{ name: "Titan Capital" }],
-  creator: "Titan Capital",
-  metadataBase: new URL("https://titan-capital-puce.vercel.app"),
-  robots: {
-    index: true,
-    follow: true,
-    "max-image-preview": "large" as const,
-    "max-snippet": -1,
-    "max-video-preview": -1,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    siteName: "Titan Capital",
-    title: "Titan Capital",
-    description:
-      "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
-    url: "https://titan-capital-puce.vercel.app",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        type: "image/png",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Titan Capital",
-    description:
-      "Titan Capital invests behind world class entrepreneurs looking to create wide-scale positive impact on India and the World.",
-    images: ["/og-image.png"],
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: "/apple-icon.png",
-  },
-  manifest: "/site.webmanifest",
-  other: {
-    "msapplication-TileImage": "/icon-192.png",
-  },
-};
 
 /*
   VIEWPORT META — required for responsive CSS to work correctly on mobile.

@@ -1,14 +1,12 @@
-import type { Metadata } from "next";
 import Footer from "@/components/sections/Footer";
 import TitanSeedHero from "@/components/sections/TitanSeedHero";
 import WhatWeLookFor from "@/components/sections/WhatWeLookFor";
 import WhyTitanSeed from "@/components/sections/WhyTitanSeed";
+import { buildMetadata } from "@/sanity/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Titan Seed Fund",
-  description:
-    "Titan Seed Fund backs exceptional founders at the earliest stages. Learn what we look for and why founders choose Titan.",
-};
+export async function generateMetadata() {
+  return buildMetadata("titanSeedFund");
+}
 
 export default function TitanSeedFundPage() {
   return (

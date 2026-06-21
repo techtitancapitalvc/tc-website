@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
 import LegalContent from "@/components/sections/LegalContent";
 import Footer from "@/components/sections/Footer";
+import { buildMetadata } from "@/sanity/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description:
-    "Read the privacy policy of Titan Winners Fund Management LLP — how we collect, use and disclose information provided by users of the Titan Capital website.",
-};
+export async function generateMetadata() {
+  return buildMetadata("privacy");
+}
 
 export default function PrivacyPolicyPage() {
   return (

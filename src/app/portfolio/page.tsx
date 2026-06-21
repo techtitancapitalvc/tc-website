@@ -1,15 +1,13 @@
-import type { Metadata } from "next";
 import BackedEarly from "@/components/sections/BackedEarly";
 import PortfolioStats from "@/components/sections/PortfolioStats";
 import PortfolioGrid from "@/components/sections/PortfolioGrid";
 import Footer from "@/components/sections/Footer";
 import JoinPortfolioCTA from "@/components/sections/JoinPortfolio";
+import { buildMetadata } from "@/sanity/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Portfolio",
-  description:
-    "Explore Titan Capital's portfolio of 200+ companies including Razorpay, OLA, Urban Company, Mamaearth, and more.",
-};
+export async function generateMetadata() {
+  return buildMetadata("portfolio");
+}
 
 export default function PortfolioPage() {
     return (
