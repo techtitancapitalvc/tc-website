@@ -35,16 +35,33 @@ const FALLBACK_COMPANIES: PortfolioCompany[] = [
   { name: "Zouk", logo: "/images/logos_backup/zouk_new_logo.webp", category: "Vegan leather goods", logoW: "40%", logoH: "15%" },
 ];
 
+/**
+ * Brands whose logo doesn't survive a plain `brightness(0) invert(1)`
+ * filter (monogram-style: filled tile + glyph on top — invert turns
+ * everything white including the glyph). For these we ship a
+ * pre-rendered "flipped variant" PNG with the white silhouette +
+ * transparent glyph baked in, and cross-fade to it on hover instead
+ * of applying the CSS filter.
+ *
+ * Key = company.name normalized (lowercase, no whitespace).
+ */
+const FLIPPED_VARIANTS: Record<string, string> = {
+  "homerun": "/images/portfolio_grid_flipped/homerun.png",
+};
+
+function flippedVariantFor(name: string): string | undefined {
+  return FLIPPED_VARIANTS[name.toLowerCase().replace(/\s+/g, "")];
+}
+
 /* ── Card component ──
    Default: white card, colored logo centred, nothing else.
-   Hover  : navy bg, logo flips to white via `brightness(0) invert(1)`
-            and slides to the top, description + READ link fade in below.
-   The brightness/invert filter only renders cleanly on logos uploaded
-   with transparent backgrounds — logos with solid coloured backgrounds
-   (e.g. GIVA's purple square) will read as solid white blocks on navy.
-   Re-export those with transparency if you want a cleaner hover. */
+   Hover  : navy bg, logo glides to top-left corner (slightly bigger
+            than before), description + READ link fade in below.
+   Position is animated with CSS `transition-all` on absolute top/left/
+   transform so every property tweens smoothly — no discrete snap. */
 function PortfolioCard({ company, index }: { company: PortfolioCompany; index: number }) {
   const [isActive, setIsActive] = useState(false);
+  const flippedSrc = flippedVariantFor(company.name);
 
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 30, scale: 0.97 },
@@ -70,29 +87,74 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
         width: "100%",
         aspectRatio: "1 / 1",
         backgroundColor: isActive ? "#001A4D" : "#FFFFFF",
-        transition: "background-color 0.5s ease-out",
+        transition: "background-color 0.55s ease-in-out",
       }}
     >
-      {/* ── LOGO — fills the card by default; shrinks to top on hover ── */}
+      {/* ── LOGO wrapper — shrinks vertically on hover to make room for
+             the description. 54% (vs original 45%) keeps the logo 1.2×
+             larger when hovered. ── */}
       <motion.div
-        className="flex w-full shrink-0 items-center justify-center"
-        animate={{ height: isActive ? "45%" : "100%" }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        style={{ paddingTop: isActive ? "clamp(14px, 1.8vw, 22px)" : 0 }}
+        className="relative w-full shrink-0 overflow-hidden"
+        animate={{ height: isActive ? "54%" : "100%" }}
+        transition={{ duration: 0.55, ease: "easeInOut" }}
       >
+        {/* Logo box — absolutely positioned. Idle: centred via top/left
+            50% + translate(-50%, -50%). Hover: top/left at padding +
+            translate(0,0). Every property is a numeric or unit value so
+            CSS tween is smooth, no snapping. */}
         <div
-          className={`relative transition-[filter] duration-500 ease-out ${
-            isActive ? "[filter:brightness(0)_invert(1)]" : ""
-          }`}
-          style={{ width: company.logoW, height: company.logoH }}
+          className="absolute transition-all duration-[550ms] ease-in-out"
+          style={{
+            width: company.logoW,
+            height: company.logoH,
+            top: isActive ? "clamp(14px, 1.8vw, 22px)" : "50%",
+            left: isActive ? "clamp(14px, 1.8vw, 22px)" : "50%",
+            transform: isActive ? "translate(0, 0)" : "translate(-50%, -50%)",
+          }}
         >
-          <Image
-            src={company.logo}
-            alt={company.name}
-            fill
-            sizes="(max-width: 768px) 40vw, 20vw"
-            className="object-contain"
-          />
+          {flippedSrc ? (
+            /* Brands with a pre-baked flipped variant — cross-fade. */
+            <>
+              <Image
+                src={company.logo}
+                alt={company.name}
+                fill
+                sizes="(max-width: 768px) 40vw, 20vw"
+                className={`object-contain transition-opacity duration-[550ms] ease-in-out ${
+                  isActive ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              <Image
+                src={flippedSrc}
+                alt={company.name}
+                fill
+                sizes="(max-width: 768px) 40vw, 20vw"
+                className={`absolute inset-0 object-contain transition-opacity duration-[550ms] ease-in-out ${
+                  isActive ? "opacity-100" : "opacity-0"
+                }`}
+                style={{ objectPosition: "left top" }}
+              />
+            </>
+          ) : (
+            /* Standard logos — CSS invert filter. */
+            <div
+              className={`relative h-full w-full transition-[filter] duration-[550ms] ease-in-out ${
+                isActive ? "[filter:brightness(0)_invert(1)]" : ""
+              }`}
+            >
+              <Image
+                src={company.logo}
+                alt={company.name}
+                fill
+                sizes="(max-width: 768px) 40vw, 20vw"
+                className="object-contain"
+                style={{
+                  objectPosition: isActive ? "left top" : "center",
+                  transition: "object-position 0.55s ease-in-out",
+                }}
+              />
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -101,7 +163,7 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
         className="flex w-full flex-1 flex-col justify-between text-white"
         style={{ padding: "clamp(12px, 1.8vw, 22px)" }}
         animate={{ opacity: isActive ? 1 : 0 }}
-        transition={{ duration: 0.4, ease: "easeOut", delay: isActive ? 0.15 : 0 }}
+        transition={{ duration: 0.45, ease: "easeInOut", delay: isActive ? 0.2 : 0 }}
       >
         <p
           className="m-0 font-['Poppins',_sans-serif] font-normal leading-[1.45]"
