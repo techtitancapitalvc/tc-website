@@ -106,8 +106,8 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
           className="absolute"
           initial={false}
           animate={{
-            top: isActive ? "6%" : "50%",
-            left: isActive ? "5%" : "50%",
+            top: isActive ? "4%" : "50%",
+            left: isActive ? "4%" : "50%",
             x: isActive ? "0%" : "-50%",
             y: isActive ? "0%" : "-50%",
           }}
@@ -162,18 +162,24 @@ function PortfolioCard({ company, index }: { company: PortfolioCompany; index: n
 
       {/* ── DESCRIPTION + READ — only on hover ── */}
       <motion.div
-        className="flex w-full flex-1 flex-col justify-between text-white"
-        style={{ padding: "clamp(12px, 1.8vw, 22px)" }}
+        className="flex min-h-0 w-full flex-1 flex-col justify-between overflow-hidden text-white"
+        style={{ padding: "clamp(12px, 0.5vw, 22px)" }}
         animate={{ opacity: isActive ? 1 : 0 }}
-        transition={{ duration: 0.45, ease: "easeInOut", delay: isActive ? 0.2 : 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
       >
         <p
-          className="m-0 font-['Poppins',_sans-serif] font-normal leading-[1.45]"
-          style={{ fontSize: "clamp(11px, min(1vw, 1.5vh), 14px)" }}
+          className="m-0 min-h-0 font-['Poppins',_sans-serif] font-normal leading-[1.3]"
+          style={{
+            fontSize: "clamp(11px, min(1vw, 1.5vh), 14px)",
+            display: "-webkit-box",
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: "vertical" as const,
+            overflow: "hidden",
+          }}
         >
           {company.category}
         </p>
-        <div className="mt-auto flex items-center gap-[6px] pt-2">
+        <div className="mt-auto flex items-center gap-[6px] pt-1">
           <span
             className="font-['Poppins',_sans-serif] font-medium uppercase tracking-wide"
             style={{ fontSize: "clamp(9px, min(0.85vw, 1.25vh), 12px)" }}
