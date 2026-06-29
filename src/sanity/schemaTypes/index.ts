@@ -7,7 +7,12 @@ import { foundersTestimonial } from "./foundersTestimonial";
 import { fundDetails } from "./fundDetails";
 import { hero } from "./hero";
 import { navbar } from "./navbar";
+import { fifteenYears } from "./fifteenYears";
+import { originStory } from "./originStory";
+import { ourStoryHero } from "./ourStoryHero";
+import { ourTeam } from "./ourTeam";
 import { pageSeo } from "./pageSeo";
+import { teamMember } from "./teamMember";
 import { siteSeo } from "./siteSeo";
 import { impactAtGlance } from "./impactAtGlance";
 import { indicornSpotlight } from "./indicornSpotlight";
@@ -49,6 +54,13 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   getInvestmentHero,
   getInvestmentForm,
   getInvestmentFAQ,
+  /* Our Story page */
+  ourStoryHero,
+  originStory,
+  fifteenYears,
+  /* Our Team page */
+  ourTeam,
+  teamMember,
   /* Global */
   navbar,
   footer,

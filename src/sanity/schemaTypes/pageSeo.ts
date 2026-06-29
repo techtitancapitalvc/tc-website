@@ -27,6 +27,8 @@ export const pageSeo = defineType({
           { title: "Winners Fund", value: "winnersFund" },
           { title: "Titan Seed Fund", value: "titanSeedFund" },
           { title: "Get Investment", value: "getinvestment" },
+          { title: "Our Story", value: "ourStory" },
+          { title: "Our Team", value: "ourteam" },
           { title: "Privacy Policy", value: "privacy" },
           { title: "Grievance Redressal", value: "grievance" },
         ],

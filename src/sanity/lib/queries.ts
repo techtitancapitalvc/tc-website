@@ -44,6 +44,125 @@ export const indicornSpotlightQuery = groq`
 `;
 
 /**
+ * Our Story page — Hero section. Singleton.
+ * Founders image URL resolved here so the frontend receives a plain string.
+ */
+export const ourStoryHeroQuery = groq`
+  *[_type == "ourStoryHero"][0]{
+    headingFirst,
+    headingHighlight,
+    quote,
+    "image": image.asset->url
+  }
+`;
+
+/**
+ * Our Story page — Origin Story section. Singleton.
+ * Per-bullet image URLs resolved here so the frontend just receives strings.
+ */
+export const originStoryQuery = groq`
+  *[_type == "originStory"][0]{
+    headingFirst,
+    headingHighlight,
+    bullets[]{
+      title,
+      desc,
+      "images": images[].asset->url
+    }
+  }
+`;
+
+/**
+ * Our Team page — all three team arrays in one fetch. Image URLs
+ * resolved here so the frontend receives plain strings.
+ */
+export const ourTeamQuery = groq`
+  *[_type == "ourTeam"][0]{
+    headingFirst,
+    headingSecond,
+    "corporateTeam": corporateTeam[]{
+      name,
+      "slug": slug.current,
+      title,
+      bio,
+      linkedinUrl,
+      emailUrl,
+      twitterUrl,
+      "image": image.asset->url
+    },
+    "seedTeam": seedTeam[]{
+      name,
+      "slug": slug.current,
+      title,
+      bio,
+      linkedinUrl,
+      emailUrl,
+      twitterUrl,
+      "image": image.asset->url
+    },
+    "winnerFundTeam": winnerFundTeam[]{
+      name,
+      "slug": slug.current,
+      title,
+      bio,
+      linkedinUrl,
+      emailUrl,
+      twitterUrl,
+      "image": image.asset->url
+    }
+  }
+`;
+
+/**
+ * Single team member by slug — used by /ourteam/[slug] detail page.
+ * Searches the three team arrays in the ourTeam singleton and returns
+ * the first match. The projection mirrors the per-card member shape
+ * plus the bio for the detail page.
+ */
+export const teamMemberBySlugQuery = groq`
+  *[_type == "ourTeam"][0]{
+    "member": (corporateTeam[] + seedTeam[] + winnerFundTeam[])[slug.current == $slug][0]{
+      name,
+      "slug": slug.current,
+      title,
+      bio,
+      linkedinUrl,
+      emailUrl,
+      twitterUrl,
+      "image": image.asset->url
+    }
+  }.member
+`;
+
+/**
+ * All team-member slugs — used by generateStaticParams() on the
+ * detail page so Next.js pre-renders each member route at build time.
+ */
+export const allTeamMemberSlugsQuery = groq`
+  *[_type == "ourTeam"][0]{
+    "slugs": array::unique(
+      (corporateTeam[].slug.current + seedTeam[].slug.current + winnerFundTeam[].slug.current)[defined(@)]
+    )
+  }.slugs
+`;
+
+/**
+ * Our Story page — Fifteen Years of Showing Up section. Singleton.
+ * Years are sorted ascending so the timeline always reads 2011 → 2026.
+ */
+export const fifteenYearsQuery = groq`
+  *[_type == "fifteenYears"][0]{
+    headingFirst,
+    headingHighlight,
+    "years": years[] | order(year asc) {
+      year,
+      subtitle,
+      description
+    }
+  }
+`;
+
+/**
  * SEO — Sitewide defaults (singleton). Image URL resolved here.
  */
 export const siteSeoQuery = groq`
@@ -459,4 +578,24 @@ export const portfoliGridQuery = `*[_type == "company"] {
   fundType,
   "logo": logo.asset->url,
   "founderImage": founderImage.asset->url
+}`;
+
+
+/**
+ * Beyond The Cheque page — Hero section.
+ */
+export const beyondTheChequeHeroQuery = groq`
+  *[_type == "beyondTheChequeHero"][0]{
+    headingFirst,
+    headingSecond,
+    subtitle
+  }
+`;
+
+export const ourTeamHeroQuery = `*[_type == "ourTeamHero"][0] {
+  titleLine1,
+  titleLine2,
+  titleLine3,
+  description,
+  "members": members[].asset->url
 }`;

@@ -27,18 +27,30 @@ type PageSeo = {
  * Any missing field on the per-page doc falls back to the sitewide value.
  */
 export async function buildMetadata(pageKey?: string): Promise<Metadata> {
-  const site = await sanityFetch<SiteSeo | null>({
-    query: siteSeoQuery,
-    tags: ["seo"],
-  });
+  // Wrap both fetches in try/catch so a transient network/Sanity blip
+  // never crashes generateMetadata for the whole page.
+  let site: SiteSeo | null = null;
+  try {
+    site = await sanityFetch<SiteSeo | null>({
+      query: siteSeoQuery,
+      tags: ["seo"],
+    });
+  } catch (err) {
+    console.error("[seo] siteSeo fetch failed, using fallback:", err);
+  }
 
-  const page = pageKey
-    ? await sanityFetch<PageSeo | null>({
+  let page: PageSeo | null = null;
+  if (pageKey) {
+    try {
+      page = await sanityFetch<PageSeo | null>({
         query: pageSeoByKeyQuery,
         params: { pageKey },
         tags: ["seo", `seo:${pageKey}`],
-      })
-    : null;
+      });
+    } catch (err) {
+      console.error(`[seo] pageSeo fetch failed for "${pageKey}":`, err);
+    }
+  }
 
   const siteName = site?.siteName ?? "Titan Capital";
   const siteUrl = site?.siteUrl ?? "https://titan-capital-puce.vercel.app";
