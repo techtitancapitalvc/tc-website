@@ -599,3 +599,22 @@ export const ourTeamHeroQuery = `*[_type == "ourTeamHero"][0] {
   description,
   "members": members[].asset->url
 }`;
+
+/**
+ * Our Team page — "Led By Founders Who've Walked The Path." section.
+ * Singleton. Portrait URLs resolved here so the frontend receives plain strings.
+ */
+export const ledByFoundersQuery = groq`
+  *[_type == "ledByFounders"][0]{
+    headingTopHighlight,
+    headingBottom,
+    founders[]{
+      name,
+      role,
+      linkedin,
+      bio,
+      imagePosition,
+      "image": image.asset->url
+    }
+  }
+`;

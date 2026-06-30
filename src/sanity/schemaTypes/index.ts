@@ -11,6 +11,8 @@ import { fifteenYears } from "./fifteenYears";
 import { originStory } from "./originStory";
 import { ourStoryHero } from "./ourStoryHero";
 import { ourTeam } from "./ourTeam";
+import { ourTeamHero } from "./ourTeamHero";
+import { ledByFounders } from "./ledByFounders";
 import { pageSeo } from "./pageSeo";
 import { teamMember } from "./teamMember";
 import { siteSeo } from "./siteSeo";
@@ -59,6 +61,8 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   originStory,
   fifteenYears,
   /* Our Team page */
+  ourTeamHero,
+  ledByFounders,
   ourTeam,
   teamMember,
   /* Global */

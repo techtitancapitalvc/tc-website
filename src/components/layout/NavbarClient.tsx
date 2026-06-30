@@ -38,6 +38,15 @@ const FALLBACK_SECTIONS: NavbarSection[] = [
     directUrl: "/portfolio",
     subItems: [],
   },
+  {
+    id: "about",
+    title: "ABOUT US ",
+    subItems: [
+      { label: "Our Story", url: "/ourstory" },
+      { label: "Our Team", url: "/ourTeam" },
+      { label: "Beyond The Cheque", url: "/beyondTheCheque" },
+    ],
+  },
 ];
 
 const FALLBACK_CTA_LABEL = "Get Investment";

@@ -33,8 +33,9 @@ export const ourTeamHero = defineType({
       title: "Team Member Images",
       type: "array",
       of: [{ type: "image" }],
-      description: "Upload exactly 11 images to fill the grid perfectly.",
-      validation: (Rule) => Rule.max(11),
+      description:
+        "Upload exactly 12 images to fill the grid perfectly (5 in row 1, 4 in row 2, 3 in row 3).",
+      validation: (Rule) => Rule.max(12),
     }),
   ],
 });

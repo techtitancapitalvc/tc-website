@@ -4,6 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import GmailIcon from "@/components/icons/GmailIcon";
+import LinkedInIcon from "@/components/icons/LinkedInIcon";
+import XIcon from "@/components/icons/XIcon";
+
 /* ─────────────────────────────────────────────────────────
    Types — shared with the server wrapper (OurTeam.tsx).
    ───────────────────────────────────────────────────────── */
@@ -98,82 +102,22 @@ function cdnImageSrc(url: string, width: number): string {
    The viewBox is 254×250 so transforms can use clipPathUnits
    ="objectBoundingBox" by scaling 1/254 × 1/250.
    ───────────────────────────────────────────────────────── */
-/* Three blob variants — used in rotation so cards don't all look
-   identical. Each is a 254×250 viewBox organic shape resembling
-   the asymmetric blue blob in the design ref. */
-const BLOB_PATHS = [
-  // wider top-right, narrower bottom-left
-  "M198 18 C234 32 252 88 244 142 C236 196 198 234 144 240 C90 246 38 230 16 188 C-6 144 6 92 32 58 C58 24 102 6 148 8 C170 9 184 12 198 18 Z",
-  // bulkier left, slim right
-  "M186 14 C224 22 250 60 250 118 C250 176 226 220 174 236 C122 252 64 240 30 204 C-4 168 0 110 20 70 C42 28 90 6 136 8 C158 9 172 10 186 14 Z",
-  // wave-edged organic
-  "M204 24 C232 44 250 96 240 150 C232 200 200 232 152 240 C100 248 50 232 22 196 C-4 162 2 108 22 70 C46 30 96 8 144 10 C170 12 188 14 204 24 Z",
-];
+/* Blue blob asset — the actual design-ref vector saved as PNG with
+   transparent surrounding. The native dimensions are 440×436; the
+   image is used as both the colour BG and the mask on the photo
+   so the photo takes the exact same organic shape. */
+const BLOB_SRC = "/images/team/blob-blue.png";
+const BLOB_VIEWBOX_W = 440;
+const BLOB_VIEWBOX_H = 436;
 
+/* No-op kept for layout parity — defs are no longer needed since we
+   mask the photo with the PNG itself (mask-image). */
 function BlobDefs() {
-  // Renders an invisible SVG with one clip-path per blob variant.
-  // TeamCard references the matching id based on its rotation slot.
-  return (
-    <svg
-      aria-hidden
-      width="0"
-      height="0"
-      style={{ position: "absolute", pointerEvents: "none" }}
-    >
-      <defs>
-        {BLOB_PATHS.map((d, i) => (
-          <clipPath
-            key={i}
-            id={`our-team-blob-clip-${i}`}
-            clipPathUnits="objectBoundingBox"
-          >
-            <path d={d} transform={`scale(${1 / 254} ${1 / 250})`} />
-          </clipPath>
-        ))}
-      </defs>
-    </svg>
-  );
+  return null;
 }
 
-/* ─────────────────────────────────────────────────────────
-   Social icon SVGs — inlined so we don't ship an icon
-   library for three icons. 30×30 per spec.
-   ───────────────────────────────────────────────────────── */
-function LinkedInIcon() {
-  return (
-    <svg viewBox="0 0 30 30" fill="none" className="h-full w-full">
-      <rect width="30" height="30" rx="4" fill="#0A66C2" />
-      <path
-        d="M8.5 11.5h2.6v8.5H8.5v-8.5Zm1.3-3.7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM13 11.5h2.5v1.2h.05c.35-.66 1.2-1.36 2.47-1.36 2.64 0 3.13 1.74 3.13 4v4.66h-2.6v-4.13c0-.99-.02-2.26-1.38-2.26-1.38 0-1.59 1.08-1.59 2.19v4.2H13v-8.5Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 30 30" fill="none" className="h-full w-full">
-      <rect width="30" height="30" rx="4" fill="#EA4335" />
-      <path
-        d="M7 10v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10l-8 5.5L7 10Zm0-1h16l-8 5.5L7 9Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg viewBox="0 0 30 30" fill="none" className="h-full w-full">
-      <rect width="30" height="30" rx="4" fill="#000" />
-      <path
-        d="M18.6 8h2.3l-5 5.74L22 23h-4.6l-3.62-4.74L9.62 23H7.3l5.35-6.12L7 8h4.72l3.27 4.32L18.6 8Zm-.8 13.6h1.27L11.3 9.34H9.94L17.8 21.6Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
+/* Social icons live in /components/icons — single source of truth,
+   reused on the slug page as well. */
 
 function SocialLink({
   href,
@@ -209,17 +153,13 @@ function SocialLink({
    ───────────────────────────────────────────────────────── */
 function TeamCard({
   member,
-  variantIndex,
   rotateBlob,
 }: {
   member: TeamMember;
-  /** Index into BLOB_PATHS so cards cycle through blob shapes. */
-  variantIndex: number;
   /** Small rotation applied to the bg blob for extra organic variety. */
   rotateBlob: number;
 }) {
   const slug = member.slug || teamSlug(member.name);
-  const blobIdx = variantIndex % BLOB_PATHS.length;
 
   // Normalise the email link — accept either a plain address or a
   // pre-formed mailto:.
@@ -231,7 +171,11 @@ function TeamCard({
 
   return (
     <motion.div
-      className="group flex flex-col items-center"
+      // w-full anchors the whole card to its flex slot width.
+      // Without it the card was sizing to its widest text child,
+      // so cards with longer titles ended up visibly wider than
+      // cards with short titles ("CFO" vs "Vice President — …").
+      className="group flex w-full flex-col items-center"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -241,38 +185,50 @@ function TeamCard({
             Hover scales the whole card subtly and reveals the
             colour photo (monochrome → colour). ── */}
       <Link
-        href={`/ourteam/${slug}`}
+        href={`/ourTeam/${slug}`}
         aria-label={`${member.name} — ${member.title}`}
-        className="block focus:outline-none"
+        className="block w-full focus:outline-none"
       >
         <div
-          className="relative transition-transform duration-300 ease-out group-hover:-translate-y-1"
+          className="relative w-full transition-transform duration-300 ease-out group-hover:-translate-y-1"
+          // Photo card fills 100 % of its flex slot (no maxWidth cap)
+          // so the blob is the same constant size for every card and
+          // the grid reaches the same left/right extent as the hero,
+          // LedByFounders, and Footer (≈ 1440 inner wrapper).
           style={{
-            width: "clamp(180px, min(17.6vw, 25.8vh), 254px)",
-            aspectRatio: "254 / 250",
+            aspectRatio: `${BLOB_VIEWBOX_W} / ${BLOB_VIEWBOX_H}`,
           }}
         >
-          {/* ── BG BLOB — solid light-blue, offset/rotated for halo ── */}
-          <svg
-            viewBox="0 0 254 250"
-            fill="none"
+          {/* ── BG BLOB — the design-ref PNG asset, offset & rotated
+                  for visual halo around the photo. ── */}
+          <img
+            src={BLOB_SRC}
+            alt=""
             aria-hidden
-            className="absolute h-full w-full"
+            draggable={false}
+            className="absolute h-full w-full select-none"
             style={{
               top: "6%",
               left: "5%",
               transform: `rotate(${rotateBlob}deg)`,
               transformOrigin: "center",
+              objectFit: "contain",
             }}
-          >
-            <path d={BLOB_PATHS[blobIdx]} fill="#D3E2FF" />
-          </svg>
+          />
 
-          {/* ── PHOTO — clipped to the same blob shape; monochrome
-                  by default with smooth colour return on hover. ── */}
+          {/* ── PHOTO — masked to the SAME blob shape via the PNG's
+                  alpha channel; monochrome by default with smooth
+                  colour return on hover. ── */}
           <div
             className="absolute inset-0"
-            style={{ clipPath: `url(#our-team-blob-clip-${blobIdx})` }}
+            style={{
+              WebkitMaskImage: `url(${BLOB_SRC})`,
+              maskImage: `url(${BLOB_SRC})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+            }}
           >
             {member.image ? (
               <Image
@@ -298,7 +254,8 @@ function TeamCard({
           </div>
         </div>
 
-        {/* ── NAME ── */}
+        {/* ── NAME — reserve a fixed 1-line slot so cards
+              never differ in height because of name wrapping. ── */}
         <h3
           className="m-0 text-center font-['Poppins',_sans-serif] font-medium text-[#0E0E0E]"
           style={{
@@ -306,12 +263,19 @@ function TeamCard({
             lineHeight: "158%",
             marginTop: "clamp(12px, min(1.4vw, 2vh), 24px)",
             maxWidth: "359px",
+            // 1 line tall = 1.58em (line-height) — long names that
+            // still wrap will push past this naturally.
+            minHeight: "1.58em",
           }}
         >
           {member.name}
         </h3>
 
-        {/* ── TITLE ── */}
+        {/* ── TITLE — reserve a fixed 2-line slot.
+              Without this, cards with short titles ("CFO") were
+              shorter than cards with long titles ("Vice President
+              — Corporate Development"), which is what made the
+              grid look uneven. ── */}
         <p
           className="m-0 text-center font-['Poppins',_sans-serif] font-normal text-[#0E0E0E]"
           style={{
@@ -319,6 +283,8 @@ function TeamCard({
             lineHeight: "158%",
             marginTop: "clamp(2px, 0.4vw, 8px)",
             maxWidth: "421px",
+            // 2 lines tall = 2 × 1.58em line-height.
+            minHeight: "calc(2 * 1.58em)",
           }}
         >
           {member.title}
@@ -345,7 +311,7 @@ function TeamCard({
           )}
           {emailHref && (
             <SocialLink href={emailHref} label={`Email ${member.name}`}>
-              <MailIcon />
+              <GmailIcon />
             </SocialLink>
           )}
           {member.twitterUrl && (
@@ -398,9 +364,12 @@ function TeamGroup({
       {/* flex-wrap (not grid) so incomplete trailing rows auto-center
             instead of clinging to the leftmost grid column. Each card
             gets a fixed flex-basis so 3 fit per row on desktop, 2 on
-            tablet, 1 on mobile — without any breakpoint switching. */}
+            tablet, 1 on mobile — without any breakpoint switching.
+            Wrapper width matches the section's outer max-w-[1440px]
+            (same as OurTeamHero) so the cards aren't pinched into a
+            narrower 1100 band on wide viewports. */}
       <div
-        className="flex w-full max-w-[1100px] flex-wrap justify-center"
+        className="flex w-full flex-wrap justify-center"
         style={{
           rowGap: "clamp(36px, min(4vw, 6vh), 72px)",
           columnGap: "clamp(20px, min(2vw, 3vh), 40px)",
@@ -410,11 +379,13 @@ function TeamGroup({
           <div
             key={`${title}-${i}-${member.name}`}
             className="flex shrink-0 justify-center"
-            style={{ flexBasis: "clamp(220px, 28%, 320px)" }}
+            // Slot width: 3 cards × ~31% + 2 × column-gap fills the
+            // 1440 inner wrapper end-to-end, so the team grid lines
+            // up with Footer / Hero / LedByFounders on both edges.
+            style={{ flexBasis: "clamp(260px, 31%, 450px)" }}
           >
             <TeamCard
               member={member}
-              variantIndex={i}
               rotateBlob={BLOB_ROTATIONS[i % BLOB_ROTATIONS.length]}
             />
           </div>
@@ -451,9 +422,11 @@ export default function OurTeamClient({
     <section
       className="relative flex w-full flex-col items-center overflow-hidden bg-white"
       style={{
-        marginTop: "var(--nav-height)",
-        paddingTop: "clamp(40px, min(5vw, 7vh), 100px)",
-        paddingBottom: "clamp(48px, min(7vw, 10vh), 120px)",
+        // Site-wide section rhythm — identical to Footer + HeroClient.
+        // No nav-height offset: this section is the third on /ourTeam,
+        // not the hero, so the navbar is already cleared upstream.
+        paddingTop: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
+        paddingBottom: "clamp(40px, min(6.94vw, 10.18vh), 100px)",
         paddingLeft: "var(--section-px-wide, 5%)",
         paddingRight: "var(--section-px-wide, 5%)",
       }}
@@ -462,7 +435,7 @@ export default function OurTeamClient({
           the DOM for url(#…) references in this section to work). */}
       <BlobDefs />
 
-      <div className="mx-auto flex w-full max-w-[1330px] flex-col items-center">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center">
         {/* ── PAGE HEADING — italic phrase first on a light-blue
               pill, regular phrase after. Same scaleX + variants
               pattern WinnersHero uses. ── */}
