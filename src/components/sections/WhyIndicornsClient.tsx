@@ -80,7 +80,7 @@ const FALLBACK_TIMELINE: WhyIndicornsTimelineEntry[] = [
     title: "The term is coined",
     desc: '"Indicorn" is unveiled on the TechSparks main stage naming a kind of company that always existed but was never celebrated.',
     statNumber: "1",
-    statLabel: "New Term",
+    statLabel: "New\nTerm",
   },
   {
     date: "October 2024",
