@@ -24,6 +24,8 @@ import { whyIndicorns } from "./whyIndicorns";
 import { indicornCompanies } from "./indicornCompanies";
 import { indicornTestimonials } from "./indicornTestimonials";
 import { portfolioWinnerFund } from "./portfolioWinnerFund";
+import { titanEcosystemHero } from "./titanEcosystemHero";
+import { titanEcosystemPillars } from "./titanEcosystemPillars";
 import { titanSeedHero } from "./titanSeedHero";
 import { whatFoundersGet } from "./whatFoundersGet";
 import { whatWeBelieve } from "./whatWeBelieve";
@@ -71,6 +73,9 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   ourStoryHero,
   originStory,
   fifteenYears,
+  /* Titan Ecosystem page */
+  titanEcosystemHero,
+  titanEcosystemPillars,
   /* Our Team page */
   ourTeamHero,
   ledByFounders,

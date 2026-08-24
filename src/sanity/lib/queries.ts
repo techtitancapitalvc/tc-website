@@ -709,6 +709,38 @@ export const allFoundersQuery = groq`
    ───────────────────────────────────────────────────────── */
 
 /** Indicorns hero — the folded card that unfolds on scroll. Singleton. */
+/**
+ * Titan Ecosystem — page hero. Singleton.
+ *
+ * Avatars are projected to bare URLs so the client can render them without
+ * pulling in an image builder. Keep comments OUT of the groq template: GROQ
+ * has no block-comment syntax, so a stray one is a parse error at query time,
+ * not build time.
+ */
+export const titanEcosystemHeroQuery = groq`
+  *[_type == "titanEcosystemHero"][0]{
+    headingLineOne,
+    headingLineTwo,
+    founderCountLabel,
+    "founderAvatars": founderAvatars[].asset->url,
+    description
+  }
+`;
+
+/** Titan Ecosystem — the scroll rail beneath the hero. Singleton. */
+export const titanEcosystemPillarsQuery = groq`
+  *[_type == "titanEcosystemPillars"][0]{
+    heading,
+    parts[]{
+      title,
+      description,
+      visual,
+      ctaLabel,
+      ctaUrl
+    }
+  }
+`;
+
 export const indicornsHeroQuery = groq`
   *[_type == "indicornsHero"][0]{
     headingPrefix,
