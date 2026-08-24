@@ -57,7 +57,7 @@ export const titanEcosystemPillars = defineType({
               options: {
                 list: [
                   { title: "Orbit — satellites breathing around a ring", value: "orbit" },
-                  { title: "Triangle → Star — a triangle that becomes a six-pointed star", value: "triangle" },
+                  { title: "Mandala — three rings of nodes turning and breathing", value: "mandala" },
                   { title: "Web — a hub whose legs drift", value: "web" },
                   { title: 'Monogram — a dot-matrix "TC" that reacts to the pointer', value: "monogram" },
                 ],

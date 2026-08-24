@@ -1,6 +1,8 @@
 import Footer from "@/components/sections/Footer";
 import FoundersStoryHero from "@/components/sections/FoundersStoryHero";
 import FoundersStory from "@/components/sections/FoundersStory";
+import FeaturedStories from "@/components/sections/FeaturedStories";
+import SixFiftyFounders from "@/components/sections/SixFiftyFounders";
 import JoinPortfolio from "@/components/sections/JoinPortfolio";
 import { buildMetadata } from "@/sanity/lib/seo";
 
@@ -12,8 +14,9 @@ export default function FoundersStoryPage() {
   return (
     <main className="flex min-h-screen w-full flex-col">
       <FoundersStoryHero />
+      <FeaturedStories />
       <FoundersStory />
-      <JoinPortfolio />
+      <SixFiftyFounders />
       <Footer />
     </main>
   );

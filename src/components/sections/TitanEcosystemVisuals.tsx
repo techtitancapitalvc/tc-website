@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 /**
@@ -11,26 +11,31 @@ import { motion } from "framer-motion";
  * about drawing. Pick one with `<PartVisual kind="…" />`.
  *
  *   orbit      six satellites breathing in and out around a dashed ring
- *   triangle   a triangle that becomes a six-pointed star and back, turning
- *   web        a hub with drifting legs that reaches for the pointer
- *   monogram   thousands of letters flying in to settle into "TC"
+ *   mandala    three rings of nodes that turn and breathe through each other
+ *   web        a spider crawling a dot field, spinning threads to the nearest
+ *   monogram   a letter cloud that turns once in 3D, then scrambles into a
+ *              dot-matrix "TC" with a field band above and below
  *
- * THREE DIFFERENT ENGINES, each for a reason:
+ * THREE ENGINES, each for a reason:
  *
- *   CSS keyframes   anything that must run forever with no input — the orbit,
- *                   the star, the web's idle drift. Keeps moving whether or
- *                   not React renders.
- *   React state     the web's pointer reaction, because a leg's far end is
- *                   `x2`/`y2` — SVG attributes CSS cannot animate — and the
- *                   line and its node must move as one. Twelve legs is cheap.
- *   Canvas          the monogram alone, because thousands of particles is far
- *                   past what the DOM will animate. See its own note.
+ *   CSS keyframes   the orbit and the star. They loop forever with no input,
+ *                   so they should keep going whether or not React renders.
+ *   rAF + refs      the spider. Its body moves every frame and its threads are
+ *                   `x1`/`y1`/`x2`/`y2` — SVG attributes CSS cannot animate.
+ *                   Writing them through refs avoids re-rendering fifty-odd
+ *                   static dots sixty times a second to move nine lines.
+ *   Canvas          the monogram, because a couple of thousand particles is
+ *                   far past what the DOM will animate. See its own note.
  *
- * DETERMINISM. The three SVG/DOM visuals never call Math.random: a random
- * value chosen during render differs between server and client and React
- * would report a hydration mismatch, so every "random" offset there is a
- * hand-picked constant. The canvas is exempt — it builds its particles inside
- * an effect, which only ever runs on the client.
+ * NOTHING STARTS UNTIL IT IS SEEN. Every visual is wrapped by PartVisual in an
+ * observed element: the CSS ones are paused through `animation-play-state`,
+ * and the two rAF loops check the same flag themselves.
+ *
+ * DETERMINISM. Anything rendered on the server — the SVG dot field, the
+ * triangle's vertices — is hand-picked, never Math.random, because a random
+ * value chosen during render differs between server and client and React would
+ * report a hydration mismatch. The canvas is exempt: it builds its particles
+ * inside an effect, which only ever runs on the client.
  */
 
 /* ─────────────────────────────────────────────────────────
@@ -39,12 +44,13 @@ import { motion } from "framer-motion";
    screens, then clamp at both ends.
    ───────────────────────────────────────────────────────── */
 export const VISUAL_SIZE = "clamp(220px, min(26vw, 40vh), 440px)";
+/** The mandala runs larger — see the note on its wrapper. */
+const MANDALA_SIZE = "clamp(280px, min(40vw, 60vh), 660px)";
 const ORBIT_DOT = "clamp(26px, min(3.24vw, 5.01vh), 56px)";
+
 /** Dash pattern for every dashed path here, in SCREEN px — see the
  *  non-scaling-stroke note on the orbit ring for why the unit is pixels. */
 const DASH = "26 16";
-/** The same pattern at the smaller scale the triangle and web draw at. */
-const DASH_FINE = "8 7";
 
 const SPIN_SECONDS = 20;
 const PULSE_SECONDS = 11;
@@ -55,13 +61,16 @@ const EASE_CSS = "cubic-bezier(0.22,1,0.36,1)";
 const EASE_BREATHE = "cubic-bezier(0.45,0,0.55,1)";
 
 const STROKE = "rgba(255,255,255,0.45)";
-const STROKE_SOFT = "rgba(255,255,255,0.3)";
+/** Mandala. Edges are faint on purpose — they only read where they overlap,
+ *  which is what gives the reference its woven look. */
+const MANDALA_EDGE = "rgba(255,255,255,0.13)";
+const MANDALA_NODE_FILL = "rgba(255,255,255,0.92)";
 /** The spider. The reference is red on black; on this navy that would read as
  *  an error state, so it takes the section's own light blue instead. */
 const SPIDER_BODY = "rgba(210,230,255,0.95)";
 const SPIDER_THREAD = "rgba(150,190,255,0.8)";
 
-export type VisualKind = "orbit" | "triangle" | "web" | "monogram";
+export type VisualKind = "orbit" | "mandala" | "web" | "monogram";
 
 /* ═════════════════════════════════════════════════════════
    KEYFRAMES — injected once by the section.
@@ -109,30 +118,6 @@ export const VISUAL_KEYFRAMES = (ring: string) => `
   82%  { opacity: 1; transform: scale(1); }
   92%  { opacity: 0; transform: scale(0.3); }
   100% { opacity: 0; transform: scale(0.3); }
-}
-
-/* ── TRIANGLE becomes STAR ──
-   A six-pointed star is two overlapping triangles, so the morph is not a
-   shape-tween at all: the second triangle simply grows in and out of the
-   first. That is why the points always land exactly on the star and never
-   drift, which a points-array tween between 3 and 6 vertices cannot promise.
-   The second triangle also counter-turns slightly as it arrives, so it looks
-   like it rotates INTO position rather than just fading up. */
-@keyframes eco-tri-b {
-  0%   { opacity: 0; transform: rotate(-60deg) scale(0.35); }
-  16%  { opacity: 0; transform: rotate(-60deg) scale(0.35); }
-  42%  { opacity: 1; transform: rotate(0deg)   scale(1); }
-  62%  { opacity: 1; transform: rotate(0deg)   scale(1); }
-  88%  { opacity: 0; transform: rotate(-60deg) scale(0.35); }
-  100% { opacity: 0; transform: rotate(-60deg) scale(0.35); }
-}
-/* The first triangle breathes very slightly against it, so the pair reads as
-   one object changing rather than one object with a passenger. */
-@keyframes eco-tri-a {
-  0%   { transform: scale(1); }
-  42%  { transform: scale(0.94); }
-  62%  { transform: scale(0.94); }
-  100% { transform: scale(1); }
 }
 
 /* NOTHING RUNS UNTIL THE READER GETS THERE.
@@ -263,105 +248,215 @@ function Orbit() {
 }
 
 /* ═════════════════════════════════════════════════════════
-   2. TRIANGLE → STAR
+   2. MANDALA — three rings that breathe through each other
    ═════════════════════════════════════════════════════════ */
-/** Radius of the vertices, in the 100-unit viewBox. */
-const TRI_R = 36;
-/** Vertex marker radius. */
-const TRI_NODE = 4.6;
+/**
+ * Rebuilt from the reference GIF rather than by eye: the file was pulled down
+ * and all 53 frames measured, so every number below comes from the source.
+ *
+ * THE RINGS SWAP — they do not bounce. This is the thing that is easy to get
+ * wrong, because the radii alone cannot tell you which it is: both models
+ * produce the identical sequence of radius values. The angular offsets settle
+ * it. Each ring carries a fixed offset (they sit 40/3 deg apart, one third of
+ * the 40 deg node pitch), and those offsets TRADE PLACES across a merge:
+ *
+ *     frame 44   measured        [24.27, 37.48, 11.14]
+ *                if they bounced [37.49, 11.12, 24.35]
+ *
+ * — a cyclic rotation of the baseline, not a return to it. So every ring
+ * travels outward, and the outermost comes back round as the new innermost.
+ *
+ * That makes the whole thing ONE closed radius path with three rings spaced a
+ * third of a period apart, rather than three rings each with their own range.
+ * Fitted against the measured frames, within 3.5% of the half-size:
+ *
+ *     r(p) = 0.5 + 0.25 * cos(2pi * (p - 0.56))     (as a fraction of half)
+ *
+ * The merges fall out of it for free: rings a third of a period apart cross
+ * at exactly the 50/125/125 and 75/75/150 the GIF measures.
+ *
+ * ROTATION IS NOT SEPARATE. Each ring also advances 40 deg — exactly one node
+ * pitch — per period, so after one period every ring has moved up a role AND
+ * turned by one node, and the figure is pixel-identical. That is why the
+ * source GIF can loop in a third of the true period.
+ *
+ * Node radius tracks its ring radius (measured 2.7 / 5.8 / 9.1px at radii
+ * 56.7 / 100 / 143.3), so a node grows as it travels outward.
+ */
+const MANDALA_RINGS = 3;
+const MANDALA_NODES = 9;
+/**
+ * Seconds for one full period — every ring back to where it began.
+ *
+ * The GIF measures 6.36s. Slowed here: the reference is a standalone loop you
+ * look AT, this one sits beside body copy and has to be readable past. One
+ * merge happens every PERIOD/3, so this is a merge every 3s.
+ */
+const MANDALA_PERIOD = 9;
+/** Where in the period the rings are at their widest. */
+const MANDALA_PEAK = 0.56;
+/** Ring radius as a fraction of the half-size: mid, and swing either side. */
+const MANDALA_MID = 0.5;
+const MANDALA_SWING = 0.25;
+/** Node radius as a fraction of its own ring radius. */
+const MANDALA_NODE = 0.06;
+/**
+ * How much of the canvas the figure fills.
+ *
+ * The measured fractions above come straight from the GIF, where the rings
+ * peak at 0.75 of the half-size — so with a node on top the drawing only ever
+ * reached 79% of its box and sat in a pool of empty space. Scaling by one
+ * factor keeps the reference's proportions exactly while taking it to 95%.
+ */
+const MANDALA_FIT =
+  0.95 / ((MANDALA_MID + MANDALA_SWING) * (1 + MANDALA_NODE));
 
-/** The six hexagram vertices. `offset` picks which triangle. */
-function triPoints(offset: number) {
-  return [0, 1, 2].map((k) => {
-    const a = ((offset + k * 120 - 90) * Math.PI) / 180;
-    return { x: 50 + TRI_R * Math.cos(a), y: 50 + TRI_R * Math.sin(a) };
-  });
-}
+function Mandala() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-function TriangleStar() {
-  const A = triPoints(0);
-  const B = triPoints(60);
-  const path = (p: { x: number; y: number }[]) =>
-    `${p.map((v) => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(" ")}`;
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const canvas = canvasRef.current;
+    if (!wrap || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let w = 0;
+    let h = 0;
+    let raf = 0;
+    let visible = false;
+    const start = performance.now();
+
+    const size = () => {
+      // Layout box, not getBoundingClientRect — the cell carries an entrance
+      // scale, and the rect would bake it into the backing store.
+      w = Math.max(1, wrap.offsetWidth);
+      h = Math.max(1, wrap.offsetHeight);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const draw = (now: number) => {
+      raf = requestAnimationFrame(draw);
+      if (!visible) return;
+      const t = (now - start) / 1000;
+      ctx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const half = Math.min(w, h) / 2;
+      // 0 at one end of the breathe, 1 at the other. Cosine, so it eases into
+      // each merge instead of arriving at constant speed.
+      /* Each ring is the SAME path, a third of a period apart. They are left
+         in index order deliberately — see the edge note below for why sorting
+         them by radius is exactly what must not happen. */
+      const base = reduced ? 0.25 : t / MANDALA_PERIOD;
+      const rings = Array.from({ length: MANDALA_RINGS }, (_, k) => {
+        const p = (base + k / MANDALA_RINGS) % 1;
+        const frac =
+          MANDALA_MID + MANDALA_SWING * Math.cos(2 * Math.PI * (p - MANDALA_PEAK));
+        const radius = frac * MANDALA_FIT * half;
+        /* One node pitch per period. This is the entire rotation — there is no
+           separate spin — and it is what makes the period seamless: a ring
+           that has moved up a role has also turned by exactly one node. */
+        const offset = (p * (2 * Math.PI)) / MANDALA_NODES;
+        return {
+          radius,
+          dot: radius * MANDALA_NODE,
+          pts: Array.from({ length: MANDALA_NODES }, (_, i) => {
+            const a = offset + (i / MANDALA_NODES) * Math.PI * 2;
+            return { x: cx + Math.cos(a) * radius, y: cy + Math.sin(a) * radius };
+          }),
+        };
+      });
+
+      /* EDGES — wired by ring IDENTITY, never by current radius order.
+         This is what stops them flickering. The rings genuinely change places,
+         so "the ring outside this one" is a different ring before and after
+         every merge; connecting on that basis makes the whole spoke set jump
+         to different nodes the instant two rings cross. Joining every ring to
+         every other one is immune to it — the pairs are the same pairs no
+         matter who is currently where, so the lines only ever move as fast as
+         the nodes do.
+
+         Drawn before the nodes so the dots sit on top, and all in one path:
+         one stroke of a hundred-odd hairlines is far cheaper than a hundred
+         strokes, and it lets overlaps build brightness the way the reference
+         does. */
+      ctx.strokeStyle = MANDALA_EDGE;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      rings.forEach((ring, a) => {
+        // Within the ring: the polygon, plus a skip-one chord for density.
+        ring.pts.forEach((p, i) => {
+          for (const step of [1, 2]) {
+            const q = ring.pts[(i + step) % MANDALA_NODES];
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+          }
+        });
+        // To every other ring: two spokes per node, which is what fans the star.
+        for (let b = a + 1; b < rings.length; b++) {
+          const other = rings[b];
+          ring.pts.forEach((p, i) => {
+            for (const step of [0, 1]) {
+              const q = other.pts[(i + step) % MANDALA_NODES];
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+            }
+          });
+        }
+      });
+      ctx.stroke();
+
+      // Nodes.
+      ctx.fillStyle = MANDALA_NODE_FILL;
+      rings.forEach((ring) => {
+        ring.pts.forEach((p) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, ring.dot, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      });
+    };
+
+    size();
+    raf = requestAnimationFrame(draw);
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(wrap);
+    const ro = new ResizeObserver(size);
+    ro.observe(wrap);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      ro.disconnect();
+    };
+  }, []);
 
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
+      ref={wrapRef}
+      /* Larger than the orbit's VISUAL_SIZE: this figure is a ring of rings
+         rather than a single circle, so at 440px its detail closed up. Capped
+         at 100% of the cell, and centred in it by the flex wrapper. */
+      className="relative w-full"
+      style={{ maxWidth: MANDALA_SIZE, aspectRatio: "1" }}
       aria-hidden
     >
-      <svg
-        viewBox="0 0 100 100"
-        className="h-full w-full"
-        style={{
-          overflow: "visible",
-          animation: `eco-spin-slow ${SPIN_SECONDS * 1.6}s linear infinite`,
-          transformBox: "view-box",
-          transformOrigin: "50px 50px",
-          willChange: "transform",
-        }}
-      >
-        {/* Triangle A — always present. */}
-        <g
-          style={{
-            animation: `eco-tri-a ${PULSE_SECONDS}s ${EASE_BREATHE} infinite`,
-            transformBox: "view-box",
-            transformOrigin: "50px 50px",
-          }}
-        >
-          <polygon
-            points={path(A)}
-            fill="none"
-            stroke={STROKE}
-            strokeWidth="1"
-            strokeDasharray={DASH_FINE}
-            vectorEffect="non-scaling-stroke"
-          />
-          {A.map((v, i) => (
-            <circle
-              key={i}
-              cx={v.x}
-              cy={v.y}
-              r={TRI_NODE}
-              fill="#00112E"
-              stroke={STROKE}
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </g>
-
-        {/* Triangle B — grows in to complete the star, then leaves again. */}
-        <g
-          style={{
-            animation: `eco-tri-b ${PULSE_SECONDS}s ${EASE_BREATHE} infinite`,
-            transformBox: "view-box",
-            transformOrigin: "50px 50px",
-            willChange: "transform, opacity",
-          }}
-        >
-          <polygon
-            points={path(B)}
-            fill="none"
-            stroke={STROKE}
-            strokeWidth="1"
-            strokeDasharray={DASH_FINE}
-            vectorEffect="non-scaling-stroke"
-          />
-          {B.map((v, i) => (
-            <circle
-              key={i}
-              cx={v.x}
-              cy={v.y}
-              r={TRI_NODE}
-              fill="#00112E"
-              stroke={STROKE}
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </g>
-      </svg>
+      <canvas ref={canvasRef} className="block h-full w-full" />
     </div>
   );
 }
@@ -382,11 +477,33 @@ const WEB_DOTS: [number, number][] = [
   [3, 65], [16, 61], [29, 69], [42, 63], [55, 71], [68, 62], [80, 67], [93, 60],
   [12, 79], [26, 75], [39, 84], [51, 77], [63, 86], [76, 78], [89, 82],
   [7, 92], [21, 96], [34, 90], [46, 97], [59, 91], [72, 95], [85, 93], [97, 88],
+  /* Second pass, interleaved with the first. The field is stretched across a
+     168-unit viewBox, so the original 53 dots covered 1.68x the area at 1.68x
+     the spacing and read as empty. These bring the spacing back. */
+  [13, 14], [27, 8], [41, 19], [54, 3], [67, 21], [80, 2], [92, 17],
+  [2, 27], [20, 30], [33, 22], [45, 29], [58, 35], [71, 26], [85, 32], [98, 21],
+  [10, 44], [24, 38], [37, 47], [50, 40], [63, 50], [77, 41], [90, 46],
+  [6, 58], [19, 54], [32, 62], [45, 56], [58, 64], [70, 55], [84, 60], [95, 52],
+  [14, 71], [28, 66], [40, 74], [53, 68], [66, 77], [79, 70], [91, 73],
+  [4, 84], [17, 88], [30, 82], [43, 89], [56, 83], [69, 87], [82, 85], [94, 79],
 ];
+/**
+ * The field is WIDER THAN IT IS TALL, matching the copy column beside it, so
+ * the viewBox has to widen too. A square `0 0 100 100` viewBox in a landscape
+ * box letterboxes: `preserveAspectRatio` defaults to "meet", which would leave
+ * the dots huddled in a square in the middle with empty gutters either side.
+ * Stretching instead (`none`) would squash the dots into ovals. Widening the
+ * viewBox is the only option that keeps circles round AND fills the box.
+ *
+ * The stored dot coordinates stay 0-100 and are scaled across on the way out,
+ * so the hand-placed field above did not have to be re-authored.
+ */
+const WEB_VB_W = 168;
+const WEB_X = WEB_VB_W / 100;
 /** How many threads the spider holds at once. */
 const SPIDER_LEGS = 9;
 /** How far a thread will stretch, in viewBox units. */
-const SPIDER_REACH = 30;
+const SPIDER_REACH = 34;
 /** Fraction of the remaining distance the body covers each frame — the lag
  *  that makes it crawl toward the pointer rather than teleport. */
 const SPIDER_EASE = 0.055;
@@ -404,6 +521,9 @@ const SPIDER_EASE = 0.055;
  * frame, and re-rendering fifty-odd dots at 60fps to move nine lines is work
  * for nothing — the field is built once and never touched again.
  */
+/** The field in viewBox coordinates — scaled across the wider box once. */
+const WEB_FIELD: [number, number][] = WEB_DOTS.map(([x, y]) => [x * WEB_X, y]);
+
 function SpiderWeb() {
   const svgRef = useRef<SVGSVGElement>(null);
   const bodyRef = useRef<SVGRectElement>(null);
@@ -415,19 +535,32 @@ function SpiderWeb() {
     if (!svg) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    let bx = 50;
+    let bx = WEB_VB_W / 2;
     let by = 50;
     let raf = 0;
     const start = performance.now();
 
+    /* The CSS pause rule cannot reach an rAF loop, so this one gates itself on
+       the same observer: off screen, the frame is still requested but does no
+       work. Crawling a spider nobody can see is pure battery. */
+    let visible = false;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(svg);
+
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
+      if (!visible) return;
       const t = (now - start) / 1000;
 
       /* Target: the pointer, or a slow wander when it is away. The two curves
          have different periods so the path never repeats tightly. */
       const p = pointer.current;
-      const tx = p ? p.x : 50 + Math.sin(t * 0.31) * 30;
+      const tx = p ? p.x : WEB_VB_W / 2 + Math.sin(t * 0.31) * (WEB_VB_W * 0.32);
       const ty = p ? p.y : 50 + Math.sin(t * 0.23 + 1.1) * 26;
 
       if (reduced) {
@@ -445,7 +578,7 @@ function SpiderWeb() {
       }
 
       // Nearest dots win the threads, recomputed from scratch each frame.
-      const near = WEB_DOTS.map(([x, y]) => ({
+      const near = WEB_FIELD.map(([x, y]) => ({
         x,
         y,
         d: Math.hypot(x - bx, y - by),
@@ -471,25 +604,29 @@ function SpiderWeb() {
     };
 
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
   }, []);
 
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
+      /* Full column width, matching the copy in the other half. */
+      className="relative w-full"
+      style={{ aspectRatio: String(WEB_VB_W / 100) }}
       aria-hidden
     >
       <svg
         ref={svgRef}
-        viewBox="0 0 100 100"
+        viewBox={`0 0 ${WEB_VB_W} 100`}
         className="h-full w-full"
         style={{ overflow: "visible" }}
         onPointerMove={(e) => {
           const b = svgRef.current?.getBoundingClientRect();
           if (!b) return;
           pointer.current = {
-            x: ((e.clientX - b.left) / b.width) * 100,
+            x: ((e.clientX - b.left) / b.width) * WEB_VB_W,
             y: ((e.clientY - b.top) / b.height) * 100,
           };
         }}
@@ -498,7 +635,7 @@ function SpiderWeb() {
         }}
       >
         {/* The field. Built once — the loop above never touches these. */}
-        {WEB_DOTS.map(([x, y], i) => (
+        {WEB_FIELD.map(([x, y], i) => (
           <circle key={i} cx={x} cy={y} r="0.5" fill="rgba(255,255,255,0.45)" />
         ))}
 
@@ -530,7 +667,7 @@ function SpiderWeb() {
 }
 
 /* ═════════════════════════════════════════════════════════
-   4. "TC" MONOGRAM — thousands of letters converging
+   4. "TC" MONOGRAM — a letter cloud that turns, then settles
    ═════════════════════════════════════════════════════════ */
 /**
  * WHY THIS ONE IS A CANVAS AND THE OTHER THREE ARE NOT.
@@ -551,43 +688,71 @@ function SpiderWeb() {
  * particle. So the wordmark is never hard-coded as coordinates — change the
  * text or the font and the target cloud follows.
  */
-const MONO_TEXT = "TC";
 /** The alphabet the flying particles are drawn from. */
 const MONO_ALPHABET = "TITANCAPITAL";
-/** Sampling step in CSS px. Particle count scales as 1/step², so this is the
- *  dial for density: measured on the live canvas, step 4 gave 1,341 targets
- *  and step 3 gives ~2,380 — the difference between "a lot of letters" and
- *  the thousands the brief asks for. */
-const MONO_STEP = 3;
+/**
+ * THE WORDMARK, drawn on the grid. A monoline "TC" one cell thick: a
+ * nine-wide crossbar over a centred stem, and a C open on the right.
+ *
+ * Authored, not sampled from a font — see the note in `build` for why sampling
+ * cannot make this shape. Editing this array is how you change the mark: every
+ * "1" becomes one letter, and the grid re-centres itself.
+ */
+const TC_GRID = [
+  "1111111110011110",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000100000",
+  "0000100000011110",
+];
+/** Columns in the field. Wider than the wordmark, so the bands run past it. */
+const MONO_FIELD_COLS = 22;
+/** Full-width rows of dimmer letters above and below the wordmark. */
+const MONO_BANDS = 2;
+/** Letter size as a share of the cell pitch. Below ~0.4 the grid reads empty. */
+const MONO_GLYPH_RATIO = 0.52;
+/** Opacity of a band letter against a wordmark letter. */
+const MONO_DIM = 0.4;
 /** Hard cap, so a very large viewport cannot melt a laptop. */
 const MONO_MAX = 2600;
-/** Seconds for the flight in. */
+/** Seconds for ONE full revolution of the letter cloud, before it scrambles. */
+const MONO_SPIN = 3.6;
+/** Seconds for the scramble into the wordmark. */
 const MONO_FLIGHT = 2.4;
+/** Camera distance for the 3D projection. Smaller = more dramatic depth. */
+const MONO_FOCAL = 620;
 /** Pointer influence radius and peak push, in CSS px. */
 const MONO_REACH = 120;
 const MONO_PUSH = 34;
 
 type Particle = {
-  /** where it settles */
+  /** where it settles — sampled from the wordmark */
   hx: number;
   hy: number;
-  /** where it flies in from */
-  sx: number;
-  sy: number;
-  /** current position */
-  x: number;
-  y: number;
-  /** sprite index, rotation, and its own stagger */
+  /** its seat in the rotating cloud, as a real 3D point */
+  ax: number;
+  ay: number;
+  az: number;
+  /** sprite index, and its own stagger into the scramble */
   ch: number;
-  rot: number;
   delay: number;
-  /** idle drift */
+  /** true for the band letters, which sit back from the wordmark */
+  dim: boolean;
+  /** idle drift, once home */
   px: number;
   py: number;
   ps: number;
 };
 
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+/** Symmetric, for the scramble: it should leave the spin gently and arrive
+ *  gently, where an ease-out would snap away from the cloud. */
+const easeInOut = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 function Monogram() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -634,9 +799,16 @@ function Monogram() {
 
     /** Sample the wordmark and hand every opaque pixel to a particle. */
     const build = () => {
-      const rect = wrap.getBoundingClientRect();
-      w = Math.max(1, Math.round(rect.width));
-      h = Math.max(1, Math.round(rect.height));
+      /* offsetWidth/Height, NOT getBoundingClientRect. The rect includes every
+         ancestor transform, and this canvas sits inside a cell that animates
+         `scale: 0.9 -> 1` on entrance and `1 -> 1.06` on hover. Sizing off the
+         rect captures whatever scale happened to be mid-flight — measured 259px
+         against a real 440px box — and the backing store is then stretched by
+         CSS to fill it: a blurry wordmark, and particle coordinates that do not
+         match the pixels they were sampled from. offsetWidth is the layout box
+         and is immune to all of it. */
+      w = Math.max(1, wrap.offsetWidth);
+      h = Math.max(1, wrap.offsetHeight);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
@@ -644,52 +816,81 @@ function Monogram() {
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Offscreen: draw TC as large as it will go, then read it back.
-      const off = document.createElement("canvas");
-      off.width = w;
-      off.height = h;
-      const octx = off.getContext("2d", { willReadFrequently: true });
-      if (!octx) return;
-      let font = h * 0.9;
-      octx.textAlign = "center";
-      octx.textBaseline = "middle";
-      for (let i = 0; i < 40; i++) {
-        octx.font = `700 ${font}px Poppins, sans-serif`;
-        if (octx.measureText(MONO_TEXT).width <= w * 0.92) break;
-        font *= 0.94;
-      }
-      octx.fillStyle = "#fff";
-      octx.fillText(MONO_TEXT, w / 2, h / 2);
-      const data = octx.getImageData(0, 0, w, h).data;
+      /* ONE GRID FOR EVERYTHING — and the glyph is AUTHORED on it, not
+         sampled from a font.
 
-      const homes: { x: number; y: number }[] = [];
-      for (let y = 0; y < h; y += MONO_STEP) {
-        for (let x = 0; x < w; x += MONO_STEP) {
-          if (data[(y * w + x) * 4 + 3] > 128) homes.push({ x, y });
+         Sampling cannot produce this picture. The reference is a monoline
+         letterform exactly one cell thick, but a filled typeface has strokes
+         many cells wide at any size that fits: a coarse grid catches almost
+         nothing (measured: 3 lit cells at a 26px pitch), and a grid fine
+         enough to trace the shape turns back into a dense slab. Stroking the
+         text does not help either — it outlines the letters, so "T" comes back
+         as two parallel lines rather than a stem.
+
+         So the cell pitch is derived from the BOX, and the wordmark and its
+         bands are laid straight onto that grid. Everything lines up in rows
+         and columns by construction. */
+      const cols = MONO_FIELD_COLS;
+      const rows = TC_GRID.length + MONO_BANDS * 2;
+      // Whichever axis runs out first decides the pitch, so it always fits.
+      const pitch = Math.min((w * 0.98) / cols, (h * 0.94) / rows);
+      const originX = (w - cols * pitch) / 2 + pitch / 2;
+      const originY = (h - rows * pitch) / 2 + pitch / 2;
+      // The wordmark is narrower than the field, so centre it in the columns.
+      const glyphCol = Math.round((cols - TC_GRID[0].length) / 2);
+
+      const homes: { x: number; y: number; dim?: boolean }[] = [];
+
+      // The wordmark, inset by the top band.
+      TC_GRID.forEach((row, r) => {
+        row.split("").forEach((ch, c) => {
+          if (ch !== "1") return;
+          homes.push({
+            x: originX + (glyphCol + c) * pitch,
+            y: originY + (MONO_BANDS + r) * pitch,
+          });
+        });
+      });
+
+      /* THE BANDS. Full-width rows of dimmer letters above and below, on the
+         same pitch and columns — what stops the wordmark reading as an object
+         floating in empty space. */
+      for (let b = 0; b < MONO_BANDS; b++) {
+        for (const r of [b, MONO_BANDS + TC_GRID.length + b]) {
+          for (let c = 0; c < cols; c++) {
+            homes.push({ x: originX + c * pitch, y: originY + r * pitch, dim: true });
+          }
         }
       }
+
       // Thin evenly rather than truncating, so the cap never lops off one side.
       const keep = Math.min(MONO_MAX, homes.length);
       const stride = homes.length / keep;
 
-      const glyph = Math.max(5, MONO_STEP * 2.1);
+      const glyph = Math.max(9, pitch * MONO_GLYPH_RATIO);
       sprites = buildSprites(glyph);
 
+      /* Each particle gets a seat in a 3D SHELL — a sphere, thickened a little
+         so the cloud has body rather than reading as a hollow outline. Seats
+         are spread with the golden-angle spiral, which distributes points over
+         a sphere far more evenly than picking two random angles (that bunches
+         them at the poles). */
+      const radius = Math.min(w, h) * 0.62;
       particles = Array.from({ length: keep }, (_, i) => {
         const home = homes[Math.floor(i * stride)];
-        // Fly in from a ring well outside the frame.
-        const a = Math.random() * Math.PI * 2;
-        const d = Math.max(w, h) * (0.7 + Math.random() * 0.7);
+        const k = i + 0.5;
+        const phi = Math.acos(1 - (2 * k) / keep);
+        const theta = Math.PI * (1 + Math.sqrt(5)) * k;
+        const r = radius * (0.78 + Math.random() * 0.34);
         return {
           hx: home.x,
           hy: home.y,
-          sx: w / 2 + Math.cos(a) * d,
-          sy: h / 2 + Math.sin(a) * d,
-          x: home.x,
-          y: home.y,
+          ax: r * Math.sin(phi) * Math.cos(theta),
+          ay: r * Math.sin(phi) * Math.sin(theta) * 0.72,
+          az: r * Math.cos(phi),
           ch: Math.floor(Math.random() * sprites.length),
-          rot: (Math.random() - 0.5) * Math.PI * 2,
-          delay: Math.random() * 0.45,
+          delay: Math.random() * 0.5,
+          dim: !!home.dim,
           px: Math.random() * Math.PI * 2,
           py: Math.random() * Math.PI * 2,
           ps: 0.5 + Math.random() * 0.8,
@@ -705,14 +906,37 @@ function Monogram() {
 
       const ptr = pointer.current;
       const glyph = sprites[0] ? sprites[0].width : 0;
+      const dpr = window.devicePixelRatio || 1;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      /* PHASE 1 — ONE REVOLUTION. The whole cloud turns about its Y axis, and
+         `Math.min` is what stops it dead at exactly 360°: past MONO_SPIN the
+         angle is pinned at 2π rather than continuing, so the spin is one round
+         and not an endless carousel. */
+      const spun = reduced ? 1 : Math.min(1, t / MONO_SPIN);
+      const theta = spun * Math.PI * 2;
+      const cosT = Math.cos(theta);
+      const sinT = Math.sin(theta);
 
       for (const p of particles) {
-        // FLIGHT: each particle has its own delay, so the cloud arrives as a
-        // stream rather than as one block.
-        const local = reduced ? 1 : Math.min(1, Math.max(0, (t - p.delay) / MONO_FLIGHT));
-        const e = easeOut(local);
-        let x = p.sx + (p.hx - p.sx) * e;
-        let y = p.sy + (p.hy - p.sy) * e;
+        // Rotate the seat about Y, then project it with perspective.
+        const rx = p.ax * cosT + p.az * sinT;
+        const rz = -p.ax * sinT + p.az * cosT;
+        const persp = MONO_FOCAL / (MONO_FOCAL + rz);
+        const cloudX = cx + rx * persp;
+        const cloudY = cy + p.ay * persp;
+
+        /* PHASE 2 — THE SCRAMBLE, which cannot begin before the revolution is
+           finished; each particle then leaves on its own delay so the cloud
+           unravels into the wordmark rather than snapping to it. */
+        const flight = reduced
+          ? 1
+          : Math.min(1, Math.max(0, (t - MONO_SPIN - p.delay) / MONO_FLIGHT));
+        const e = easeInOut(flight);
+
+        let x = cloudX + (p.hx - cloudX) * e;
+        let y = cloudY + (p.hy - cloudY) * e;
 
         // IDLE: a small wander once home, so the wordmark breathes.
         if (e >= 1 && !reduced) {
@@ -732,25 +956,20 @@ function Monogram() {
           }
         }
 
-        p.x = x;
-        p.y = y;
-
         const sprite = sprites[p.ch];
         if (!sprite) continue;
-        const size = glyph / (window.devicePixelRatio || 1);
-        // Spin while flying, upright once home.
-        const rot = p.rot * (1 - e);
-        if (rot !== 0) {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(rot);
-          ctx.globalAlpha = Math.min(1, e * 1.6);
-          ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
-          ctx.restore();
-        } else {
-          ctx.globalAlpha = 1;
-          ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
-        }
+
+        /* Depth reads through SIZE and BRIGHTNESS while the cloud turns — a
+           letter at the back is smaller and dimmer — and both lerp back to
+           flat as it lands, so the finished wordmark is evenly lit. */
+        const depth = 1 + (persp - 1) * (1 - e);
+        const size = (glyph / dpr) * depth;
+        /* Band letters only fall back as they LAND. Through the revolution
+           every letter is equal — the bands are a property of the finished
+           picture, not of the cloud. */
+        const settled = p.dim ? 1 - (1 - MONO_DIM) * e : 1;
+        ctx.globalAlpha = (Math.min(1, 0.35 + 0.65 * depth) * (1 - e) + e) * settled;
+        ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
       }
       ctx.globalAlpha = 1;
     };
@@ -787,11 +1006,30 @@ function Monogram() {
   return (
     <motion.div
       ref={wrapRef}
-      className="relative shrink-0"
-      style={{ width: VISUAL_SIZE, height: `calc(${VISUAL_SIZE} * 0.62)` }}
+      className="relative w-full"
+      /* FULL COLUMN WIDTH — the same width as the copy in the other half, not
+         the square VISUAL_SIZE the two circular diagrams use. This is a
+         wordmark in a landscape field: it needs the room to spread, and the
+         letters do their 3D revolution across this whole width before they
+         scramble into the mark. */
+      /* 1.5, so the grid is WIDTH-bound. The cell pitch is the smaller of
+         (width / columns) and (height / rows); at 1.75 the box was short
+         enough that rows won, which capped the pitch and left the wordmark
+         small inside a wide frame. At 1.5 the two limits land within a pixel
+         of each other, so the mark grows into the width it was given. */
+      style={{ aspectRatio: "1.5" }}
       onPointerMove={(e) => {
-        const b = wrapRef.current?.getBoundingClientRect();
-        if (b) pointer.current = { x: e.clientX - b.left, y: e.clientY - b.top };
+        const el = wrapRef.current;
+        if (!el) return;
+        const b = el.getBoundingClientRect();
+        /* Normalised through the rect, then scaled back up by the LAYOUT size:
+           the particles live in unscaled canvas pixels, but the rect is the
+           scaled on-screen box, so subtracting the offset alone would be off by
+           the hover scale. */
+        pointer.current = {
+          x: ((e.clientX - b.left) / b.width) * el.offsetWidth,
+          y: ((e.clientY - b.top) / b.height) * el.offsetHeight,
+        };
       }}
       onPointerLeave={() => {
         pointer.current = null;
@@ -805,17 +1043,63 @@ function Monogram() {
   );
 }
 
-/* ═════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════
+   THE GATE
+   ═════════════════════════════════════════════════════════ */
+/**
+ * Holds a visual still until the reader reaches it.
+ *
+ * `once: false` on purpose — the wrapper keeps reporting, so a visual scrolled
+ * away is paused again rather than left running off-screen. Combined with
+ * `animation-play-state` (see the rule in VISUAL_KEYFRAMES) that means coming
+ * back to a part resumes it mid-cycle instead of restarting it, which is what
+ * a looping ambient graphic should do.
+ *
+ * The threshold is low: these are tall graphics, and waiting for 35% of a
+ * 440px diagram means the top third has already been on screen for a while
+ * doing nothing.
+ */
+function useInView<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setActive(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return { ref, active };
+}
+
 export default function PartVisual({ kind }: { kind: VisualKind }) {
-  switch (kind) {
-    case "triangle":
-      return <TriangleStar />;
-    case "web":
-      return <SpiderWeb />;
-    case "monogram":
-      return <Monogram />;
-    case "orbit":
-    default:
-      return <Orbit />;
-  }
+  const { ref, active } = useInView<HTMLDivElement>();
+
+  return (
+    <div
+      ref={ref}
+      data-eco-visual={active ? "live" : "idle"}
+      /* `w-full` is load-bearing. This wrapper is itself a flex ITEM, so
+         without it the browser shrinks it to an intrinsic width — and the
+         monogram inside sizes itself with `min(100%, …)`, which then has no
+         real basis to resolve against and collapsed the whole visual to 300px
+         inside a 720px column. */
+      className="flex w-full items-center justify-center"
+    >
+      {kind === "mandala" ? (
+        <Mandala />
+      ) : kind === "web" ? (
+        <SpiderWeb />
+      ) : kind === "monogram" ? (
+        <Monogram />
+      ) : (
+        <Orbit />
+      )}
+    </div>
+  );
 }

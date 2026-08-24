@@ -4,20 +4,25 @@ import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import {
-  StoryCard,
   SeeMoreButton,
   padStories,
   type FounderStory,
 } from "./ImpactAtGlanceClient";
+import FounderQuoteCard from "./FounderQuoteCard";
 import { SECTION_HEADING_CLASS, SECTION_HEADING_STYLE } from "@/styles/heroTypography";
 
 /*
   FoundersStoryGrid
   ─────────────────
-  Same 3-column hover-reveal StoryCard grid + scroll-linked animated
-  dividers as ImpactAtGlance's "Their Stories" section — extended to
-  4 rows (12 cards). Cards, hover behaviour and card animation are the
-  exact same components; only the row count and divider layout differ.
+  The same 3-column grid and scroll-linked dividers as ImpactAtGlance's
+  "Their Stories" section, extended to 4 rows (12 cards). Grid, gaps and
+  divider geometry are unchanged.
+
+  The CARD is not the same, though. This page uses FounderQuoteCard — logo in
+  the top-left corner and the quote across the foot, both visible at rest —
+  where the home page keeps its hover-reveal StoryCard. They are separate
+  components on purpose: editing the shared one would have rewritten the home
+  page's section too.
 */
 
 const ROWS = 4;
@@ -47,9 +52,6 @@ export default function FoundersStoryGrid({
   ctaLabel,
   slides,
 }: FoundersStoryGridProps) {
-  /* Shared across all pills so their width is constant. */
-  const allTags = slides.flatMap((s) => s.tags ?? []);
-
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -133,7 +135,7 @@ export default function FoundersStoryGrid({
           >
             {padStories(slides, CARD_COUNT).map((story, i) => (
               <Link key={`${story.name}-${i}`} href={`/foundersstory/${storySlug(story)}`} className="block">
-                <StoryCard story={story} sizerTags={allTags} />
+                <FounderQuoteCard story={story} />
               </Link>
             ))}
           </div>

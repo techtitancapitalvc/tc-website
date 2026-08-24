@@ -727,6 +727,42 @@ export const titanEcosystemHeroQuery = groq`
   }
 `;
 
+/**
+ * Founder story detail pages. One document per company, found by slug.
+ *
+ * Every section is projected whether or not it is filled — the PAGE decides
+ * what to render, so an empty `acts` array or a missing `todayStats` simply
+ * arrives as null and that section is skipped.
+ */
+export const founderStoryPageBySlugQuery = groq`
+  *[_type == "founderStoryPage" && slug.current == $slug][0]{
+    company,
+    tags,
+    headline,
+    founders,
+    "heroImage": heroImage.asset->url,
+    facts,
+    acts[]{
+      eyebrow,
+      title,
+      body,
+      bodyBold,
+      quote
+    },
+    todayHeading,
+    todayStats[]{ num, label },
+    todayFootnote,
+    exploreHeading,
+    exploreBrowseLabel,
+    exploreBrowseHref
+  }
+`;
+
+/** Every slug, for generateStaticParams. */
+export const founderStoryPageSlugsQuery = groq`
+  *[_type == "founderStoryPage" && defined(slug.current)].slug.current
+`;
+
 /** Titan Ecosystem — the scroll rail beneath the hero. Singleton. */
 export const titanEcosystemPillarsQuery = groq`
   *[_type == "titanEcosystemPillars"][0]{

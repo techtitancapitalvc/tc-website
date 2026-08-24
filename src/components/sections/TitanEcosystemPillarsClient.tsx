@@ -70,7 +70,7 @@ const FALLBACK_PARTS: TitanEcosystemPart[] = [
   {
     title: "The Titan Expert\nCommunity",
     description: FALLBACK_BODY,
-    visual: "triangle",
+    visual: "mandala",
   },
   {
     title: "Titan Job Network",
@@ -91,6 +91,24 @@ const FALLBACK_PARTS: TitanEcosystemPart[] = [
 const POINTER = "clamp(24px, min(2.31vw, 3.58vh), 40px)";
 
 const LINE = "rgba(255,255,255,0.22)";
+
+/**
+ * HOW FAR EACH HALF STOPS SHORT OF THE CENTRE LINE.
+ *
+ * The copy and the diagram must use the SAME value: the copy applies it as
+ * padding on its line-facing side, and the diagram applies the identical
+ * padding on its own. That makes every part a mirror about the line — the same
+ * gap to it from both sides, and the diagram comes out the same width as the
+ * copy.
+ *
+ * It is written out longhand at all four call sites, and cannot be hoisted
+ * into a constant: Tailwind generates classes by scanning the source for
+ * LITERAL strings, so `md:pl-[${INSET}]` produces a class name at runtime that
+ * was never compiled and silently does nothing. Change one, change all four.
+ *
+ *     md:pl-[clamp(32px,min(4.5vw,7vh),80px)]
+ *     md:pr-[clamp(32px,min(4.5vw,7vh),80px)]
+ */
 
 export default function TitanEcosystemPillarsClient({
   data,
@@ -234,6 +252,9 @@ export default function TitanEcosystemPillarsClient({
               which side each lands on visually. */}
           {parts.map((part, i) => {
             const diagramLeft = i % 2 === 1;
+            /* The two landscape diagrams mirror the copy; the two circular
+               ones stay centred in their half. See the cell below. */
+            const wide = part.visual === "web" || part.visual === "monogram";
             return (
               <div
                 key={i}
@@ -321,6 +342,12 @@ export default function TitanEcosystemPillarsClient({
                     diagramLeft
                       ? "md:order-1 md:mr-[calc(-0.5*var(--part-gap))]"
                       : "md:order-2 md:ml-[calc(-0.5*var(--part-gap))]"
+                  } ${
+                    wide
+                      ? diagramLeft
+                        ? "md:pr-[calc(0.5*var(--part-gap)+clamp(32px,min(4.5vw,7vh),80px))]"
+                        : "md:pl-[calc(0.5*var(--part-gap)+clamp(32px,min(4.5vw,7vh),80px))]"
+                      : ""
                   }`}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}

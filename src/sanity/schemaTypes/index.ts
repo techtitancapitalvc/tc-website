@@ -4,6 +4,7 @@ import { backedBefore } from "./backedBefore";
 import { backedEarly } from "./backedEarly";
 import { company } from "./company";
 import { footer } from "./footer";
+import { founderStoryPage } from "./founderStoryPage";
 import { foundersTestimonial } from "./foundersTestimonial";
 import { fundDetails } from "./fundDetails";
 import { hero } from "./hero";
@@ -87,6 +88,8 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   /* SEO */
   siteSeo,
   pageSeo,
+  /* Founder story detail pages */
+  founderStoryPage,
   /* Portfolio */
   company,
   portfolioGrid,
