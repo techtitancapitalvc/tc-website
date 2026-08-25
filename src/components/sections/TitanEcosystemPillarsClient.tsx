@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { HeroGlow } from "./JoinPortfolio";
 import PartVisual, {
   VISUAL_KEYFRAMES,
   VISUAL_SIZE,
@@ -120,6 +121,9 @@ export default function TitanEcosystemPillarsClient({
     data?.parts && data.parts.length > 0 ? data.parts : FALLBACK_PARTS;
 
   const railRef = useRef<HTMLDivElement>(null);
+  /* The glow measures the cursor against THIS section, so the flashlight
+     stays under the pointer however far down the page the section sits. */
+  const sectionRef = useRef<HTMLElement>(null);
 
   /* Progress across the rail. The offsets start the line as the rail's top
      reaches the middle of the screen and finish as its bottom does, so the
@@ -152,6 +156,7 @@ export default function TitanEcosystemPillarsClient({
 
   return (
     <section
+      ref={sectionRef}
       className="relative w-full overflow-hidden bg-[#00112E] font-['Poppins',_sans-serif]"
       style={{
         paddingTop: "var(--section-py)",
@@ -162,20 +167,14 @@ export default function TitanEcosystemPillarsClient({
     >
       <style>{VISUAL_KEYFRAMES(VISUAL_SIZE)}</style>
 
-      {/* Ambient glow behind the copy, matching the design's lit left side.
-          Sized in % of the section so it cannot spill sideways and create the
-          stray blobs a vw-sized glow leaves on tall mobile sections. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-0 top-1/4 z-0 max-md:hidden"
-        style={{
-          width: "55%",
-          height: "50%",
-          background:
-            "radial-gradient(ellipse at 30% 50%, rgba(37,84,196,0.45) 0%, rgba(10,40,120,0.18) 45%, transparent 72%)",
-          filter: "blur(40px)",
-        }}
-      />
+      {/* The hero's aurora: two wandering blobs that parallax against the
+          cursor, plus the flashlight blob that follows it. Imported rather
+          than copied — this is the SAME component the home hero renders, so
+          the two cannot drift apart.
+
+          It replaces the single static glow that used to sit behind the copy;
+          keeping both would have muddied the left side. */}
+      <HeroGlow sectionRef={sectionRef} />
 
       <div className="relative z-10 mx-auto w-full max-w-[1440px]">
         {/* ── SECTION HEADING ── */}

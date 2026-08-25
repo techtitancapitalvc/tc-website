@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import FounderQuoteCard from "./FounderQuoteCard";
+import StatsBand from "./StatsBand";
 import type { FounderStory } from "./ImpactAtGlanceClient";
 import {
   SECTION_HEADING_CLASS,
@@ -13,7 +14,6 @@ import {
   HERO_BODY_CLASS,
   HERO_BODY_STYLE,
   LABEL_STYLE,
-  CAPTION_STYLE,
 } from "@/styles/heroTypography";
 
 /**
@@ -49,7 +49,8 @@ const RISE = {
 };
 
 /* ═══════════════════════════════════════════════════════════
-   Shared types — mirror the founderStoryPage Sanity document.
+   Shared types — mirror one `founderStory` entry inside the single
+   "Founders Story Page" document.
    ═══════════════════════════════════════════════════════════ */
 export interface StoryFacts {
   location?: string;
@@ -375,6 +376,11 @@ export function FounderStoryActs({ acts }: { acts?: StoryAct[] }) {
 /* ═══════════════════════════════════════════════════════════
    3. TODAY — the navy stats band
    ═══════════════════════════════════════════════════════════ */
+/**
+ * A thin wrapper over the shared StatsBand. The blog detail page renders the
+ * same component with `tone="light"`, so the two stay identical by
+ * construction rather than by two copies being kept in step.
+ */
 export function FounderStoryToday({
   heading,
   stats,
@@ -384,87 +390,8 @@ export function FounderStoryToday({
   stats?: StoryStat[];
   footnote?: string;
 }) {
-  const real = (stats ?? []).filter((s) => s.num);
-  // The stats ARE the section — a heading alone is not one.
-  if (real.length === 0) return null;
-
   return (
-    <section
-      className="relative w-full overflow-hidden bg-[#00112E]"
-      style={{
-        paddingTop: "var(--section-py)",
-        paddingBottom: "var(--section-py)",
-        paddingLeft: "var(--section-px-wide)",
-        paddingRight: "var(--section-px-wide)",
-      }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at 10% 40%, rgba(37,84,196,0.40) 0%, transparent 55%), radial-gradient(ellipse at 90% 70%, rgba(37,84,196,0.28) 0%, transparent 55%)",
-        }}
-      />
-      <motion.div
-        className="relative z-10 mx-auto flex w-full flex-col items-center"
-        style={{ maxWidth: COLUMN }}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
-      >
-        {heading && (
-          <motion.h2
-            variants={RISE}
-            className={`m-0 text-center font-semibold text-white ${SECTION_HEADING_CLASS}`}
-            style={{ ...SECTION_HEADING_STYLE, marginBottom: "clamp(28px, min(3.4vw, 5vh), 60px)" }}
-          >
-            {heading}
-          </motion.h2>
-        )}
-
-        {/* `auto-fit` rather than a fixed 4 columns: the count is editor-driven,
-            and three stats in a four-column grid would sit lopsided. */}
-        <motion.div
-          variants={RISE}
-          className="grid w-full max-md:!grid-cols-2"
-          style={{
-            gridTemplateColumns: `repeat(${Math.min(real.length, 4)}, minmax(0, 1fr))`,
-            gap: "clamp(24px, min(3vw, 4.4vh), 56px)",
-          }}
-        >
-          {real.map((s, i) => (
-            <div key={i} className="flex flex-col items-center text-center">
-              <span
-                className={`font-semibold text-white ${SUBHEADING_CLASS}`}
-                style={SUBHEADING_STYLE}
-              >
-                {s.num}
-              </span>
-              {s.label && (
-                <span
-                  className="whitespace-pre-line font-['Poppins',_sans-serif] font-normal text-white/75"
-                  style={{ ...LABEL_STYLE, lineHeight: 1.5, marginTop: "clamp(6px, 0.8vw, 12px)" }}
-                >
-                  {s.label}
-                </span>
-              )}
-            </div>
-          ))}
-        </motion.div>
-
-        {footnote && (
-          <motion.p
-            variants={RISE}
-            className="m-0 text-center font-['Poppins',_sans-serif] font-normal text-white/55"
-            style={{ ...CAPTION_STYLE, marginTop: "clamp(24px, min(3vw, 4.4vh), 54px)" }}
-          >
-            {footnote}
-          </motion.p>
-        )}
-      </motion.div>
-    </section>
+    <StatsBand heading={heading} stats={stats} footnote={footnote} tone="navy" maxWidth={COLUMN} />
   );
 }
 

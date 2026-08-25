@@ -727,40 +727,115 @@ export const titanEcosystemHeroQuery = groq`
   }
 `;
 
+/** Blogs — hero. Its own singleton, separate from the listing below it. */
+export const blogsHeroQuery = groq`
+  *[_type == "blogsHero"][0]{
+    headingFirst,
+    headingSecond,
+    subtitle
+  }
+`;
+
 /**
- * Founder story detail pages. One document per company, found by slug.
+ * Blog posts. EVERY post lives inside the single "Blogs Page" document, the
+ * same way team members live inside "Our Team Page" — so the three queries
+ * below all read one document and pick out of its `posts` array.
+ *
+ * One entry feeds both the listing card and the article, so a card can never
+ * drift from the page it links to. Listing order is the ARRAY order: the post
+ * an editor drags to the top is the one that leads.
+ */
+const BLOG_CARD_FIELDS = `
+  "slug": slug.current,
+  title,
+  excerpt,
+  "coverImage": coverImage.asset->url,
+  tags,
+  author,
+  readTime,
+  category,
+  featured
+`;
+
+export const allBlogPostsQuery = groq`
+  *[_type == "blogsPage"][0]{
+    "posts": posts[defined(slug.current)]{
+      ${BLOG_CARD_FIELDS}
+    }
+  }.posts
+`;
+
+export const blogPostBySlugQuery = groq`
+  *[_type == "blogsPage"][0]{
+    "post": posts[slug.current == $slug][0]{
+      ${BLOG_CARD_FIELDS},
+      sections[]{ subheading, body, bodyBold },
+      statsHeading,
+      stats[]{ num, label },
+      statsFootnote,
+      "closingImage": closingImage.asset->url,
+      closingSections[]{ subheading, body, bodyBold }
+    }
+  }.post
+`;
+
+/* Filter the ARRAY, then project the slug. `posts[].slug.current[defined(@)]`
+   reads naturally but binds differently and returns [null]. */
+export const blogPostSlugsQuery = groq`
+  *[_type == "blogsPage"][0]{
+    "slugs": posts[defined(slug.current)].slug.current
+  }.slugs
+`;
+
+/** Founders story — hero. Its own singleton. */
+export const foundersStoryHeroQuery = groq`
+  *[_type == "foundersStoryHero"][0]{
+    headingLineOne,
+    headingLineTwo,
+    "founderImages": founderImages[].asset->url
+  }
+`;
+
+/**
+ * Founder stories. Same arrangement as the blogs above: every story lives
+ * inside the single "Founders Story Page" document and is found by slug.
  *
  * Every section is projected whether or not it is filled — the PAGE decides
  * what to render, so an empty `acts` array or a missing `todayStats` simply
  * arrives as null and that section is skipped.
  */
 export const founderStoryPageBySlugQuery = groq`
-  *[_type == "founderStoryPage" && slug.current == $slug][0]{
-    company,
-    tags,
-    headline,
-    founders,
-    "heroImage": heroImage.asset->url,
-    facts,
-    acts[]{
-      eyebrow,
-      title,
-      body,
-      bodyBold,
-      quote
-    },
-    todayHeading,
-    todayStats[]{ num, label },
-    todayFootnote,
-    exploreHeading,
-    exploreBrowseLabel,
-    exploreBrowseHref
-  }
+  *[_type == "foundersStoryPage"][0]{
+    "story": stories[slug.current == $slug][0]{
+      company,
+      "slug": slug.current,
+      tags,
+      headline,
+      founders,
+      "heroImage": heroImage.asset->url,
+      facts,
+      acts[]{
+        eyebrow,
+        title,
+        body,
+        bodyBold,
+        quote
+      },
+      todayHeading,
+      todayStats[]{ num, label },
+      todayFootnote,
+      exploreHeading,
+      exploreBrowseLabel,
+      exploreBrowseHref
+    }
+  }.story
 `;
 
 /** Every slug, for generateStaticParams. */
 export const founderStoryPageSlugsQuery = groq`
-  *[_type == "founderStoryPage" && defined(slug.current)].slug.current
+  *[_type == "foundersStoryPage"][0]{
+    "slugs": stories[defined(slug.current)].slug.current
+  }.slugs
 `;
 
 /** Titan Ecosystem — the scroll rail beneath the hero. Singleton. */

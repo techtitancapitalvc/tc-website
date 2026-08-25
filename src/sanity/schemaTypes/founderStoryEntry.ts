@@ -1,21 +1,28 @@
 import { defineField, defineType } from "sanity";
 
 /**
- * /foundersstory/[slug] — one document per company.
+ * One founder story — an OBJECT, not a document.
  *
- * NOT a singleton: each founder story is its own document, found by slug.
+ * Stories live inside the single "Founders Story Page" document (see
+ * foundersStoryPage.ts), the same way team members live inside "Our Team
+ * Page". /foundersstory/[slug] finds its story by looking up the slug in that
+ * array, so adding a story is one entry in one place rather than a new
+ * document to create and remember to publish.
  *
  * THE PAGE IS FOUR INDEPENDENT SECTIONS, and every one of them is optional.
  * A section whose fields are empty does not render at all — so a story with
  * no stats simply has no blue band, and one with no acts jumps from the header
  * to whatever comes next. That is why almost nothing here is `required`:
  * marking fields required would force editors to fill in sections they do not
- * want on that particular page.
+ * want on that particular story.
  */
-export const founderStoryPage = defineType({
-  name: "founderStoryPage",
-  title: "Founder Story — page",
-  type: "document",
+export const founderStoryEntry = defineType({
+  /* NOT "founderStory": the Impact At A Glance singleton already has an inline
+     array member by that name, and two schema types sharing one name means
+     Sanity can hand this schema's fields to that section's data. */
+  name: "founderStoryEntry",
+  title: "Founder Story",
+  type: "object",
 
   groups: [
     { name: "header", title: "1 · Header" },
@@ -27,20 +34,19 @@ export const founderStoryPage = defineType({
   fields: [
     /* ─────────── 1. HEADER ─────────── */
     defineField({
-      name: "slug",
-      title: "Slug",
-      description:
-        'The URL segment, e.g. "mamaearth" for /foundersstory/mamaearth. Generate it from the company name.',
-      type: "slug",
-      options: { source: "company", maxLength: 96 },
-      validation: (r) => r.required(),
-      group: "header",
-    }),
-    defineField({
       name: "company",
       title: "Company",
       type: "string",
       validation: (r) => r.required(),
+      group: "header",
+    }),
+    defineField({
+      name: "slug",
+      title: "Slug (URL — /foundersstory/<slug>)",
+      description: 'e.g. "mamaearth" for /foundersstory/mamaearth.',
+      type: "slug",
+      options: { source: "company", maxLength: 96 },
+      validation: (r) => r.required().error("Slug is required for the story URL"),
       group: "header",
     }),
     defineField({
@@ -63,7 +69,8 @@ export const founderStoryPage = defineType({
     defineField({
       name: "founders",
       title: "Founders",
-      description: 'e.g. "Ghazal & Varun Alagh". The company is appended after a dash automatically.',
+      description:
+        'e.g. "Ghazal & Varun Alagh". The company is appended after a dash automatically.',
       type: "string",
       group: "header",
     }),
@@ -173,7 +180,12 @@ export const founderStoryPage = defineType({
           type: "object",
           name: "todayStat",
           fields: [
-            defineField({ name: "num", title: "Figure", type: "string", validation: (r) => r.required() }),
+            defineField({
+              name: "num",
+              title: "Figure",
+              type: "string",
+              validation: (r) => r.required(),
+            }),
             defineField({ name: "label", title: "Label", type: "string" }),
           ],
           preview: { select: { title: "num", subtitle: "label" } },
@@ -183,7 +195,7 @@ export const founderStoryPage = defineType({
     defineField({
       name: "todayFootnote",
       title: "Footnote",
-      description: 'e.g. the source of the figures.',
+      description: "e.g. the source of the figures.",
       type: "text",
       rows: 2,
       group: "today",
@@ -212,6 +224,6 @@ export const founderStoryPage = defineType({
   ],
 
   preview: {
-    select: { title: "company", subtitle: "headline" },
+    select: { title: "company", subtitle: "headline", media: "heroImage" },
   },
 });

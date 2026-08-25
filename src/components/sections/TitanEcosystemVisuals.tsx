@@ -10,7 +10,8 @@ import { motion } from "framer-motion";
  * scroll line, the pointer, the alternating columns — and this one is only
  * about drawing. Pick one with `<PartVisual kind="…" />`.
  *
- *   orbit      six satellites breathing in and out around a dashed ring
+ *   orbit      a dot that splits into six, blooms outward, merges down to
+ *              three, and falls back in — reproduced from a reference clip
  *   mandala    three rings of nodes that turn and breathe through each other
  *   web        a spider crawling a dot field, spinning threads to the nearest
  *   monogram   a letter cloud that turns once in 3D, then scrambles into a
@@ -48,17 +49,7 @@ export const VISUAL_SIZE = "clamp(220px, min(26vw, 40vh), 440px)";
 const MANDALA_SIZE = "clamp(280px, min(40vw, 60vh), 660px)";
 const ORBIT_DOT = "clamp(26px, min(3.24vw, 5.01vh), 56px)";
 
-/** Dash pattern for every dashed path here, in SCREEN px — see the
- *  non-scaling-stroke note on the orbit ring for why the unit is pixels. */
-const DASH = "26 16";
-
-const SPIN_SECONDS = 20;
-const PULSE_SECONDS = 11;
-
 const EASE_CSS = "cubic-bezier(0.22,1,0.36,1)";
-/** Symmetric, for anything that expands and then contracts — the house
- *  ease-out front-loads and would make a collapse land in a few percent. */
-const EASE_BREATHE = "cubic-bezier(0.45,0,0.55,1)";
 
 const STROKE = "rgba(255,255,255,0.45)";
 /** Mandala. Edges are faint on purpose — they only read where they overlap,
@@ -76,48 +67,83 @@ export type VisualKind = "orbit" | "mandala" | "web" | "monogram";
    KEYFRAMES — injected once by the section.
    ═════════════════════════════════════════════════════════ */
 export const VISUAL_KEYFRAMES = (ring: string) => `
-@property --orbit-r {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
-}
+@property --sat-r  { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@property --ring-r { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@property --sat-s  { syntax: '<number>'; inherits: true; initial-value: 1; }
 
 @keyframes eco-spin { to { transform: rotate(360deg); } }
 @keyframes eco-spin-slow { to { transform: rotate(360deg); } }
 @keyframes eco-spin-back { to { transform: rotate(-360deg); } }
 
-/* ── ORBIT ── */
-@keyframes eco-radius {
-  0%   { --orbit-r: calc(0.232 * ${ring}); }
-  30%  { --orbit-r: calc(0.400 * ${ring}); }
-  52%  { --orbit-r: calc(0.400 * ${ring}); }
-  70%  { --orbit-r: calc(0.130 * ${ring}); }
-  82%  { --orbit-r: calc(0.130 * ${ring}); }
-  100% { --orbit-r: calc(0.232 * ${ring}); }
+/* ── ORBIT ──
+   Every stop below is measured off the reference clip (720x720, 60fps, 24.2s)
+   by sampling a radial profile of each frame: a radius where most angles are
+   lit is the ring, a radius where only a few arcs are lit is the satellites,
+   and the number of arcs is how many satellites there are.
+
+   WHAT THE REFERENCE ACTUALLY DOES, and what this reproduces:
+
+   1. The satellites ARE the centre dot. It splits into six, they fly out, and
+      at the end they fall back in and become one dot again. The centre is
+      empty the whole time they are out — measured: the centre pixel is lit
+      only while everything is collapsed.
+   2. The ring is a SEPARATE, SMALLER circle — r=48 against satellites at
+      r=74-84 in a 240px frame. The satellites do not ride on it. (The old
+      build had them glued to a single breathing radius, which is why it read
+      as one pulsing wheel rather than a bloom.)
+   3. The travel out is a fast burst then a long creep: r goes 5→34→50→62 in
+      0.6s, then takes another 3s to drift from 62 to 84. Hence the crowded
+      early stops here and the near-flat tail.
+   4. Satellites GROW as they travel — diameter 15.9 at r=30 up to 25.0 at
+      r=84, so roughly half size to full.
+   5. They MERGE: six become three. Measured angles go 0/60/120/180/240/300
+      to 60/180/300 — every other dot travels 60 degrees onto its neighbour
+      and is absorbed. That is what eco-merge does.
+   6. The whole field rotates at ~13 degrees/second throughout.
+
+   The clip's white transition cards are NOT reproduced; they are edit points
+   in a showreel, not part of the mechanism. */
+@keyframes eco-orbit {
+  0%   { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
+  5%   { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
+  11%  { --sat-r: calc(0.140 * ${ring}); --sat-s: 0.62; --ring-r: calc(0.100 * ${ring}); }
+  17%  { --sat-r: calc(0.240 * ${ring}); --sat-s: 0.72; --ring-r: calc(0.150 * ${ring}); }
+  26%  { --sat-r: calc(0.310 * ${ring}); --sat-s: 0.85; --ring-r: calc(0.185 * ${ring}); }
+  40%  { --sat-r: calc(0.340 * ${ring}); --sat-s: 0.95; --ring-r: calc(0.200 * ${ring}); }
+  78%  { --sat-r: calc(0.350 * ${ring}); --sat-s: 1.00; --ring-r: calc(0.200 * ${ring}); }
+  88%  { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
+  100% { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
 }
+/* The ring fades in behind the bloom and out with the collapse. */
 @keyframes eco-ring {
-  0%   { opacity: 0.85; }
-  30%  { opacity: 1; }
-  52%  { opacity: 1; }
-  70%  { opacity: 0.4; }
-  82%  { opacity: 0.4; }
-  100% { opacity: 0.85; }
+  0%   { opacity: 0; }
+  5%   { opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  88%  { opacity: 0; }
+  100% { opacity: 0; }
 }
-@keyframes eco-sat {
-  0%   { opacity: 1; }
-  52%  { opacity: 1; }
-  66%  { opacity: 0; }
-  82%  { opacity: 0; }
-  94%  { opacity: 1; }
-  100% { opacity: 1; }
+/* Every other satellite walks 60deg onto its neighbour and is absorbed. It
+   comes back only once everything is collapsed at the centre, where the core
+   dot covers the reappearance. */
+@keyframes eco-merge {
+  0%   { transform: rotate(0deg);  opacity: 1; }
+  40%  { transform: rotate(0deg);  opacity: 1; }
+  56%  { transform: rotate(60deg); opacity: 1; }
+  61%  { transform: rotate(60deg); opacity: 0; }
+  87%  { transform: rotate(60deg); opacity: 0; }
+  88%  { transform: rotate(0deg);  opacity: 0; }
+  95%  { transform: rotate(0deg);  opacity: 1; }
+  100% { transform: rotate(0deg);  opacity: 1; }
 }
+/* The core is lit ONLY while the satellites are home — it is the same dot. */
 @keyframes eco-core {
-  0%   { opacity: 0; transform: scale(0.3); }
-  56%  { opacity: 0; transform: scale(0.3); }
-  70%  { opacity: 1; transform: scale(1); }
-  82%  { opacity: 1; transform: scale(1); }
-  92%  { opacity: 0; transform: scale(0.3); }
-  100% { opacity: 0; transform: scale(0.3); }
+  0%   { opacity: 1; transform: scale(1); }
+  5%   { opacity: 1; transform: scale(1); }
+  12%  { opacity: 0; transform: scale(0.4); }
+  84%  { opacity: 0; transform: scale(0.4); }
+  92%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 /* NOTHING RUNS UNTIL THE READER GETS THERE.
@@ -141,6 +167,14 @@ export const VISUAL_KEYFRAMES = (ring: string) => `
    ═════════════════════════════════════════════════════════ */
 const ORBIT_COUNT = 6;
 const STEP_DEG = 360 / ORBIT_COUNT;
+/** Slots that walk onto their neighbour and are absorbed — six become three,
+ *  as measured. The survivors are the odd slots, matching the reference's
+ *  60/180/300 after the merge. */
+const MERGES = (slot: number) => slot % 2 === 0;
+/** One bloom → orbit → merge → collapse. */
+const ORBIT_SECONDS = 14;
+/** 360deg at the reference's measured ~13deg/s. */
+const ORBIT_SPIN_SECONDS = 28;
 
 function Orbit() {
   return (
@@ -149,32 +183,36 @@ function Orbit() {
       style={{
         width: VISUAL_SIZE,
         height: VISUAL_SIZE,
-        animation: `eco-radius ${PULSE_SECONDS}s ${EASE_BREATHE} infinite`,
+        /* LINEAR on purpose. The stops in eco-orbit already carry the
+           reference's own acceleration — burst, then creep — so an easing
+           curve here would apply that shape twice. */
+        animation: `eco-orbit ${ORBIT_SECONDS}s linear infinite`,
       }}
       aria-hidden
     >
-      {/* THE ORBIT PATH. Its diameter is literally `2 x --orbit-r` — the same
-          variable each satellite rides out along — so the circles sit exactly
-          ON it at every frame, not just when expanded.
+      {/* THE RING — its own, smaller circle, on `--ring-r` rather than the
+          satellites' radius. In the reference it sits at r=48 while the
+          satellites orbit at 74-84, so it reads as something the satellites
+          circle AROUND, not a track they sit on.
 
-          `vector-effect="non-scaling-stroke"` holds the 1px width and the dash
-          pattern in SCREEN pixels. Without it both live in viewBox units and
-          would scale with the ring, stretching as it expands and collapsing to
-          specks at the small radius.
+          SOLID, not dashed: sampling the reference shows better than 80% of
+          the angles at that radius lit, which a dash pattern could not do.
 
-          r="50" against a 100-unit viewBox makes the drawn radius exactly
-          `--orbit-r`; the stroke then straddles the viewBox edge, so the
-          `overflow: visible` is load-bearing. */}
+          `vector-effect="non-scaling-stroke"` holds the 1px width in SCREEN
+          pixels; without it the stroke lives in viewBox units and would
+          thicken as the ring grows. r="50" against a 100-unit viewBox makes
+          the drawn radius exactly `--ring-r`, which puts the stroke on the
+          viewBox edge — hence `overflow: visible`. */}
       <svg
         viewBox="0 0 100 100"
         className="absolute left-1/2 top-1/2"
         style={{
-          width: "calc(2 * var(--orbit-r))",
-          height: "calc(2 * var(--orbit-r))",
-          marginLeft: "calc(-1 * var(--orbit-r))",
-          marginTop: "calc(-1 * var(--orbit-r))",
+          width: "calc(2 * var(--ring-r))",
+          height: "calc(2 * var(--ring-r))",
+          marginLeft: "calc(-1 * var(--ring-r))",
+          marginTop: "calc(-1 * var(--ring-r))",
           overflow: "visible",
-          animation: `eco-ring ${PULSE_SECONDS}s ${EASE_BREATHE} infinite`,
+          animation: `eco-ring ${ORBIT_SECONDS}s linear infinite`,
           willChange: "opacity",
         }}
       >
@@ -185,7 +223,6 @@ function Orbit() {
           fill="none"
           stroke={STROKE}
           strokeWidth="1"
-          strokeDasharray={DASH}
           vectorEffect="non-scaling-stroke"
         />
       </svg>
@@ -193,37 +230,52 @@ function Orbit() {
       <div
         className="absolute inset-0"
         style={{
-          animation: `eco-spin ${SPIN_SECONDS}s linear infinite`,
+          /* Counter-clockwise, which is the direction measured in the
+             reference's orbit phase. */
+          animation: `eco-spin-back ${ORBIT_SPIN_SECONDS}s linear infinite`,
           willChange: "transform",
         }}
       >
         {Array.from({ length: ORBIT_COUNT }, (_, slot) => (
-          /* ANGLE and RADIUS cannot share an element: a later `transform`
-             replaces an earlier one rather than adding to it. */
+          /* FOUR NESTED ELEMENTS, one transform each. They cannot be collapsed:
+             a second `transform` on an element REPLACES the first rather than
+             composing with it, and this dot needs four at once — its slot
+             angle, its merge walk, its radius, and its size. */
           <div
             key={slot}
             className="absolute left-1/2 top-1/2 h-0 w-0"
             style={{ transform: `rotate(${slot * STEP_DEG}deg)` }}
           >
             <div
-              className="relative"
-              style={{ transform: "translateY(calc(-1 * var(--orbit-r)))" }}
+              className="relative h-0 w-0"
+              style={
+                MERGES(slot)
+                  ? {
+                      animation: `eco-merge ${ORBIT_SECONDS}s ${EASE_CSS} infinite`,
+                      willChange: "transform, opacity",
+                    }
+                  : undefined
+              }
             >
               <div
-                className="absolute rounded-full"
-                style={{
-                  width: ORBIT_DOT,
-                  height: ORBIT_DOT,
-                  marginLeft: `calc(-0.5 * ${ORBIT_DOT})`,
-                  marginTop: `calc(-0.5 * ${ORBIT_DOT})`,
-                  border: "1px solid rgba(255,255,255,0.7)",
-                  background:
-                    "radial-gradient(circle at 50% 50%, rgba(120,170,255,0.14) 0%, transparent 72%)",
-                  boxShadow: "0 0 18px rgba(120,170,255,0.22)",
-                  animation: `eco-sat ${PULSE_SECONDS}s ${EASE_CSS} infinite`,
-                  willChange: "opacity",
-                }}
-              />
+                className="relative"
+                style={{ transform: "translateY(calc(-1 * var(--sat-r)))" }}
+              >
+                {/* Filled, as in the reference — not an outlined ring. */}
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    width: ORBIT_DOT,
+                    height: ORBIT_DOT,
+                    marginLeft: `calc(-0.5 * ${ORBIT_DOT})`,
+                    marginTop: `calc(-0.5 * ${ORBIT_DOT})`,
+                    background:
+                      "radial-gradient(circle at 50% 50%, #FFFFFF 0%, rgba(214,232,255,0.96) 60%, rgba(150,190,255,0.88) 100%)",
+                    boxShadow: "0 0 20px rgba(150,190,255,0.4)",
+                    transform: "scale(var(--sat-s))",
+                  }}
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -239,7 +291,7 @@ function Orbit() {
           background:
             "radial-gradient(circle at 50% 50%, #FFFFFF 0%, rgba(196,220,255,0.95) 62%, rgba(130,175,255,0.8) 100%)",
           boxShadow: "0 0 26px rgba(150,190,255,0.55)",
-          animation: `eco-core ${PULSE_SECONDS}s ${EASE_CSS} infinite`,
+          animation: `eco-core ${ORBIT_SECONDS}s ${EASE_CSS} infinite`,
           willChange: "transform, opacity",
         }}
       />

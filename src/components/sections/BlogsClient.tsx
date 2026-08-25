@@ -11,7 +11,9 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
    FoundersStory grid). Buttons reuse the site's navy pill style.
    ───────────────────────────────────────────────────────── */
 
-const BLOG_IMAGE = "/images/indicorns/skyscrappers.png";
+/* .jpeg, not .png — the file on disk is skyscrappers.jpeg, so the old path
+   404'd and every placeholder card rendered a broken image. */
+const BLOG_IMAGE = "/images/indicorns/skyscrappers.jpeg";
 
 interface Blog {
   id: number;
@@ -46,11 +48,36 @@ const makeBlog = (id: number): Blog => ({
   tags: ["D2C", "Consumer Brand", "IPO 2023"],
 });
 
-/** The big card on the left. */
-const FEATURED = makeBlog(0);
-/** The two stacked beside it. */
-const FEATURED_SIDE: Blog[] = [makeBlog(101), makeBlog(102)];
-const BLOGS: Blog[] = Array.from({ length: 6 }, (_, i) => makeBlog(i + 1));
+/* Placeholders, used only until posts exist in Sanity. */
+const FALLBACK_POSTS: Blog[] = Array.from({ length: 9 }, (_, i) => makeBlog(i));
+
+/** What the listing receives from Sanity — see allBlogPostsQuery. */
+export interface BlogPostCard {
+  slug?: string;
+  title?: string;
+  excerpt?: string;
+  coverImage?: string;
+  tags?: string[];
+  author?: string;
+  readTime?: string;
+  category?: string;
+  featured?: boolean;
+}
+
+/** Sanity shape -> the shape the cards already expect. */
+function toBlog(p: BlogPostCard, i: number): Blog {
+  return {
+    id: i,
+    image: p.coverImage || BLOG_IMAGE,
+    author: p.author || "",
+    readTime: p.readTime || "",
+    category: p.category || "",
+    title: p.title || "",
+    excerpt: p.excerpt || "",
+    href: p.slug ? `/blogs/${p.slug}` : "#",
+    tags: p.tags,
+  };
+}
 
 const STORY_GAP = "calc(var(--section-px-wide) * 0.4)";
 // No outer inset — the grid aligns to the same left/right gutter as the
@@ -256,23 +283,52 @@ function BlogCard({ blog }: { blog: Blog }) {
   );
 }
 
-export default function BlogsClient() {
+export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }) {
+  /* Derived in ONE memo, so the arrays are referentially stable. The filter
+     below depends on `BLOGS`, and rebuilding these on every render would make
+     that memo recompute every time — which is what the lint rule catches. */
+  const { FEATURED, FEATURED_SIDE, BLOGS, categories } = useMemo(() => {
+    /* Sanity when there is any, placeholders otherwise — so the page never
+       renders as an empty shell while the team is still filling it in. */
+    const all: Blog[] = posts?.length ? posts.map(toBlog) : FALLBACK_POSTS;
+
+    /* The first three FEATURED posts take the header block; if fewer than
+       three are flagged, the newest fill in behind them. Without that top-up
+       the header collapses the moment someone forgets the checkbox. */
+    const flagged = posts?.length
+      ? all.filter((_, i) => posts[i]?.featured)
+      : all.slice(0, 3);
+    const header = [...flagged, ...all.filter((b) => !flagged.includes(b))].slice(0, 3);
+
+    return {
+      FEATURED: header[0] ?? all[0],
+      FEATURED_SIDE: header.slice(1, 3),
+      BLOGS: all.filter((b) => !header.includes(b)),
+      /* Categories come from the posts themselves rather than a hardcoded
+         list, so adding one in Sanity is enough — nothing to keep in step. */
+      categories: posts?.length
+        ? Array.from(new Set(all.map((b) => b.category).filter(Boolean)))
+        : CATEGORIES,
+    };
+  }, [posts]);
+
   const [category, setCategory] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  // Search filters live by title/author. Category is a selectable filter
-  // that will narrow results once posts carry matching categories (the
-  // sample posts all share one category, so it's display-only for now).
+  /* Search matches title or author; category narrows on top of it. The
+     category filter used to be display-only because every sample post shared
+     one category — with real data it does something, so it is wired up. */
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return BLOGS.filter(
       (b) =>
-        !q ||
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q)
+        (!q ||
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q)) &&
+        (!category || b.category === category)
     );
-  }, [query]);
+  }, [query, category, BLOGS]);
 
   const rows = Math.max(1, Math.ceil(filtered.length / 3));
 
@@ -443,7 +499,7 @@ export default function BlogsClient() {
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute left-0 top-[calc(100%+12px)] z-40 flex w-[260px] flex-col overflow-hidden rounded-[8px] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
               >
-                {CATEGORIES.map((cat) => {
+                {categories.map((cat) => {
                   const active = category === cat;
                   return (
                     <button

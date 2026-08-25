@@ -2,9 +2,14 @@ import type { SchemaTypeDefinition } from "sanity";
 import { aboutTheFund } from "./aboutTheFund";
 import { backedBefore } from "./backedBefore";
 import { backedEarly } from "./backedEarly";
+import { blogPost } from "./blogPost";
+import { blogsHero } from "./blogsHero";
+import { blogsPage } from "./blogsPage";
 import { company } from "./company";
 import { footer } from "./footer";
-import { founderStoryPage } from "./founderStoryPage";
+import { founderStoryEntry } from "./founderStoryEntry";
+import { foundersStoryHero } from "./foundersStoryHero";
+import { foundersStoryPage } from "./foundersStoryPage";
 import { foundersTestimonial } from "./foundersTestimonial";
 import { fundDetails } from "./fundDetails";
 import { hero } from "./hero";
@@ -88,8 +93,14 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   /* SEO */
   siteSeo,
   pageSeo,
-  /* Founder story detail pages */
-  founderStoryPage,
+  /* Blogs page — hero, then one document holding every post */
+  blogsHero,
+  blogsPage,
+  blogPost,
+  /* Founders story page — hero, then one document holding every story */
+  foundersStoryHero,
+  foundersStoryPage,
+  founderStoryEntry,
   /* Portfolio */
   company,
   portfolioGrid,
