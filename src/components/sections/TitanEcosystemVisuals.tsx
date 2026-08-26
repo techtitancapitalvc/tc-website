@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
  *   orbit      a dot that splits into six, blooms outward, merges down to
  *              three, and falls back in — reproduced from a reference clip
  *   mandala    three rings of nodes that turn and breathe through each other
- *   web        a spider crawling a dot field, spinning threads to the nearest
+ *   web        a spider crossing a square grid, spinning threads to the nearest
  *   monogram   a letter cloud that turns once in 3D, then scrambles into a
  *              dot-matrix "TC" with a field band above and below
  *
@@ -23,8 +23,9 @@ import { motion } from "framer-motion";
  *                   so they should keep going whether or not React renders.
  *   rAF + refs      the spider. Its body moves every frame and its threads are
  *                   `x1`/`y1`/`x2`/`y2` — SVG attributes CSS cannot animate.
- *                   Writing them through refs avoids re-rendering fifty-odd
- *                   static dots sixty times a second to move nine lines.
+ *                   Writing them through refs avoids re-rendering the whole
+ *                   grid sixty times a second — and every dot is re-lit each
+ *                   frame as well, so that is 77 nodes plus 16 threads.
  *   Canvas          the monogram, because a couple of thousand particles is
  *                   far past what the DOM will animate. See its own note.
  *
@@ -47,104 +48,26 @@ import { motion } from "framer-motion";
 export const VISUAL_SIZE = "clamp(220px, min(26vw, 40vh), 440px)";
 /** The mandala runs larger — see the note on its wrapper. */
 const MANDALA_SIZE = "clamp(280px, min(40vw, 60vh), 660px)";
-const ORBIT_DOT = "clamp(26px, min(3.24vw, 5.01vh), 56px)";
-
-const EASE_CSS = "cubic-bezier(0.22,1,0.36,1)";
 
 const STROKE = "rgba(255,255,255,0.45)";
 /** Mandala. Edges are faint on purpose — they only read where they overlap,
  *  which is what gives the reference its woven look. */
 const MANDALA_EDGE = "rgba(255,255,255,0.13)";
 const MANDALA_NODE_FILL = "rgba(255,255,255,0.92)";
-/** The spider. The reference is red on black; on this navy that would read as
- *  an error state, so it takes the section's own light blue instead. */
-const SPIDER_BODY = "rgba(210,230,255,0.95)";
-const SPIDER_THREAD = "rgba(150,190,255,0.8)";
+/** The spider. White on navy, as the reference is white on black — the threads
+ *  keep only a faint cool cast so they sit in the section's palette. */
+const SPIDER_BODY = "rgba(235,244,255,0.98)";
+const SPIDER_THREAD = "rgba(214,232,255,0.78)";
 
 export type VisualKind = "orbit" | "mandala" | "web" | "monogram";
 
 /* ═════════════════════════════════════════════════════════
    KEYFRAMES — injected once by the section.
    ═════════════════════════════════════════════════════════ */
-export const VISUAL_KEYFRAMES = (ring: string) => `
-@property --sat-r  { syntax: '<length>'; inherits: true; initial-value: 0px; }
-@property --ring-r { syntax: '<length>'; inherits: true; initial-value: 0px; }
-@property --sat-s  { syntax: '<number>'; inherits: true; initial-value: 1; }
-
+export const VISUAL_KEYFRAMES = () => `
 @keyframes eco-spin { to { transform: rotate(360deg); } }
 @keyframes eco-spin-slow { to { transform: rotate(360deg); } }
 @keyframes eco-spin-back { to { transform: rotate(-360deg); } }
-
-/* ── ORBIT ──
-   Every stop below is measured off the reference clip (720x720, 60fps, 24.2s)
-   by sampling a radial profile of each frame: a radius where most angles are
-   lit is the ring, a radius where only a few arcs are lit is the satellites,
-   and the number of arcs is how many satellites there are.
-
-   WHAT THE REFERENCE ACTUALLY DOES, and what this reproduces:
-
-   1. The satellites ARE the centre dot. It splits into six, they fly out, and
-      at the end they fall back in and become one dot again. The centre is
-      empty the whole time they are out — measured: the centre pixel is lit
-      only while everything is collapsed.
-   2. The ring is a SEPARATE, SMALLER circle — r=48 against satellites at
-      r=74-84 in a 240px frame. The satellites do not ride on it. (The old
-      build had them glued to a single breathing radius, which is why it read
-      as one pulsing wheel rather than a bloom.)
-   3. The travel out is a fast burst then a long creep: r goes 5→34→50→62 in
-      0.6s, then takes another 3s to drift from 62 to 84. Hence the crowded
-      early stops here and the near-flat tail.
-   4. Satellites GROW as they travel — diameter 15.9 at r=30 up to 25.0 at
-      r=84, so roughly half size to full.
-   5. They MERGE: six become three. Measured angles go 0/60/120/180/240/300
-      to 60/180/300 — every other dot travels 60 degrees onto its neighbour
-      and is absorbed. That is what eco-merge does.
-   6. The whole field rotates at ~13 degrees/second throughout.
-
-   The clip's white transition cards are NOT reproduced; they are edit points
-   in a showreel, not part of the mechanism. */
-@keyframes eco-orbit {
-  0%   { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
-  5%   { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
-  11%  { --sat-r: calc(0.140 * ${ring}); --sat-s: 0.62; --ring-r: calc(0.100 * ${ring}); }
-  17%  { --sat-r: calc(0.240 * ${ring}); --sat-s: 0.72; --ring-r: calc(0.150 * ${ring}); }
-  26%  { --sat-r: calc(0.310 * ${ring}); --sat-s: 0.85; --ring-r: calc(0.185 * ${ring}); }
-  40%  { --sat-r: calc(0.340 * ${ring}); --sat-s: 0.95; --ring-r: calc(0.200 * ${ring}); }
-  78%  { --sat-r: calc(0.350 * ${ring}); --sat-s: 1.00; --ring-r: calc(0.200 * ${ring}); }
-  88%  { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
-  100% { --sat-r: calc(0.012 * ${ring}); --sat-s: 0.50; --ring-r: calc(0.030 * ${ring}); }
-}
-/* The ring fades in behind the bloom and out with the collapse. */
-@keyframes eco-ring {
-  0%   { opacity: 0; }
-  5%   { opacity: 0; }
-  20%  { opacity: 1; }
-  80%  { opacity: 1; }
-  88%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-/* Every other satellite walks 60deg onto its neighbour and is absorbed. It
-   comes back only once everything is collapsed at the centre, where the core
-   dot covers the reappearance. */
-@keyframes eco-merge {
-  0%   { transform: rotate(0deg);  opacity: 1; }
-  40%  { transform: rotate(0deg);  opacity: 1; }
-  56%  { transform: rotate(60deg); opacity: 1; }
-  61%  { transform: rotate(60deg); opacity: 0; }
-  87%  { transform: rotate(60deg); opacity: 0; }
-  88%  { transform: rotate(0deg);  opacity: 0; }
-  95%  { transform: rotate(0deg);  opacity: 1; }
-  100% { transform: rotate(0deg);  opacity: 1; }
-}
-/* The core is lit ONLY while the satellites are home — it is the same dot. */
-@keyframes eco-core {
-  0%   { opacity: 1; transform: scale(1); }
-  5%   { opacity: 1; transform: scale(1); }
-  12%  { opacity: 0; transform: scale(0.4); }
-  84%  { opacity: 0; transform: scale(0.4); }
-  92%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
 
 /* NOTHING RUNS UNTIL THE READER GETS THERE.
    Every visual is wrapped in [data-eco-visual], and until its observer reports
@@ -165,136 +88,331 @@ export const VISUAL_KEYFRAMES = (ring: string) => `
 /* ═════════════════════════════════════════════════════════
    1. ORBIT
    ═════════════════════════════════════════════════════════ */
-const ORBIT_COUNT = 6;
-const STEP_DEG = 360 / ORBIT_COUNT;
-/** Slots that walk onto their neighbour and are absorbed — six become three,
- *  as measured. The survivors are the odd slots, matching the reference's
- *  60/180/300 after the merge. */
-const MERGES = (slot: number) => slot % 2 === 0;
-/** One bloom → orbit → merge → collapse. */
-const ORBIT_SECONDS = 14;
-/** 360deg at the reference's measured ~13deg/s. */
-const ORBIT_SPIN_SECONDS = 28;
+/**
+ * Reproduced from the reference clip (720x720, 60fps, 24.2s), measured frame
+ * by frame with a radial profile: at each radius, how many of 180 sampled
+ * angles are lit. A radius where most are lit is a ring; a radius where a few
+ * discrete arcs are lit is the satellites, and the arc count is how many.
+ *
+ * THE CLIP IS TWO LOOPS, NOT ONE. That is the thing an earlier build missed —
+ * it reproduced the first and stopped there.
+ *
+ *   LOOP ONE  t=0.4-7.4   The ring stays SMALL, fixed at r=13 the whole way.
+ *                         One dot becomes six, they bloom to r=84, six merge
+ *                         down to three, and the three fall back in.
+ *   LOOP TWO  t=10.2-19.6 Starts as a PAIR, not six — two dots spreading left
+ *                         and right to r=78. Then the RING ITSELF GROWS, 13 up
+ *                         to 48 between t=12.6 and t=15.6, and only once it is
+ *                         out do the satellites multiply, 2-3-4-5-6 over eight
+ *                         tenths of a second, redistributing evenly each time.
+ *                         Then they collapse and the big ring shrinks back to
+ *                         13, which is where loop one starts again.
+ *
+ * Why this is rAF and not CSS keyframes like it used to be: the satellite
+ * COUNT changes, and the survivors redistribute around the circle when it
+ * does. Six fixed elements with their own keyframes cannot express "five dots
+ * evenly spaced" — the positions depend on how many there currently are. In
+ * JS the whole timeline is just a table of measurements and a lerp.
+ *
+ * The clip's white transition cards (t=0-0.2, 1.6-2.0, 9.2-9.4) are NOT
+ * reproduced; they are edit points in a showreel, not part of the mechanism.
+ */
+
+/** Measured stops as [reference second, value]. Radii are in the 240px frame
+ *  the measurements were taken in; RADIUS_SCALE converts to a fraction of the
+ *  box. Everything is expressed on the clip's own clock, so the numbers below
+ *  can be checked against it directly. */
+type Stop = [number, number];
+
+const ORBIT_T0 = 0.4; // the clip's first settled frame
+const ORBIT_T1 = 24.0;
+
+/** The ring: fixed at 13 through loop one, grown to 48 in loop two, back down. */
+const ORBIT_RING: Stop[] = [
+  [0.4, 13], [12.4, 13], [12.6, 17], [12.8, 30], [13.0, 35], [13.6, 42],
+  [14.0, 44], [14.2, 45], [14.4, 46], [14.8, 47], [15.6, 48], [21.2, 48],
+  [21.4, 46], [21.6, 45], [22.0, 25], [22.2, 19], [22.6, 13], [24.0, 13],
+];
+
+/** The satellites' orbit radius across both loops. Zero is "home". */
+const ORBIT_SAT: Stop[] = [
+  [0.4, 0], [0.8, 5], [1.0, 36], [1.2, 51], [1.4, 63], [2.2, 75], [2.6, 77],
+  [3.0, 80], [3.4, 82], [3.8, 84], [6.4, 84], [6.6, 82], [6.8, 64], [7.0, 37],
+  [7.2, 24], [7.4, 0], [10.0, 0],
+  [10.2, 22], [10.4, 45], [10.6, 53], [10.8, 62], [11.2, 68], [11.6, 73],
+  [12.0, 76], [12.4, 77], [12.6, 78], [15.6, 76], [16.8, 75], [17.2, 74],
+  [18.2, 73], [18.8, 72], [19.0, 66], [19.2, 51], [19.4, 24], [19.6, 0],
+  [24.0, 0],
+];
+
+/** How many satellites there are. Fractional on purpose: the in-between values
+ *  are what spread the dots apart as one more arrives, which is what the clip
+ *  does — five dots sit at 72 degrees, six at 60. */
+const ORBIT_COUNT_STOPS: Stop[] = [
+  /* SIX DROPS TO TWO WHILE EVERYTHING IS HOME. The satellites are at radius
+     zero from t=7.4 to t=10.2, and the switch has to happen inside that
+     window. It used to run from 10.0 to 10.2 — which is exactly when they
+     emerge — so the count was passing through 5, 4 and 3 as they came out and
+     you saw five dots originate before it settled to two. */
+  [0.4, 6], [4.4, 6], [7.4, 6], [7.5, 2],
+  [16.2, 2], [16.4, 3], [16.6, 4], [16.8, 5], [17.0, 6], [24.0, 6],
+];
+
+/** Loop one's merge: six become three between t=3.4 and t=4.4. Measured angles
+ *  go 0/60/120/180/240/300 to 60/180/300 — every other dot walks 60 degrees
+ *  onto its neighbour and is absorbed there, so the three that remain are the
+ *  ORIGINAL odd ones rather than a fresh even spread. */
+const ORBIT_MERGE_FROM = 3.4;
+const ORBIT_MERGE_TO = 4.4;
+/** Loop one's satellites are back at the centre — and stay there until loop
+ *  two starts them again at t=10.2. ANY change to how many satellites there
+ *  are, or to how they are placed, has to happen inside this window, because
+ *  it is the only stretch where nothing is drawn to jump. */
+const ORBIT_HOME = 7.4;
+
+/** Rotation, in degrees, as measured. Loop one holds still while it blooms and
+ *  only turns after the merge (-12.8 deg/s); loop two holds until the six are
+ *  established and then turns the other way (+13 deg/s). The 90-degree offset
+ *  at t=10.2 is what puts loop two's opening pair left-and-right rather than
+ *  on the hexagon's up axis, which is where the clip has it. */
+const ORBIT_TURN: Stop[] = [
+  [0.4, 0], [3.4, 0], [7.4, -51], [10.1, -51],
+  [10.2, 90], [16.8, 90], [19.6, 126], [24.0, 126],
+];
+
+/** Satellite diameter against its own orbit radius: measured 15.9 at r=30 and
+ *  25.0 at r=84, which is this line. So a satellite grows as it travels. */
+const ORBIT_DOT_BASE = 10.85;
+const ORBIT_DOT_SLOPE = 0.1685;
+
+/** Wall-clock seconds for the whole thing. The clip's own span is 23.6s; this
+ *  runs it faster while keeping every proportion, so the two loops stay in the
+ *  ratio they were measured in. One number changes the pace of all of it. */
+const ORBIT_SECONDS = 18;
+
+/** Six elements is the most the clip ever shows at once. */
+const ORBIT_SLOTS = 6;
+
+/* The viewBox is 240 units because the measurements were taken in a 240px
+   frame — so every radius in the tables above is used AS IS, with no scale
+   factor to get wrong, and can be checked straight against the clip. */
+const ORBIT_VB = 240;
+const ORBIT_RING_DASH = "6 4";
+const ORBIT_SAT_DASH = "6 5";
+const ORBIT_SAT_FILL = "eco-sat-fill";
+
+/** Linear interpolation over a table of measured stops. */
+function orbitAt(stops: Stop[], t: number): number {
+  if (t <= stops[0][0]) return stops[0][1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [t0, v0] = stops[i];
+    const [t1, v1] = stops[i + 1];
+    if (t >= t0 && t <= t1) {
+      return t1 === t0 ? v1 : v0 + ((v1 - v0) * (t - t0)) / (t1 - t0);
+    }
+  }
+  return stops[stops.length - 1][1];
+}
 
 function Orbit() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<SVGCircleElement>(null);
+  const coreRef = useRef<SVGCircleElement>(null);
+  const satRefs = useRef<(SVGCircleElement | null)[]>([]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let raf = 0;
+    let visible = false;
+    const start = performance.now();
+
+    /* The CSS pause rule cannot reach an rAF loop, so this gates itself on the
+       same observer the others use. */
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+      },
+      { threshold: 0.15 }
+    );
+    io.observe(wrap);
+
+    const c = ORBIT_VB / 2;
+    const span = ORBIT_T1 - ORBIT_T0;
+
+    const draw = (now: number) => {
+      raf = requestAnimationFrame(draw);
+      if (!visible) return;
+
+      /* Wall clock -> the clip's own clock, so every table above is read in
+         the units it was measured in. */
+      const cycle = ((now - start) / 1000 / ORBIT_SECONDS) % 1;
+      const t = reduced ? 5 : ORBIT_T0 + cycle * span;
+
+      const ringR = orbitAt(ORBIT_RING, t);
+      const satR = orbitAt(ORBIT_SAT, t);
+      const turn = orbitAt(ORBIT_TURN, t);
+
+      const ring = ringRef.current;
+      if (ring) ring.setAttribute("r", ringR.toFixed(2));
+
+      /* The core is the satellites, at home. It is lit only while they are —
+         measured: the centre pixel is dark for every frame they are out. */
+      const core = coreRef.current;
+      if (core) {
+        const home = Math.max(0, 1 - satR / 6);
+        core.setAttribute("opacity", home.toFixed(3));
+        core.setAttribute("r", (ORBIT_DOT_BASE / 2).toFixed(2));
+      }
+
+      /* Loop one's merge, as its own term: alternate dots walk +60 degrees and
+         fade out as they arrive, and the three survivors stay on the ORIGINAL
+         odd slots afterwards rather than re-spreading.
+
+         It has to stop being in force at ORBIT_HOME — the moment loop one's
+         satellites reach the centre. Handing back to the evenly-spaced
+         placement moves the survivors from 60/180/300 to 0/120/240, so the
+         handover is only invisible where the radius is zero. It used to happen
+         at 10.1, halfway through loop two's dots emerging, which is the other
+         half of the five-dots-originating glitch. */
+      const merging =
+        t >= ORBIT_MERGE_FROM && t <= ORBIT_MERGE_TO
+          ? (t - ORBIT_MERGE_FROM) / (ORBIT_MERGE_TO - ORBIT_MERGE_FROM)
+          : t > ORBIT_MERGE_TO && t < ORBIT_HOME
+            ? 1
+            : 0;
+
+      const count = orbitAt(ORBIT_COUNT_STOPS, t);
+      const dia = ORBIT_DOT_BASE + ORBIT_DOT_SLOPE * satR;
+
+      for (let i = 0; i < ORBIT_SLOTS; i++) {
+        const el = satRefs.current[i];
+        if (!el) continue;
+
+        let angle: number;
+        let opacity: number;
+
+        if (merging > 0) {
+          /* Still on the six-slot hexagon: the odd ones hold, the even ones
+             travel onto them. */
+          angle = i * 60 + (i % 2 === 0 ? 60 * merging : 0);
+          opacity = i % 2 === 0 ? Math.max(0, 1 - merging * 1.6) : 1;
+        } else {
+          /* Evenly spaced for however many there currently are — and BLENDED
+             BETWEEN THE TWO WHOLE ARRANGEMENTS while that number is changing.
+
+             The obvious `i * 360 / count` is wrong even though it looks right.
+             With a fractional count the arriving dot is placed at
+             `i * 360 / count`, which for the third dot at count=2.05 is 351
+             degrees — hard against its neighbour — and it then swings 111
+             degrees round to 240 as the count fills in. It reads as a dot
+             flying around the ring rather than appearing.
+
+             Blending instead means the dots already there glide from the old
+             spacing to the new one, and the newcomer fades in exactly where it
+             is going to live. */
+          const nLow = Math.max(1, Math.floor(count));
+          const nHigh = Math.max(1, Math.ceil(count));
+          const f = count - Math.floor(count);
+          if (i < nLow) {
+            const from = (i * 360) / nLow;
+            const to = (i * 360) / nHigh;
+            angle = from + (to - from) * f;
+            opacity = 1;
+          } else if (i < nHigh) {
+            angle = (i * 360) / nHigh;
+            opacity = f;
+          } else {
+            angle = 0;
+            opacity = 0;
+          }
+        }
+
+        if (satR < 0.5 || opacity <= 0.002) {
+          el.setAttribute("opacity", "0");
+          continue;
+        }
+        const a = ((angle + turn) * Math.PI) / 180 - Math.PI / 2;
+        el.setAttribute("cx", (c + Math.cos(a) * satR).toFixed(2));
+        el.setAttribute("cy", (c + Math.sin(a) * satR).toFixed(2));
+        el.setAttribute("r", (dia / 2).toFixed(2));
+        el.setAttribute("opacity", opacity.toFixed(3));
+      }
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+    };
+  }, []);
+
   return (
     <div
+      ref={wrapRef}
       className="relative shrink-0"
-      style={{
-        width: VISUAL_SIZE,
-        height: VISUAL_SIZE,
-        /* LINEAR on purpose. The stops in eco-orbit already carry the
-           reference's own acceleration — burst, then creep — so an easing
-           curve here would apply that shape twice. */
-        animation: `eco-orbit ${ORBIT_SECONDS}s linear infinite`,
-      }}
+      style={{ width: VISUAL_SIZE, height: VISUAL_SIZE }}
       aria-hidden
     >
-      {/* THE RING — its own, smaller circle, on `--ring-r` rather than the
-          satellites' radius. In the reference it sits at r=48 while the
-          satellites orbit at 74-84, so it reads as something the satellites
-          circle AROUND, not a track they sit on.
-
-          SOLID, not dashed: sampling the reference shows better than 80% of
-          the angles at that radius lit, which a dash pattern could not do.
-
-          `vector-effect="non-scaling-stroke"` holds the 1px width in SCREEN
-          pixels; without it the stroke lives in viewBox units and would
-          thicken as the ring grows. r="50" against a 100-unit viewBox makes
-          the drawn radius exactly `--ring-r`, which puts the stroke on the
-          viewBox edge — hence `overflow: visible`. */}
       <svg
-        viewBox="0 0 100 100"
-        className="absolute left-1/2 top-1/2"
-        style={{
-          width: "calc(2 * var(--ring-r))",
-          height: "calc(2 * var(--ring-r))",
-          marginLeft: "calc(-1 * var(--ring-r))",
-          marginTop: "calc(-1 * var(--ring-r))",
-          overflow: "visible",
-          animation: `eco-ring ${ORBIT_SECONDS}s linear infinite`,
-          willChange: "opacity",
-        }}
+        viewBox={`0 0 ${ORBIT_VB} ${ORBIT_VB}`}
+        className="h-full w-full"
+        style={{ overflow: "visible" }}
       >
+        <defs>
+          {/* 95% transparent — a hint of light inside the outline, not a disc. */}
+          <radialGradient id={ORBIT_SAT_FILL}>
+            <stop offset="0%" stopColor="#CFE2FF" stopOpacity="0.05" />
+            <stop offset="58%" stopColor="#8FB4FF" stopOpacity="0.03" />
+            <stop offset="100%" stopColor="#8FB4FF" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* THE RING. Dashed: coverage at its radius measures a steady 0.62 of
+            the circle in the reference, which a solid stroke cannot be.
+            `non-scaling-stroke` holds the width AND the dash rhythm in screen
+            pixels while the radius changes underneath. */}
         <circle
-          cx="50"
-          cy="50"
-          r="50"
+          ref={ringRef}
+          cx={ORBIT_VB / 2}
+          cy={ORBIT_VB / 2}
+          r={13}
           fill="none"
           stroke={STROKE}
           strokeWidth="1"
+          strokeDasharray={ORBIT_RING_DASH}
           vectorEffect="non-scaling-stroke"
         />
-      </svg>
 
-      <div
-        className="absolute inset-0"
-        style={{
-          /* Counter-clockwise, which is the direction measured in the
-             reference's orbit phase. */
-          animation: `eco-spin-back ${ORBIT_SPIN_SECONDS}s linear infinite`,
-          willChange: "transform",
-        }}
-      >
-        {Array.from({ length: ORBIT_COUNT }, (_, slot) => (
-          /* FOUR NESTED ELEMENTS, one transform each. They cannot be collapsed:
-             a second `transform` on an element REPLACES the first rather than
-             composing with it, and this dot needs four at once — its slot
-             angle, its merge walk, its radius, and its size. */
-          <div
-            key={slot}
-            className="absolute left-1/2 top-1/2 h-0 w-0"
-            style={{ transform: `rotate(${slot * STEP_DEG}deg)` }}
-          >
-            <div
-              className="relative h-0 w-0"
-              style={
-                MERGES(slot)
-                  ? {
-                      animation: `eco-merge ${ORBIT_SECONDS}s ${EASE_CSS} infinite`,
-                      willChange: "transform, opacity",
-                    }
-                  : undefined
-              }
-            >
-              <div
-                className="relative"
-                style={{ transform: "translateY(calc(-1 * var(--sat-r)))" }}
-              >
-                {/* Filled, as in the reference — not an outlined ring. */}
-                <div
-                  className="absolute rounded-full"
-                  style={{
-                    width: ORBIT_DOT,
-                    height: ORBIT_DOT,
-                    marginLeft: `calc(-0.5 * ${ORBIT_DOT})`,
-                    marginTop: `calc(-0.5 * ${ORBIT_DOT})`,
-                    background:
-                      "radial-gradient(circle at 50% 50%, #FFFFFF 0%, rgba(214,232,255,0.96) 60%, rgba(150,190,255,0.88) 100%)",
-                    boxShadow: "0 0 20px rgba(150,190,255,0.4)",
-                    transform: "scale(var(--sat-s))",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+        {Array.from({ length: ORBIT_SLOTS }, (_, i) => (
+          <circle
+            key={i}
+            ref={(el) => {
+              satRefs.current[i] = el;
+            }}
+            cx={ORBIT_VB / 2}
+            cy={ORBIT_VB / 2}
+            r={0}
+            opacity={0}
+            fill={`url(#${ORBIT_SAT_FILL})`}
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth="1"
+            strokeDasharray={ORBIT_SAT_DASH}
+            vectorEffect="non-scaling-stroke"
+          />
         ))}
-      </div>
 
-      <div
-        className="absolute left-1/2 top-1/2 rounded-full"
-        style={{
-          width: ORBIT_DOT,
-          height: ORBIT_DOT,
-          marginLeft: `calc(-0.5 * ${ORBIT_DOT})`,
-          marginTop: `calc(-0.5 * ${ORBIT_DOT})`,
-          background:
-            "radial-gradient(circle at 50% 50%, #FFFFFF 0%, rgba(196,220,255,0.95) 62%, rgba(130,175,255,0.8) 100%)",
-          boxShadow: "0 0 26px rgba(150,190,255,0.55)",
-          animation: `eco-core ${ORBIT_SECONDS}s ${EASE_CSS} infinite`,
-          willChange: "transform, opacity",
-        }}
-      />
+        <circle
+          ref={coreRef}
+          cx={ORBIT_VB / 2}
+          cy={ORBIT_VB / 2}
+          r={ORBIT_DOT_BASE / 2}
+          fill="#FFFFFF"
+          opacity={1}
+        />
+      </svg>
     </div>
   );
 }
@@ -350,8 +468,13 @@ const MANDALA_PEAK = 0.56;
 /** Ring radius as a fraction of the half-size: mid, and swing either side. */
 const MANDALA_MID = 0.5;
 const MANDALA_SWING = 0.25;
-/** Node radius as a fraction of its own ring radius. */
-const MANDALA_NODE = 0.06;
+/** Node radius as a fraction of its own ring radius. Below the reference's
+ *  measured 0.06 — the dots read smaller and the glow below carries the
+ *  weight the size used to. */
+const MANDALA_NODE = 0.042;
+/** Halo around each node, as a multiple of its own radius. */
+const MANDALA_GLOW = 2.6;
+const MANDALA_GLOW_COLOR = "rgba(186,214,255,0.95)";
 /**
  * How much of the canvas the figure fills.
  *
@@ -410,14 +533,33 @@ function Mandala() {
          them by radius is exactly what must not happen. */
       const base = reduced ? 0.25 : t / MANDALA_PERIOD;
       const rings = Array.from({ length: MANDALA_RINGS }, (_, k) => {
-        const p = (base + k / MANDALA_RINGS) % 1;
+        /* PHASE IS NOT WRAPPED, and that matters more than it looks.
+           It used to be `(base + k/RINGS) % 1`. The radius did not care —
+           cosine is periodic, so it came out the same either way — but the
+           offset below is LINEAR in the phase, so every time the phase rolled
+           over 1 the ring's nodes jumped back a full node pitch, 40 degrees,
+           in a single frame. Once per period, per ring: a snap every three
+           seconds.
+
+           The dots got away with it, because rotating nine evenly spaced nodes
+           by exactly one pitch maps the set onto itself and nothing appears to
+           move. THE EDGES DID NOT. They are wired by node identity, so node i
+           of one ring suddenly sat where node i-1 had been and every line
+           touching that ring re-drew somewhere else. That was the abrupt
+           re-wiring, and it is why it looked tied to the loop.
+
+           Measured across a full cycle at 60fps, worst single-frame node
+           movement: 18.31 units wrapped against 0.30 unwrapped, on a typical
+           0.20 per frame. */
+        const phase = base + k / MANDALA_RINGS;
         const frac =
-          MANDALA_MID + MANDALA_SWING * Math.cos(2 * Math.PI * (p - MANDALA_PEAK));
+          MANDALA_MID +
+          MANDALA_SWING * Math.cos(2 * Math.PI * (phase - MANDALA_PEAK));
         const radius = frac * MANDALA_FIT * half;
         /* One node pitch per period. This is the entire rotation — there is no
            separate spin — and it is what makes the period seamless: a ring
            that has moved up a role has also turned by exactly one node. */
-        const offset = (p * (2 * Math.PI)) / MANDALA_NODES;
+        const offset = (phase * (2 * Math.PI)) / MANDALA_NODES;
         return {
           radius,
           dot: radius * MANDALA_NODE,
@@ -467,15 +609,24 @@ function Mandala() {
       });
       ctx.stroke();
 
-      // Nodes.
+      /* Nodes, each carrying a halo. The shadow is set per RING rather than
+         per node, because the blur scales with the ring's own dot size — an
+         outer node is larger and glows wider, the same way its dot grows.
+
+         Reset to 0 afterwards: shadowBlur is context state, and left on it
+         would put a halo behind next frame's edges too, which turns the
+         hairlines into a fog. */
       ctx.fillStyle = MANDALA_NODE_FILL;
+      ctx.shadowColor = MANDALA_GLOW_COLOR;
       rings.forEach((ring) => {
+        ctx.shadowBlur = ring.dot * MANDALA_GLOW;
         ring.pts.forEach((p) => {
           ctx.beginPath();
           ctx.arc(p.x, p.y, ring.dot, 0, Math.PI * 2);
           ctx.fill();
         });
       });
+      ctx.shadowBlur = 0;
     };
 
     size();
@@ -517,69 +668,103 @@ function Mandala() {
    3. SPIDER WEB
    ═════════════════════════════════════════════════════════ */
 /**
- * THE FIELD the spider crawls through. A static scatter of faint dots in
- * viewBox units — hand-placed rather than generated, per the determinism note
- * at the top. The spider is what moves; these never do.
- */
-const WEB_DOTS: [number, number][] = [
-  [6, 9], [19, 4], [33, 12], [47, 6], [58, 14], [71, 5], [84, 11], [95, 7],
-  [11, 22], [25, 17], [38, 26], [52, 20], [64, 28], [78, 19], [90, 25],
-  [4, 36], [17, 32], [30, 41], [44, 34], [56, 43], [69, 33], [82, 39], [96, 31],
-  [9, 51], [22, 46], [35, 55], [48, 49], [61, 57], [74, 47], [87, 53],
-  [3, 65], [16, 61], [29, 69], [42, 63], [55, 71], [68, 62], [80, 67], [93, 60],
-  [12, 79], [26, 75], [39, 84], [51, 77], [63, 86], [76, 78], [89, 82],
-  [7, 92], [21, 96], [34, 90], [46, 97], [59, 91], [72, 95], [85, 93], [97, 88],
-  /* Second pass, interleaved with the first. The field is stretched across a
-     168-unit viewBox, so the original 53 dots covered 1.68x the area at 1.68x
-     the spacing and read as empty. These bring the spacing back. */
-  [13, 14], [27, 8], [41, 19], [54, 3], [67, 21], [80, 2], [92, 17],
-  [2, 27], [20, 30], [33, 22], [45, 29], [58, 35], [71, 26], [85, 32], [98, 21],
-  [10, 44], [24, 38], [37, 47], [50, 40], [63, 50], [77, 41], [90, 46],
-  [6, 58], [19, 54], [32, 62], [45, 56], [58, 64], [70, 55], [84, 60], [95, 52],
-  [14, 71], [28, 66], [40, 74], [53, 68], [66, 77], [79, 70], [91, 73],
-  [4, 84], [17, 88], [30, 82], [43, 89], [56, 83], [69, 87], [82, 85], [94, 79],
-];
-/**
  * The field is WIDER THAN IT IS TALL, matching the copy column beside it, so
  * the viewBox has to widen too. A square `0 0 100 100` viewBox in a landscape
  * box letterboxes: `preserveAspectRatio` defaults to "meet", which would leave
  * the dots huddled in a square in the middle with empty gutters either side.
  * Stretching instead (`none`) would squash the dots into ovals. Widening the
  * viewBox is the only option that keeps circles round AND fills the box.
- *
- * The stored dot coordinates stay 0-100 and are scaled across on the way out,
- * so the hand-placed field above did not have to be re-authored.
  */
 const WEB_VB_W = 168;
-const WEB_X = WEB_VB_W / 100;
-/** How many threads the spider holds at once. */
-const SPIDER_LEGS = 9;
-/** How far a thread will stretch, in viewBox units. */
-const SPIDER_REACH = 34;
-/** Fraction of the remaining distance the body covers each frame — the lag
- *  that makes it crawl toward the pointer rather than teleport. */
-const SPIDER_EASE = 0.055;
+const WEB_VB_H = 100;
+
+/* ── THE LATTICE ──
+   A STRAIGHT SQUARE GRID, not a scatter. Everything below is measured off the
+   reference clip (720x1280, 30fps): its dots sit on a lattice with a spacing
+   of exactly 70px against a 720px frame — 0.097 of the width — which is the
+   GRID_STEP here, and gives eleven columns across our wider box.
+
+   The grid is centred rather than run to the edges, so the margin is even on
+   all four sides instead of leaving a wide gutter on the short axis. */
+const GRID_STEP = 16;
+const GRID_COLS = 11;
+const GRID_ROWS = 7;
+const WEB_FIELD: [number, number][] = (() => {
+  const x0 = (WEB_VB_W - (GRID_COLS - 1) * GRID_STEP) / 2;
+  const y0 = (WEB_VB_H - (GRID_ROWS - 1) * GRID_STEP) / 2;
+  const pts: [number, number][] = [];
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let c = 0; c < GRID_COLS; c++) {
+      pts.push([x0 + c * GRID_STEP, y0 + r * GRID_STEP]);
+    }
+  }
+  return pts;
+})();
+
+/** How many threads the spider holds at once — sixteen, as in the reference. */
+const SPIDER_LEGS = 16;
+/** Far enough to reach the ring of dots two steps out, which is where the
+ *  reference's threads end. Below ~2.25 steps the outer legs find nothing. */
+const SPIDER_REACH = GRID_STEP * 2.5;
+
+/* ── THE POOL OF LIGHT ──
+   Wherever the body is, the dots around it are BIGGER and BRIGHTER, tapering
+   back down further out. Measured from the reference, dot diameter against
+   distance from the hub in grid steps:
+
+       0.5    1.0    1.5    2.0    2.5    3.0    3.5    4.5    5.0
+      15px   14px   12.8   9.3    7.2    5.3    3.3    1.4    ~0
+
+   which is a smoothstep from 0.107 of a step down to nothing at five steps —
+   fitted and confirmed against the measurements at 0.2/0.4/0.6/0.7 of the
+   reach. The floor is not quite zero here: the reference is a black frame
+   where dots may vanish, whereas this sits in a section that should still
+   read as a grid outside the pool. */
+const POOL_REACH = GRID_STEP * 5;
+const DOT_R = 0.28;
+const DOT_R_NEAR = GRID_STEP * 0.09;
+const DOT_O = 0.3;
+const DOT_O_NEAR = 1;
+/** The body, the largest dot in the field. Measured at 0.21 of a step across;
+ *  a shade above DOT_R_NEAR so it still leads its own neighbours. */
+const SPIDER_BODY_R = GRID_STEP * 0.115;
+/* ── HOW THE BODY MOVES ──
+   A spring rather than a per-frame fraction, stepped by real elapsed time so
+   the crawl runs at one speed on any refresh rate. Tuned by simulation: it
+   covers a jump in about half a second and overshoots by ~3.6% before
+   settling — enough lag to read as something crawling after the pointer, and
+   enough overshoot to look alive rather than dragged along on a string. */
+const SPIDER_STIFFNESS = 36;
+const SPIDER_DAMPING = 0.7;
 
 /**
- * A spider crawling through a field of dots, spinning a thread to each of the
- * nearest few. It follows the pointer, and wanders a slow figure-of-eight on
- * its own when there is none, so the visual is alive before it is touched.
+ * A spider crossing a grid of dots, spinning a thread to each of the nearest
+ * sixteen. It follows the pointer, and wanders on its own when there is none,
+ * so the visual is alive before it is touched.
+ *
+ * IT MOVES CONTINUOUSLY. The reference clip's hub is on an exact lattice
+ * intersection in every single frame — sampled one by one it reads
+ * grid(3.00,3.00), grid(4.00,4.00), grid(5.99,2.00), never in between — so an
+ * earlier build snapped the body to the nearest node to reproduce that hop.
+ * It was wrong here: a clip can hop because nothing is driving it, but under a
+ * live pointer the same rule reads as the body teleporting to the cursor, and
+ * the threads jump between dots instead of sweeping across them. The grid is
+ * carried by the dots; the body is left free.
  *
  * THE LEGS ARE RE-CHOSEN EVERY FRAME. They are not fixed spokes: as the body
  * moves, whichever dots are now nearest take the threads and the previous ones
- * are released. That re-attachment is the whole effect.
+ * are released. That re-attachment is the whole effect, which is why the
+ * threads fade in and out at the edge of their reach rather than blinking.
  *
- * Driven through refs on an rAF loop, not React state. The body moves every
- * frame, and re-rendering fifty-odd dots at 60fps to move nine lines is work
- * for nothing — the field is built once and never touched again.
+ * Driven through refs on an rAF loop, not React state — the body moves every
+ * frame and every dot is re-lit with it, which is far too much to re-render.
  */
-/** The field in viewBox coordinates — scaled across the wider box once. */
-const WEB_FIELD: [number, number][] = WEB_DOTS.map(([x, y]) => [x * WEB_X, y]);
 
 function SpiderWeb() {
   const svgRef = useRef<SVGSVGElement>(null);
-  const bodyRef = useRef<SVGRectElement>(null);
+  const bodyRef = useRef<SVGCircleElement>(null);
   const legRefs = useRef<(SVGLineElement | null)[]>([]);
+  const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
   const pointer = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -588,9 +773,14 @@ function SpiderWeb() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let bx = WEB_VB_W / 2;
-    let by = 50;
+    let by = WEB_VB_H / 2;
+    /* Velocity, so the body has weight: it accelerates toward the target and
+       overshoots slightly rather than easing straight onto it. */
+    let vx = 0;
+    let vy = 0;
     let raf = 0;
-    const start = performance.now();
+    let last = performance.now();
+    const start = last;
 
     /* The CSS pause rule cannot reach an rAF loop, so this one gates itself on
        the same observer: off screen, the frame is still requested but does no
@@ -608,33 +798,68 @@ function SpiderWeb() {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
       const t = (now - start) / 1000;
+      /* Seconds since the last frame, capped so a background tab that stalls
+         for a second does not resume by flinging the body across the grid. */
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
 
       /* Target: the pointer, or a slow wander when it is away. The two curves
          have different periods so the path never repeats tightly. */
       const p = pointer.current;
       const tx = p ? p.x : WEB_VB_W / 2 + Math.sin(t * 0.31) * (WEB_VB_W * 0.32);
-      const ty = p ? p.y : 50 + Math.sin(t * 0.23 + 1.1) * 26;
+      const ty = p ? p.y : WEB_VB_H / 2 + Math.sin(t * 0.23 + 1.1) * 26;
 
       if (reduced) {
         bx = tx;
         by = ty;
       } else {
-        bx += (tx - bx) * SPIDER_EASE;
-        by += (ty - by) * SPIDER_EASE;
+        /* A CRITICALLY-DAMPED SPRING, stepped by real elapsed time.
+           The old `b += (target - b) * k` was a fixed fraction PER FRAME, so
+           the crawl ran at double speed on a 120Hz screen and stuttered
+           whenever a frame was long. Working from `dt` makes the speed the
+           same everywhere, and carrying velocity gives the body the weight
+           that makes it read as crawling rather than sliding. */
+        const k = SPIDER_STIFFNESS;
+        const c = 2 * Math.sqrt(k) * SPIDER_DAMPING;
+        vx += (-k * (bx - tx) - c * vx) * dt;
+        vy += (-k * (by - ty) - c * vy) * dt;
+        bx += vx * dt;
+        by += vy * dt;
       }
+
+      /* The body draws WHERE IT IS. An earlier build snapped it to the nearest
+         lattice node, which is what the reference clip does — its hub is on an
+         exact intersection in every frame. Under a live pointer that reads as
+         teleporting, and the threads jump rather than sweep, so the snap is
+         gone and the grid is left to the dots. */
+      const sx = bx;
+      const sy = by;
 
       const body = bodyRef.current;
       if (body) {
-        body.setAttribute("x", (bx - 1.6).toFixed(2));
-        body.setAttribute("y", (by - 1.6).toFixed(2));
+        body.setAttribute("cx", sx.toFixed(2));
+        body.setAttribute("cy", sy.toFixed(2));
+      }
+
+      /* Re-light every dot from its distance to the body — bigger AND brighter
+         near it, tapering back down further out. Smoothstep rather than a
+         straight ramp: a linear taper leaves a visible edge where it lands on
+         the resting size. */
+      const distances = WEB_FIELD.map(([x, y]) => Math.hypot(x - sx, y - sy));
+      for (let i = 0; i < WEB_FIELD.length; i++) {
+        const dot = dotRefs.current[i];
+        if (!dot) continue;
+        const t = 1 - Math.min(1, distances[i] / POOL_REACH); // 1 at the body
+        const pool = t * t * (3 - 2 * t);
+        dot.setAttribute("r", (DOT_R + (DOT_R_NEAR - DOT_R) * pool).toFixed(2));
+        dot.setAttribute(
+          "fill-opacity",
+          (DOT_O + (DOT_O_NEAR - DOT_O) * pool).toFixed(3)
+        );
       }
 
       // Nearest dots win the threads, recomputed from scratch each frame.
-      const near = WEB_FIELD.map(([x, y]) => ({
-        x,
-        y,
-        d: Math.hypot(x - bx, y - by),
-      }))
+      const near = WEB_FIELD.map(([x, y], i) => ({ x, y, d: distances[i] }))
         .sort((a, b) => a.d - b.d)
         .slice(0, SPIDER_LEGS);
 
@@ -646,12 +871,20 @@ function SpiderWeb() {
           line.setAttribute("opacity", "0");
           continue;
         }
-        line.setAttribute("x1", bx.toFixed(2));
-        line.setAttribute("y1", by.toFixed(2));
+        line.setAttribute("x1", sx.toFixed(2));
+        line.setAttribute("y1", sy.toFixed(2));
         line.setAttribute("x2", n.x.toFixed(2));
         line.setAttribute("y2", n.y.toFixed(2));
-        // Fades as a thread reaches its limit, so legs let go softly.
-        line.setAttribute("opacity", (1 - n.d / SPIDER_REACH).toFixed(3));
+        /* Even across the fan, as in the reference, but fading to nothing over
+           the last quarter of the reach. That taper is what makes a thread
+           read as being let go and a new one spun, rather than lines blinking
+           on and off at a hard boundary as the nearest set changes. */
+        const u = n.d / SPIDER_REACH;
+        const rim = Math.max(0, Math.min(1, (1 - u) / 0.25));
+        line.setAttribute(
+          "opacity",
+          ((0.85 - 0.25 * u) * rim * rim * (3 - 2 * rim)).toFixed(3)
+        );
       }
     };
 
@@ -666,12 +899,12 @@ function SpiderWeb() {
     <div
       /* Full column width, matching the copy in the other half. */
       className="relative w-full"
-      style={{ aspectRatio: String(WEB_VB_W / 100) }}
+      style={{ aspectRatio: String(WEB_VB_W / WEB_VB_H) }}
       aria-hidden
     >
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${WEB_VB_W} 100`}
+        viewBox={`0 0 ${WEB_VB_W} ${WEB_VB_H}`}
         className="h-full w-full"
         style={{ overflow: "visible" }}
         onPointerMove={(e) => {
@@ -679,16 +912,30 @@ function SpiderWeb() {
           if (!b) return;
           pointer.current = {
             x: ((e.clientX - b.left) / b.width) * WEB_VB_W,
-            y: ((e.clientY - b.top) / b.height) * 100,
+            y: ((e.clientY - b.top) / b.height) * WEB_VB_H,
           };
         }}
         onPointerLeave={() => {
           pointer.current = null;
         }}
       >
-        {/* The field. Built once — the loop above never touches these. */}
+        {/* The lattice. Positions are set once and never change — the loop
+            re-lights each dot's size and opacity as the body passes.
+
+            WHITE, with the opacity carrying the brightness, so a dot inside
+            the pool is a clean bright white rather than a tinted grey. */}
         {WEB_FIELD.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="0.5" fill="rgba(255,255,255,0.45)" />
+          <circle
+            key={i}
+            ref={(el) => {
+              dotRefs.current[i] = el;
+            }}
+            cx={x}
+            cy={y}
+            r={DOT_R}
+            fill="#FFFFFF"
+            fillOpacity={DOT_O}
+          />
         ))}
 
         {/* Threads. Positioned entirely by the loop. */}
@@ -705,13 +952,15 @@ function SpiderWeb() {
           />
         ))}
 
-        {/* The body — a small square, as in the reference. */}
-        <rect
+        {/* The body — a DOT, and the largest one on the grid, so it reads as
+            the centre the threads are spun from. */}
+        <circle
           ref={bodyRef}
-          width="3.2"
-          height="3.2"
+          r={SPIDER_BODY_R}
+          cx={WEB_VB_W / 2}
+          cy={WEB_VB_H / 2}
           fill={SPIDER_BODY}
-          style={{ filter: "drop-shadow(0 0 6px rgba(150,190,255,0.7))" }}
+          style={{ filter: "drop-shadow(0 0 5px rgba(190,215,255,0.8))" }}
         />
       </svg>
     </div>
@@ -740,7 +989,13 @@ function SpiderWeb() {
  * particle. So the wordmark is never hard-coded as coordinates — change the
  * text or the font and the target cloud follows.
  */
-/** The alphabet the flying particles are drawn from. */
+/**
+ * The letters the particles carry — as a SEQUENCE, not a bag to draw from.
+ *
+ * A cell's letter comes from its position on the grid, advancing by one for
+ * every step right AND every step down, so the field reads T-I-T-A-N-C-A-P-I-
+ * T-A-L across every row and down every column. See `letterAt` in `build`.
+ */
 const MONO_ALPHABET = "TITANCAPITAL";
 /**
  * THE WORDMARK, drawn on the grid. A monoline "TC" one cell thick: a
@@ -828,9 +1083,15 @@ function Monogram() {
     let raf = 0;
     let startedAt: number | null = null;
 
+    /* "TITANCAPITAL" repeats letters, so sprites are built for the DISTINCT
+       characters and this maps each position in the string to its sprite —
+       the sequence is preserved without rendering "T" three times. */
+    const MONO_CHARS = [...new Set(MONO_ALPHABET.split(""))];
+    const MONO_SEQ = MONO_ALPHABET.split("").map((ch) => MONO_CHARS.indexOf(ch));
+
     /** One small canvas per distinct character, rendered once. */
     const buildSprites = (size: number) => {
-      const chars = [...new Set(MONO_ALPHABET.split(""))];
+      const chars = MONO_CHARS;
       return chars.map((ch) => {
         const c = document.createElement("canvas");
         const dpr = window.devicePixelRatio || 1;
@@ -891,7 +1152,25 @@ function Monogram() {
       // The wordmark is narrower than the field, so centre it in the columns.
       const glyphCol = Math.round((cols - TC_GRID[0].length) / 2);
 
-      const homes: { x: number; y: number; dim?: boolean }[] = [];
+      /* WHICH LETTER SITS IN WHICH CELL — from its grid position, so the word
+         reads BOTH WAYS.
+
+         Stepping one cell right advances the letter by one, and so does
+         stepping one cell down. That single rule gives every row and every
+         column the sequence T-I-T-A-N-C-A-P-I-T-A-L, and it is the only rule
+         that can: pinning each row to start on "T" would make a column read
+         TTTTT, and pinning each column to start on "T" would do the same to
+         the rows. Cell (0,0) is a T, so the top row and the left column both
+         open on it; the rest start further into the word and wrap. Identical
+         letters end up on diagonals, which is what gives the field its grain.
+
+         The wordmark uses its ABSOLUTE position on the grid, not its own local
+         one, so its letters line up with the band letters in the same columns
+         and the whole field is one lattice. */
+      const letterAt = (gr: number, gc: number) =>
+        MONO_SEQ[(((gr + gc) % MONO_SEQ.length) + MONO_SEQ.length) % MONO_SEQ.length];
+
+      const homes: { x: number; y: number; ch: number; dim?: boolean }[] = [];
 
       // The wordmark, inset by the top band.
       TC_GRID.forEach((row, r) => {
@@ -900,6 +1179,7 @@ function Monogram() {
           homes.push({
             x: originX + (glyphCol + c) * pitch,
             y: originY + (MONO_BANDS + r) * pitch,
+            ch: letterAt(MONO_BANDS + r, glyphCol + c),
           });
         });
       });
@@ -910,7 +1190,12 @@ function Monogram() {
       for (let b = 0; b < MONO_BANDS; b++) {
         for (const r of [b, MONO_BANDS + TC_GRID.length + b]) {
           for (let c = 0; c < cols; c++) {
-            homes.push({ x: originX + c * pitch, y: originY + r * pitch, dim: true });
+            homes.push({
+              x: originX + c * pitch,
+              y: originY + r * pitch,
+              ch: letterAt(r, c),
+              dim: true,
+            });
           }
         }
       }
@@ -940,7 +1225,8 @@ function Monogram() {
           ax: r * Math.sin(phi) * Math.cos(theta),
           ay: r * Math.sin(phi) * Math.sin(theta) * 0.72,
           az: r * Math.cos(phi),
-          ch: Math.floor(Math.random() * sprites.length),
+          // Set by the cell it lands in — see `letterAt`.
+          ch: home.ch,
           delay: Math.random() * 0.5,
           dim: !!home.dim,
           px: Math.random() * Math.PI * 2,

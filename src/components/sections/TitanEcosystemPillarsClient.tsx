@@ -6,7 +6,6 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { HeroGlow } from "./JoinPortfolio";
 import PartVisual, {
   VISUAL_KEYFRAMES,
-  VISUAL_SIZE,
   type VisualKind,
 } from "./TitanEcosystemVisuals";
 import {
@@ -30,9 +29,9 @@ import {
  *   - the line and the pointer are driven by SCROLL POSITION, so they are a
  *     pure function of where the reader is and reverse perfectly on the way
  *     back up;
- *   - the orbit runs on its own CSS keyframe loop, so the diagram is alive
- *     even when the page is still. Scroll-driving it would freeze the whole
- *     section the moment the reader stopped.
+ *   - each diagram runs on its own clock, so it is alive even when the page is
+ *     still. Scroll-driving them would freeze the section the moment the
+ *     reader stopped.
  *
  * LAYOUT. Desktop puts the line down the centre with copy left and diagram
  * right. Mobile moves the line to the far left and stacks copy over diagram
@@ -165,7 +164,7 @@ export default function TitanEcosystemPillarsClient({
         paddingRight: "var(--section-px-wide)",
       }}
     >
-      <style>{VISUAL_KEYFRAMES(VISUAL_SIZE)}</style>
+      <style>{VISUAL_KEYFRAMES()}</style>
 
       {/* The hero's aurora: two wandering blobs that parallax against the
           cursor, plus the flashlight blob that follows it. Imported rather
