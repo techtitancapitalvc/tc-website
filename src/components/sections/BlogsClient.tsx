@@ -15,7 +15,7 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
    404'd and every placeholder card rendered a broken image. */
 const BLOG_IMAGE = "/images/indicorns/skyscrappers.jpeg";
 
-interface Blog {
+export interface Blog {
   id: number;
   image: string;
   author: string;
@@ -65,7 +65,7 @@ export interface BlogPostCard {
 }
 
 /** Sanity shape -> the shape the cards already expect. */
-function toBlog(p: BlogPostCard, i: number): Blog {
+export function toBlog(p: BlogPostCard, i: number): Blog {
   return {
     id: i,
     image: p.coverImage || BLOG_IMAGE,
@@ -240,12 +240,20 @@ function SideCard({ blog }: { blog: Blog }) {
   );
 }
 
-/* ── Card used in the grid ── */
-function BlogCard({ blog }: { blog: Blog }) {
+/* ── Card used in the grid ──
+   Exported because the article page's "Explore Blog" band renders the SAME
+   card, so a card there can never drift from a card on the listing. It takes
+   its own surface: beige on the white grid, white on the beige Explore band —
+   each is the inverse of what it sits on. ── */
+export function BlogCard({
+  blog,
+  surface = "#FBF7F0",
+}: {
+  blog: Blog;
+  surface?: string;
+}) {
   return (
-    /* Beige on the white grid section — the inverse of the featured block
-       above, which is white cards on beige. */
-    <div className="group flex h-full w-full flex-col bg-[#FBF7F0]">
+    <div className="group flex h-full w-full flex-col" style={{ background: surface }}>
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 11" }}>
         <Image
           src={blog.image}

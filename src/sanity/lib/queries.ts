@@ -769,12 +769,18 @@ export const blogPostBySlugQuery = groq`
   *[_type == "blogsPage"][0]{
     "post": posts[slug.current == $slug][0]{
       ${BLOG_CARD_FIELDS},
-      sections[]{ subheading, body, bodyBold },
-      statsHeading,
-      stats[]{ num, label },
-      statsFootnote,
-      "closingImage": closingImage.asset->url,
-      closingSections[]{ subheading, body, bodyBold }
+      acts[]{
+        eyebrow,
+        title,
+        body,
+        bodyBold,
+        quote,
+        stats[]{ num, label },
+        "image": image.asset->url
+      },
+      exploreHeading,
+      exploreBrowseLabel,
+      exploreBrowseHref
     }
   }.post
 `;

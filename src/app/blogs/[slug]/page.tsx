@@ -3,7 +3,12 @@ import Link from "next/link";
 import Footer from "@/components/sections/Footer";
 import BlogArticle, { type BlogPostData } from "@/components/sections/BlogArticle";
 import { sanityFetch } from "@/sanity/lib/client";
-import { blogPostBySlugQuery, blogPostSlugsQuery } from "@/sanity/lib/queries";
+import {
+  allBlogPostsQuery,
+  blogPostBySlugQuery,
+  blogPostSlugsQuery,
+} from "@/sanity/lib/queries";
+import type { BlogPostCard } from "@/components/sections/BlogsClient";
 import { buildMetadata } from "@/sanity/lib/seo";
 
 /**
@@ -26,6 +31,20 @@ async function getPost(slug: string): Promise<BlogPostData | null> {
   } catch (err) {
     console.error(`[blog] fetch failed for "${slug}":`, err);
     return null;
+  }
+}
+
+/** The other posts, for the Explore band — never the one being read. */
+async function getMore(slug: string): Promise<BlogPostCard[]> {
+  try {
+    const all = await sanityFetch<BlogPostCard[] | null>({
+      query: allBlogPostsQuery,
+      revalidate: 60,
+    });
+    return (all ?? []).filter((p) => p.slug !== slug).slice(0, 3);
+  } catch {
+    /* The band hides itself on an empty list, so this is safe. */
+    return [];
   }
 }
 
@@ -97,9 +116,11 @@ export default async function BlogPostPage({
     );
   }
 
+  const more = await getMore(slug);
+
   return (
     <main className="flex min-h-screen w-full flex-col bg-white">
-      <BlogArticle post={post} />
+      <BlogArticle post={post} more={more} />
       <Footer />
     </main>
   );

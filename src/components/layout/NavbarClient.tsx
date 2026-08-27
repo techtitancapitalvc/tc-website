@@ -30,6 +30,20 @@ const INVERTED_HERO_ROUTES = new Set([
   "/titanEcosystem",
 ]);
 
+/* Listings whose OWN hero is dark but whose detail pages render on white.
+   The parent must not invert — /blogs and /foundersstory both open on a navy
+   hero — but every page beneath them must, or the nav is white-on-white and
+   simply is not there until you scroll past the threshold.
+
+   Kept apart from the set above precisely because the rule is different:
+   that one matches the route AND its children, this one matches ONLY the
+   children. Adding these to it would flip the listings' dark heroes too. */
+const INVERTED_DETAIL_PARENTS = new Set([
+  "/portfolio",
+  "/foundersstory",
+  "/blogs",
+]);
+
 /* ─── Cursor-origin fill button (shared) ─── */
 function NavCursorFillButton({
   href,
@@ -221,7 +235,7 @@ export default function NavbarClient({ data }: { data?: NavbarData }) {
     [...INVERTED_HERO_ROUTES].some(
       (r) => pathname === r || pathname.startsWith(`${r}/`)
     ) ||
-    (pathname.startsWith("/portfolio/") && pathname !== "/portfolio");
+    [...INVERTED_DETAIL_PARENTS].some((r) => pathname.startsWith(`${r}/`));
   const inverted = isInvertedRoute && !scrolled;
 
   const lenis = useLenis();

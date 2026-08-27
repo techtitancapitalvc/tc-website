@@ -11,15 +11,15 @@ import { defineField, defineType } from "sanity";
  * The one object feeds BOTH surfaces:
  *
  *   /blogs          the card — cover, tags, meta line, title, excerpt
- *   /blogs/[slug]   the article — that same header plus body, stats, closing image
+ *   /blogs/[slug]   the article — that same header, then the acts
  *
  * so a card can never drift from the post it links to.
  *
- * EVERY PART OF THE ARTICLE IS OPTIONAL and hides itself when empty: a post
- * with no stats has no stats band, one with no closing image ends on its last
- * paragraph. That is why almost nothing here is `required` — marking fields
- * required would force editors to fill in parts of a layout they do not want
- * on that post.
+ * EVERY PART OF THE ARTICLE IS OPTIONAL and hides itself when empty: an act
+ * with no quote has no cream block, one with no figures has no strip, and a
+ * post with no explore heading has no band at the end. That is why almost
+ * nothing here is `required` — marking fields required would force editors to
+ * fill in parts of a layout they do not want on that post.
  */
 export const blogPost = defineType({
   name: "blogPost",
@@ -99,107 +99,113 @@ export const blogPost = defineType({
       group: "card",
     }),
 
-    /* ─────────── Article body ─────────── */
+    /* ─────────── Article ─────────── */
     defineField({
-      name: "sections",
-      title: "Body sections",
+      name: "acts",
+      title: "Acts",
       description:
-        "Add as many as the post needs. A section with no heading is just a paragraph; one with no body is just a heading.",
+        'The body, in parts — "Act I", "Act II" and so on. Each carries its own optional pull quote, figures strip and picture, so they land where the piece wants them rather than only at the end.',
       type: "array",
       group: "article",
       of: [
         {
           type: "object",
-          name: "blogSection",
+          name: "blogAct",
           fields: [
             defineField({
-              name: "subheading",
-              title: "Subheading",
-              description: "Set bold, at the same size as the body.",
+              name: "eyebrow",
+              title: "Eyebrow",
+              description: 'The small line above the title, e.g. "Act I Before Titan".',
+              type: "string",
+            }),
+            defineField({
+              name: "title",
+              title: "Title",
+              description: 'e.g. "Before."',
               type: "string",
             }),
             defineField({
               name: "body",
               title: "Paragraphs",
-              description: "One entry per paragraph.",
+              description:
+                "One entry per paragraph. The first letter of the first paragraph is set as a drop cap.",
               type: "array",
               of: [{ type: "text", rows: 5 }],
             }),
             defineField({
               name: "bodyBold",
               title: "Closing emphasis",
-              description: "Optional. Appended to the last paragraph in bold.",
+              description:
+                "Optional. Appended to the last paragraph in bold — the line the act lands on.",
               type: "text",
               rows: 2,
             }),
+            defineField({
+              name: "quote",
+              title: "Pull quote",
+              description: "Optional cream block at the end of the act.",
+              type: "object",
+              options: { collapsible: true, collapsed: true },
+              fields: [
+                defineField({ name: "text", title: "Quote", type: "text", rows: 3 }),
+                defineField({ name: "attribution", title: "Attribution", type: "string" }),
+              ],
+            }),
+            defineField({
+              name: "stats",
+              title: "Figures",
+              description:
+                "Optional cream strip of numbers after the quote. No figures, no strip.",
+              type: "array",
+              of: [
+                {
+                  type: "object",
+                  name: "blogStat",
+                  fields: [
+                    defineField({
+                      name: "num",
+                      title: "Figure",
+                      type: "string",
+                      validation: (r) => r.required(),
+                    }),
+                    defineField({ name: "label", title: "Label", type: "string" }),
+                  ],
+                  preview: { select: { title: "num", subtitle: "label" } },
+                },
+              ],
+            }),
+            defineField({
+              name: "image",
+              title: "Picture",
+              description: "Optional full-width picture, after the quote and figures.",
+              type: "image",
+              options: { hotspot: true },
+            }),
           ],
-          preview: { select: { title: "subheading" } },
+          preview: { select: { title: "title", subtitle: "eyebrow", media: "image" } },
         },
       ],
     }),
+
+    /* ─────────── Explore band ─────────── */
     defineField({
-      name: "statsHeading",
-      title: "Stats — heading",
-      description: "Optional. The stats show with or without it.",
+      name: "exploreHeading",
+      title: "Explore — heading",
+      description: 'e.g. "Explore Blog". Leave empty to hide the whole band.',
       type: "string",
       group: "article",
     }),
     defineField({
-      name: "stats",
-      title: "Stats",
-      description: "No stats, no stats band.",
-      type: "array",
-      group: "article",
-      of: [
-        {
-          type: "object",
-          name: "blogStat",
-          fields: [
-            defineField({ name: "num", title: "Figure", type: "string", validation: (r) => r.required() }),
-            defineField({ name: "label", title: "Label", type: "string" }),
-          ],
-          preview: { select: { title: "num", subtitle: "label" } },
-        },
-      ],
-    }),
-    defineField({
-      name: "statsFootnote",
-      title: "Stats — footnote",
-      type: "text",
-      rows: 2,
+      name: "exploreBrowseLabel",
+      title: "Explore — browse link label",
+      type: "string",
       group: "article",
     }),
     defineField({
-      name: "closingImage",
-      title: "Closing image",
-      description: "The full-width picture near the end of the article.",
-      type: "image",
-      options: { hotspot: true },
+      name: "exploreBrowseHref",
+      title: "Explore — browse link URL",
+      type: "string",
       group: "article",
-    }),
-    defineField({
-      name: "closingSections",
-      title: "Sections after the closing image",
-      description: "Optional. Same shape as the body sections above.",
-      type: "array",
-      group: "article",
-      of: [
-        {
-          type: "object",
-          name: "blogSection",
-          fields: [
-            defineField({ name: "subheading", title: "Subheading", type: "string" }),
-            defineField({
-              name: "body",
-              title: "Paragraphs",
-              type: "array",
-              of: [{ type: "text", rows: 5 }],
-            }),
-            defineField({ name: "bodyBold", title: "Closing emphasis", type: "text", rows: 2 }),
-          ],
-          preview: { select: { title: "subheading" } },
-        },
-      ],
     }),
   ],
 
