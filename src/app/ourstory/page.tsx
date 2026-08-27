@@ -1,5 +1,6 @@
 import FifteenYears from "@/components/sections/FifteenYears";
 import Footer from "@/components/sections/Footer";
+import FundDetails from "@/components/sections/FundDetails";
 import OriginStory from "@/components/sections/OriginStory";
 import OurStoryHero from "@/components/sections/OurStoryHero";
 import { buildMetadata } from "@/sanity/lib/seo";
@@ -14,6 +15,7 @@ export default function OurStoryPage() {
       <OurStoryHero />
       <OriginStory />
       <FifteenYears />
+      <FundDetails />
       <Footer />
     </main>
   );
