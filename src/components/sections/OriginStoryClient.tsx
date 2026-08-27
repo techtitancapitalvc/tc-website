@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -137,20 +137,146 @@ function BulletDot({ uniqueId }: { uniqueId: string }) {
 }
 
 /* ─────────────────────────────────────────────────────────
-   Image deck — 437×542 front card with two rotated shadow
-   cards behind it. Auto-cycles through the images every 4s
-   (front card flips to next; backs hold for visual depth).
+   THE CARD DECK.
+
+   The swipe is Swiper's `effect-cards`, and the arithmetic below is that
+   module's own — its source was read rather than the motion eyeballed, so the
+   numbers are its numbers:
+
+     perSlideRotate 2      each card back in the stack sits 2deg further round
+     perSlideOffset 8      and 8% further right, less 0.75% per step
+     tZ = -100 * |p|       so the stack genuinely recedes in 3D
+     shadow rgba(0,0,0,.15) fading in over the second half of a card's exit
+
+   THE ARC — the part that makes it read as a swipe rather than a crossfade —
+   is the branch Swiper runs while a card is under the finger:
+
+     sub     = (1 - |(|p| - 0.5)/0.5|) ^ 0.5    peaks at the halfway point
+     rotate += -28 * p * sub                    it kicks over
+     scale  += -0.5 * sub                       and shrinks
+     tXAdd  += 96 * sub                         as it flies out sideways
+     tY      = -25 * sub * |p| %                lifting as it goes
+
+   ONE THING IS DELIBERATELY NOT LIKE SWIPER, and it matters. Swiper only runs
+   that branch on a real drag; on autoplay it hands two end-state transforms to
+   CSS and lets it interpolate, which skips the arc entirely and looks like a
+   card sliding 7% left. So progress here is driven continuously through the
+   formula on every frame, which is what makes an untouched deck perform the
+   same arc the reference does.
    ───────────────────────────────────────────────────────── */
+const CARDS = { perSlideRotate: 2, perSlideOffset: 8 };
+/** How long one card takes to leave. The reference measures 0.20-0.23s per
+ *  transition, but that is a tutorial being clicked through at speed; this is
+ *  a photo beside body copy, so it takes the house timing instead. */
+const SWIPE_MS = 600;
+/** Time a card holds the front before the next one takes it. */
+const HOLD_MS = 4000;
+/** Swiper's own clamp — nothing beyond four cards deep is computed. */
+const MAX_DEPTH = 4;
+
+/** Swiper's `effect-cards` transform for one card at progress `p`. */
+function cardState(p: number, count: number) {
+  const clamped = Math.min(Math.max(p, -MAX_DEPTH), MAX_DEPTH);
+  const ap = Math.abs(clamped);
+
+  const tZ = -100 * ap;
+  let rotate = -CARDS.perSlideRotate * clamped;
+  let scale = 1;
+  let tXAdd = CARDS.perSlideOffset - ap * 0.75;
+  let tY = 0;
+
+  // The swipe arc, over the card's own crossing.
+  if (ap > 0 && ap < 1) {
+    const sub = Math.pow(1 - Math.abs((ap - 0.5) / 0.5), 0.5);
+    rotate += -28 * clamped * sub;
+    scale += -0.5 * sub;
+    tXAdd += 96 * sub;
+    tY = -25 * sub * ap;
+  }
+
+  const tX = clamped < 0 ? tXAdd * ap : clamped > 0 ? -tXAdd * ap : 0;
+  const s = clamped < 0 ? 1 + (1 - scale) * clamped : 1 - (1 - scale) * clamped;
+
+  return {
+    transform: `translate3d(${tX}%, ${tY}%, ${tZ}px) rotateZ(${rotate}deg) scale(${s})`,
+    shadow: Math.min(Math.max((ap - 0.5) / 0.5, 0), 1),
+    zIndex: -Math.abs(Math.round(clamped)) + count,
+  };
+}
+
+/**
+ * HOW MANY CARDS THE STACK HOLDS, which is not the same as how many pictures
+ * there are.
+ *
+ * A card that has been swiped does not vanish — the reference keeps it, at
+ * progress +1, +2, and so on, and a still frame of it shows edges fanned out
+ * on BOTH sides of the front card. So a card has to travel all the way to the
+ * clamp at |p| = 4 before it can be recycled to the back, because that is the
+ * only place it is buried deeply enough for the jump not to show.
+ *
+ * With three pictures there is nowhere to hide that jump: the recycle point
+ * would be the deepest RESTING position, in plain view. So the stack is padded
+ * out to seven slots and the pictures repeat around it. Only edge slivers of
+ * the buried cards are ever visible, which is exactly what the reference shows
+ * — you cannot identify a buried card there either.
+ */
+const DECK_SLOTS = 7;
+
 function ImageDeck({ images, alt }: { images: string[]; alt: string }) {
-  const [index, setIndex] = useState(0);
+  const count = images.length;
+  const slots = count < 2 ? count : Math.max(count, DECK_SLOTS);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const shadeRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (images.length <= 1) return;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(id);
-  }, [images.length]);
+    if (count < 2) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    let raf = 0;
+    let from = 0;
+    let start = performance.now() + HOLD_MS;
+
+    /* The house curve. Swiper leaves this to the browser's default `ease`;
+       the arc is the mechanism, the curve is the site's. */
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const paint = (pos: number) => {
+      for (let i = 0; i < slots; i += 1) {
+        const el = cardRefs.current[i];
+        if (!el) continue;
+        /* CENTRED wrap, so the recycle lands at the far end of the fan rather
+           than in the middle of the resting stack. A card runs 0 -> +3.5,
+           where it is buried at the clamp, and reappears at -3.5. */
+        const w = (((pos - i) % slots) + slots) % slots;
+        const p = w <= slots / 2 ? w : w - slots;
+        const st = cardState(p, slots);
+        el.style.transform = st.transform;
+        el.style.zIndex = `${st.zIndex}`;
+        const shade = shadeRefs.current[i];
+        if (shade) shade.style.opacity = `${st.shadow}`;
+      }
+    };
+
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const elapsed = now - start;
+      if (elapsed < 0) {
+        paint(from);
+        return;
+      }
+      const t = Math.min(1, elapsed / SWIPE_MS);
+      paint(from + ease(t));
+      if (t === 1) {
+        from += 1;
+        start = now + HOLD_MS;
+      }
+    };
+
+    paint(0);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [count, slots]);
 
   // Common card sizing — fluid clamp matching the 437×542 design.
   const cardStyle: React.CSSProperties = {
@@ -159,54 +285,86 @@ function ImageDeck({ images, alt }: { images: string[]; alt: string }) {
     borderRadius: "2px",
   };
 
-  return (
-    <div className="relative" style={cardStyle}>
-      {/* Back shadow card — rotated counter-clockwise */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-[#DDD]"
-        style={{
-          ...cardStyle,
-          transform: "rotate(-5.26deg)",
-          width: "100%",
-          height: "100%",
-        }}
-      />
-      {/* Mid shadow card — rotated clockwise */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-[#DDD]"
-        style={{
-          ...cardStyle,
-          transform: "rotate(6.005deg)",
-          width: "100%",
-          height: "100%",
-        }}
-      />
-      {/* Front image — cross-fades on index change */}
-      {images.map((src, i) => (
-        <motion.div
-          key={src + i}
-          className="absolute inset-0 overflow-hidden bg-[#DDD]"
-          style={{ ...cardStyle, width: "100%", height: "100%" }}
-          animate={{
-            opacity: i === index ? 1 : 0,
-            scale: i === index ? 1 : 0.97,
-          }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+  const photo = (src: string) => (
+    <Image
+      src={cdnImageSrc(src, 900)}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 70vw, 437px"
+      className="object-cover"
+      // The source photos ship with their own rounded corners; a slight zoom
+      // pushes those corners outside the frame so the card reads with the
+      // container's sharp 2px radius instead.
+      style={{ transform: "scale(1.06)" }}
+    />
+  );
+
+  /* ONE PICTURE, NO DECK. With nothing to swipe to, the stack would be a
+     single card sitting still — so the original two tilted backing cards stay,
+     which is what gives a lone photo its depth. */
+  if (count < 2) {
+    return (
+      <div className="relative" style={cardStyle}>
+        <div
+          aria-hidden
+          className="absolute inset-0 h-full w-full bg-[#DDD]"
+          style={{ borderRadius: "2px", transform: "rotate(-5.26deg)" }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 h-full w-full bg-[#DDD]"
+          style={{ borderRadius: "2px", transform: "rotate(6.005deg)" }}
+        />
+        <div
+          className="absolute inset-0 h-full w-full overflow-hidden bg-[#DDD]"
+          style={{ borderRadius: "2px" }}
         >
-          <Image
-            src={cdnImageSrc(src, 900)}
-            alt={alt}
-            fill
-            sizes="(max-width: 768px) 70vw, 437px"
-            className="object-cover"
-            // The source photos ship with their own rounded corners; a
-            // slight zoom pushes those corners outside the frame so the
-            // card reads with the container's sharp 2px radius instead.
-            style={{ transform: "scale(1.06)" }}
+          {images[0] && photo(images[0])}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    /* `perspective` is what makes the tZ above depth rather than decoration —
+       Swiper sets it on the container for exactly this reason. */
+    <div className="relative" style={{ ...cardStyle, perspective: "1200px" }}>
+      {Array.from({ length: slots }, (_, i) => i).map((i) => (
+        <div
+          key={i}
+          ref={(el) => {
+            cardRefs.current[i] = el;
+          }}
+          className="absolute inset-0 h-full w-full overflow-hidden bg-[#DDD]"
+          style={{
+            borderRadius: "2px",
+            transformOrigin: "center center",
+            willChange: "transform",
+            // First paint, before the loop takes over: the resting stack.
+            ...(() => {
+              const w = ((i % slots) + slots) % slots;
+              const st = cardState(w <= slots / 2 ? -w : slots - w, slots);
+              return { transform: st.transform, zIndex: st.zIndex };
+            })(),
+          }}
+        >
+          {/* The pictures repeat around the padded stack — see DECK_SLOTS. */}
+          {photo(images[i % count])}
+          {/* Swiper's own slide shadow — a flat 15% black that fades in over
+              the second half of a card's exit and keeps the buried cards from
+              reading as bright as the front one. */}
+          <div
+            aria-hidden
+            ref={(el) => {
+              shadeRefs.current[i] = el;
+            }}
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background: "rgba(0,0,0,0.15)",
+              opacity: i === 0 ? 0 : 1,
+            }}
           />
-        </motion.div>
+        </div>
       ))}
     </div>
   );
