@@ -63,7 +63,20 @@ export const fifteenYears = defineType({
             }),
           ],
           preview: {
-            select: { title: "year", subtitle: "subtitle" },
+            /* `year` is a NUMBER, and a preview title has to be a string.
+               Handing the number straight through crashes the Studio the
+               moment you open one of these entries: its breadcrumb calls
+               `title.toLowerCase()`, which a number does not have, and the
+               whole editor drops to an error screen.
+
+               So it is selected under a different key and turned into a
+               string here. `?? ""` covers a freshly added entry, which has
+               no year yet. */
+            select: { year: "year", subtitle: "subtitle" },
+            prepare: ({ year, subtitle }) => ({
+              title: year === undefined || year === null ? "New year" : String(year),
+              subtitle: (subtitle as string) ?? "",
+            }),
           },
         },
       ],

@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { STORY_BLOCK_TYPES } from "./storyBlocks";
 
 /**
  * One founder story — an OBJECT, not a document.
@@ -9,12 +10,11 @@ import { defineField, defineType } from "sanity";
  * array, so adding a story is one entry in one place rather than a new
  * document to create and remember to publish.
  *
- * THE PAGE IS FOUR INDEPENDENT SECTIONS, and every one of them is optional.
- * A section whose fields are empty does not render at all — so a story with
- * no stats simply has no blue band, and one with no acts jumps from the header
- * to whatever comes next. That is why almost nothing here is `required`:
- * marking fields required would force editors to fill in sections they do not
- * want on that particular story.
+ * THE HEADER IS FIXED, THE REST IS A LIST. Tags, headline, founders and hero
+ * image are the story's identity — every story opens the same way, so letting
+ * them be dragged around would let one open on a quote and another on a photo.
+ * Everything after them lives in `blocks`, an ordered list the editor composes
+ * and reorders freely. See storyBlocks.ts for what can go in it.
  */
 export const founderStoryEntry = defineType({
   /* NOT "founderStory": the Impact At A Glance singleton already has an inline
@@ -26,9 +26,7 @@ export const founderStoryEntry = defineType({
 
   groups: [
     { name: "header", title: "1 · Header" },
-    { name: "acts", title: "2 · Acts" },
-    { name: "today", title: "3 · Today (blue band)" },
-    { name: "explore", title: "4 · Explore" },
+    { name: "story", title: "2 · Story" },
   ],
 
   fields: [
@@ -43,10 +41,30 @@ export const founderStoryEntry = defineType({
     defineField({
       name: "slug",
       title: "Slug (URL — /foundersstory/<slug>)",
-      description: 'e.g. "mamaearth" for /foundersstory/mamaearth.',
+      description:
+        'Just the last part of the address, no slashes: "mamaearth" for /foundersstory/mamaearth.',
       type: "slug",
-      options: { source: "company", maxLength: 96 },
-      validation: (r) => r.required().error("Slug is required for the story URL"),
+      options: {
+        source: "company",
+        maxLength: 96,
+        slugify: (input: string) =>
+          input
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 96),
+      },
+      validation: (r) =>
+        r
+          .required()
+          .error("Slug is required for the story URL")
+          /* A slug typed with a slash builds "/foundersstory//mamaearth",
+             which is not a route — the page 404s. */
+          .custom((v) =>
+            v?.current && /[/\s]/.test(v.current)
+              ? 'Remove the slash — write "mamaearth", not "/mamaearth".'
+              : true
+          ),
       group: "header",
     }),
     defineField({
@@ -81,145 +99,15 @@ export const founderStoryEntry = defineType({
       options: { hotspot: true },
       group: "header",
     }),
+    /* ─────────── 2. THE STORY ─────────── */
     defineField({
-      name: "facts",
-      title: "Fact bar",
+      name: "blocks",
+      title: "Story",
       description:
-        "The bordered strip under the photo. Leave every field empty to hide the strip entirely.",
-      type: "object",
-      group: "header",
-      options: { collapsible: true, collapsed: false },
-      fields: [
-        defineField({ name: "location", title: "Location", type: "string" }),
-        defineField({ name: "sector", title: "Sector", type: "string" }),
-        defineField({ name: "year", title: "Year", type: "string" }),
-        defineField({
-          name: "siteUrl",
-          title: "Website",
-          description: 'Powers the "Visit Site" button. No URL, no button.',
-          type: "url",
-        }),
-      ],
-    }),
-
-    /* ─────────── 2. ACTS ─────────── */
-    defineField({
-      name: "acts",
-      title: "Acts",
-      description:
-        'The narrative sections. Add as many as the story needs — "Act I Before Titan", "Act II", and so on. No acts, no section.',
+        "Everything below the header, in order. Add whichever blocks the story needs and drag them into the order you want — a fact bar part way down, two quotes in a row, figures before the copy rather than after.",
       type: "array",
-      group: "acts",
-      of: [
-        {
-          type: "object",
-          name: "storyAct",
-          fields: [
-            defineField({
-              name: "eyebrow",
-              title: "Eyebrow",
-              description: 'The small line above the title, e.g. "Act I Before Titan".',
-              type: "string",
-            }),
-            defineField({
-              name: "title",
-              title: "Title",
-              description: 'e.g. "Before."',
-              type: "string",
-              validation: (r) => r.required(),
-            }),
-            defineField({
-              name: "body",
-              title: "Paragraphs",
-              description:
-                "One entry per paragraph. The first letter of the first paragraph is set as a drop cap.",
-              type: "array",
-              of: [{ type: "text", rows: 5 }],
-            }),
-            defineField({
-              name: "bodyBold",
-              title: "Closing emphasis",
-              description:
-                "Optional. Appended to the last paragraph in bold — the line the act lands on.",
-              type: "text",
-              rows: 2,
-            }),
-            defineField({
-              name: "quote",
-              title: "Pull quote",
-              description: "Optional tinted block at the end of the act.",
-              type: "object",
-              options: { collapsible: true, collapsed: true },
-              fields: [
-                defineField({ name: "text", title: "Quote", type: "text", rows: 3 }),
-                defineField({ name: "attribution", title: "Attribution", type: "string" }),
-              ],
-            }),
-          ],
-          preview: { select: { title: "title", subtitle: "eyebrow" } },
-        },
-      ],
-    }),
-
-    /* ─────────── 3. TODAY ─────────── */
-    defineField({
-      name: "todayHeading",
-      title: "Heading",
-      description: 'e.g. "Mamaearth Consumer, Today". Needs at least one stat to show.',
-      type: "string",
-      group: "today",
-    }),
-    defineField({
-      name: "todayStats",
-      title: "Stats",
-      description: "No stats, no blue band.",
-      type: "array",
-      group: "today",
-      of: [
-        {
-          type: "object",
-          name: "todayStat",
-          fields: [
-            defineField({
-              name: "num",
-              title: "Figure",
-              type: "string",
-              validation: (r) => r.required(),
-            }),
-            defineField({ name: "label", title: "Label", type: "string" }),
-          ],
-          preview: { select: { title: "num", subtitle: "label" } },
-        },
-      ],
-    }),
-    defineField({
-      name: "todayFootnote",
-      title: "Footnote",
-      description: "e.g. the source of the figures.",
-      type: "text",
-      rows: 2,
-      group: "today",
-    }),
-
-    /* ─────────── 4. EXPLORE ─────────── */
-    defineField({
-      name: "exploreHeading",
-      title: "Heading",
-      description: 'e.g. "Explore Stories". Leave empty to hide the section.',
-      type: "string",
-      group: "explore",
-    }),
-    defineField({
-      name: "exploreBrowseLabel",
-      title: "Browse link label",
-      type: "string",
-      group: "explore",
-    }),
-    defineField({
-      name: "exploreBrowseHref",
-      title: "Browse link URL",
-      type: "string",
-      group: "explore",
+      group: "story",
+      of: STORY_BLOCK_TYPES,
     }),
   ],
 

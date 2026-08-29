@@ -32,7 +32,7 @@ export const SECTORS = [
 
 export const STAGES = ["Seed", "Series A", "Series B"];
 
-export const STATUSES = ["Recent Investment", "Exited"];
+export const STATUSES = ["Recent Investment", "IPO", "Unicorn", "Exited"];
 
 /**
  * Shape Sanity's `options.list` expects.

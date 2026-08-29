@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { STORY_BLOCK_TYPES } from "./storyBlocks";
 
 /**
  * One blog post — an OBJECT, not a document.
@@ -15,11 +16,10 @@ import { defineField, defineType } from "sanity";
  *
  * so a card can never drift from the post it links to.
  *
- * EVERY PART OF THE ARTICLE IS OPTIONAL and hides itself when empty: an act
- * with no quote has no cream block, one with no figures has no strip, and a
- * post with no explore heading has no band at the end. That is why almost
- * nothing here is `required` — marking fields required would force editors to
- * fill in parts of a layout they do not want on that post.
+ * THE HEADER IS FIXED, THE REST IS A LIST. Title, one-liner and cover image
+ * open every article; everything after them lives in `blocks`, the same
+ * ordered list the founder stories use, composed and reordered freely. See
+ * storyBlocks.ts for what can go in it.
  */
 export const blogPost = defineType({
   name: "blogPost",
@@ -44,9 +44,30 @@ export const blogPost = defineType({
     defineField({
       name: "slug",
       title: "Slug (URL — /blogs/<slug>)",
+      description:
+        'Just the last part of the address, no slashes: "boba-bhai", NOT "/boba-bhai".',
       type: "slug",
-      options: { source: "title", maxLength: 96 },
-      validation: (r) => r.required().error("Slug is required for the article URL"),
+      options: {
+        source: "title",
+        maxLength: 96,
+        slugify: (input: string) =>
+          input
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 96),
+      },
+      validation: (r) =>
+        r
+          .required()
+          .error("Slug is required for the article URL")
+          /* A slug typed with a slash builds "/blogs//boba-bhai", which is not
+             a route — the page 404s and the card looks broken. */
+          .custom((v) =>
+            v?.current && /[/\s]/.test(v.current)
+              ? 'Remove the slash — write "boba-bhai", not "/boba-bhai".'
+              : true
+          ),
       group: "card",
     }),
     defineField({
@@ -101,111 +122,13 @@ export const blogPost = defineType({
 
     /* ─────────── Article ─────────── */
     defineField({
-      name: "acts",
-      title: "Acts",
+      name: "blocks",
+      title: "Article",
       description:
-        'The body, in parts — "Act I", "Act II" and so on. Each carries its own optional pull quote, figures strip and picture, so they land where the piece wants them rather than only at the end.',
+        "Everything below the header, in order. The SAME blocks the founder stories use — add whichever the piece needs and drag them into the order you want.",
       type: "array",
       group: "article",
-      of: [
-        {
-          type: "object",
-          name: "blogAct",
-          fields: [
-            defineField({
-              name: "eyebrow",
-              title: "Eyebrow",
-              description: 'The small line above the title, e.g. "Act I Before Titan".',
-              type: "string",
-            }),
-            defineField({
-              name: "title",
-              title: "Title",
-              description: 'e.g. "Before."',
-              type: "string",
-            }),
-            defineField({
-              name: "body",
-              title: "Paragraphs",
-              description:
-                "One entry per paragraph. The first letter of the first paragraph is set as a drop cap.",
-              type: "array",
-              of: [{ type: "text", rows: 5 }],
-            }),
-            defineField({
-              name: "bodyBold",
-              title: "Closing emphasis",
-              description:
-                "Optional. Appended to the last paragraph in bold — the line the act lands on.",
-              type: "text",
-              rows: 2,
-            }),
-            defineField({
-              name: "quote",
-              title: "Pull quote",
-              description: "Optional cream block at the end of the act.",
-              type: "object",
-              options: { collapsible: true, collapsed: true },
-              fields: [
-                defineField({ name: "text", title: "Quote", type: "text", rows: 3 }),
-                defineField({ name: "attribution", title: "Attribution", type: "string" }),
-              ],
-            }),
-            defineField({
-              name: "stats",
-              title: "Figures",
-              description:
-                "Optional cream strip of numbers after the quote. No figures, no strip.",
-              type: "array",
-              of: [
-                {
-                  type: "object",
-                  name: "blogStat",
-                  fields: [
-                    defineField({
-                      name: "num",
-                      title: "Figure",
-                      type: "string",
-                      validation: (r) => r.required(),
-                    }),
-                    defineField({ name: "label", title: "Label", type: "string" }),
-                  ],
-                  preview: { select: { title: "num", subtitle: "label" } },
-                },
-              ],
-            }),
-            defineField({
-              name: "image",
-              title: "Picture",
-              description: "Optional full-width picture, after the quote and figures.",
-              type: "image",
-              options: { hotspot: true },
-            }),
-          ],
-          preview: { select: { title: "title", subtitle: "eyebrow", media: "image" } },
-        },
-      ],
-    }),
-
-    /* ─────────── Explore band ─────────── */
-    defineField({
-      name: "exploreHeading",
-      title: "Explore — heading",
-      description: 'e.g. "Explore Blog". Leave empty to hide the whole band.',
-      type: "string",
-      group: "article",
-    }),
-    defineField({
-      name: "exploreBrowseLabel",
-      title: "Explore — browse link label",
-      type: "string",
-      group: "article",
-    }),
-    defineField({
-      name: "exploreBrowseHref",
-      title: "Explore — browse link URL",
-      type: "string",
-      group: "article",
+      of: STORY_BLOCK_TYPES,
     }),
   ],
 

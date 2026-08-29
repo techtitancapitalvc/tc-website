@@ -8,6 +8,15 @@ import { blogsPage } from "./blogsPage";
 import { company } from "./company";
 import { footer } from "./footer";
 import { founderStoryEntry } from "./founderStoryEntry";
+import {
+  storyContent,
+  storyQuote,
+  storyNote,
+  storyPicture,
+  storyFactBar,
+  storyFigures,
+  storyExplore,
+} from "./storyBlocks";
 import { foundersStoryHero } from "./foundersStoryHero";
 import { foundersStoryPage } from "./foundersStoryPage";
 import { foundersTestimonial } from "./foundersTestimonial";
@@ -101,6 +110,14 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   foundersStoryHero,
   foundersStoryPage,
   founderStoryEntry,
+  /* The blocks a story is composed from */
+  storyContent,
+  storyQuote,
+  storyNote,
+  storyPicture,
+  storyFactBar,
+  storyFigures,
+  storyExplore,
   /* Portfolio */
   company,
   portfolioGrid,

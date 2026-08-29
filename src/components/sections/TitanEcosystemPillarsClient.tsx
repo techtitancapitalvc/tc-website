@@ -1,8 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import Image from "next/image";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { useLenis } from "lenis/react";
 import { HeroGlow } from "./JoinPortfolio";
 import PartVisual, {
   VISUAL_KEYFRAMES,
@@ -49,6 +52,11 @@ export interface TitanEcosystemPart {
   visual?: VisualKind;
   ctaLabel?: string;
   ctaUrl?: string;
+  /** Upload one and this part's button opens a QR pop-up instead of
+   *  navigating — see QrDialog. */
+  ctaQr?: string;
+  ctaQrHeading?: string;
+  ctaQrCaption?: string;
 }
 
 export interface TitanEcosystemPillarsData {
@@ -92,6 +100,199 @@ const POINTER = "clamp(24px, min(2.31vw, 3.58vh), 40px)";
 
 const LINE = "rgba(255,255,255,0.22)";
 
+/** The CTA's look, shared by the link and the QR trigger so the two can never
+ *  drift apart. */
+const CTA_CLASS =
+  "mt-[clamp(20px,min(2.4vw,3.7vh),42px)] inline-flex w-fit items-center justify-center rounded-full bg-white text-[#00112E] transition-colors duration-300 hover:bg-[#DCE8FF]";
+const CTA_STYLE: React.CSSProperties = {
+  padding: "clamp(10px, min(1.1vw, 1.7vh), 18px) clamp(20px, min(2.2vw, 3.4vh), 38px)",
+  fontWeight: 600,
+  fontSize: "clamp(12px, min(1.26vw, 2.0vh), 17px)",
+};
+
+/* ─────────────────────────────────────────────────────────
+   THE QR POP-UP.
+
+   Shown when a part has a QR uploaded — that image is the whole switch, so a
+   part without one keeps its button as an ordinary link and no other part on
+   the rail is touched.
+
+   IT IS PORTALLED TO <body>, which is not a detail. `position: fixed` is
+   measured against the nearest ancestor that has a transform, and this rail is
+   full of them — every part animates in on `y`, and the section carries the
+   cursor glow. Rendered in place, the pop-up would centre itself inside a
+   part's card rather than on the screen. The portal takes it out of that
+   chain entirely.
+   ───────────────────────────────────────────────────────── */
+/** Each thing inside the card rises as the card settles. */
+const QR_ITEM = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+function QrDialog({
+  src,
+  heading,
+  caption,
+  onClose,
+}: {
+  src: string;
+  heading?: string;
+  caption?: string;
+  onClose: () => void;
+}) {
+  const lenis = useLenis();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    /* Lenis owns the scroll, so `overflow: hidden` on the body does nothing —
+       it has to be told to stop, and started again on the way out. */
+    lenis?.stop();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      lenis?.start();
+    };
+  }, [lenis, onClose]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <motion.div
+      className="fixed inset-0 z-[999] flex items-center justify-center"
+      /* `perspective` here is what turns the card's rotateX below into depth
+         rather than a squash — it has to sit on the PARENT of the thing that
+         rotates. */
+      style={{ padding: "24px", perspective: "1000px" }}
+      initial={{ opacity: 0, backgroundColor: "rgba(0,17,46,0)", backdropFilter: "blur(0px)" }}
+      animate={{ opacity: 1, backgroundColor: "rgba(0,17,46,0.55)", backdropFilter: "blur(6px)" }}
+      exit={{ opacity: 0, backgroundColor: "rgba(0,17,46,0)", backdropFilter: "blur(0px)" }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={heading || "QR code"}
+    >
+      <motion.div
+        className="relative flex w-full flex-col items-center bg-white"
+        style={{
+          maxWidth: "clamp(280px, min(24vw, 40vh), 350px)",
+          borderRadius: "2px",
+          padding: "clamp(22px, min(2.2vw, 3.4vh), 34px)",
+        }}
+        /* Tips up and settles as it comes toward the reader, rather than
+           simply fading. `transformPerspective` keeps the tilt honest even if
+           the parent's perspective is ever removed. */
+        initial={{ opacity: 0, y: 40, scale: 0.9, rotateX: 12 }}
+        animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+        exit={{ opacity: 0, y: 20, scale: 0.94, rotateX: 6 }}
+        transition={{
+          duration: 0.7,
+          ease: [0.22, 1, 0.36, 1],
+          // Contents follow the card in, one after another.
+          staggerChildren: 0.09,
+          delayChildren: 0.14,
+        }}
+        // The backdrop closes; a click on the card itself must not.
+        onClick={(e) => e.stopPropagation()}
+      >
+        <motion.button
+          variants={QR_ITEM}
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute left-[clamp(12px,1.2vw,20px)] top-[clamp(12px,1.2vw,20px)] flex items-center justify-center text-[#0E0E0E] transition-opacity duration-200 hover:opacity-60"
+          style={{ width: "24px", height: "24px", lineHeight: 1 }}
+        >
+          <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden fill="none">
+            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.6" />
+          </svg>
+        </motion.button>
+
+        {heading && (
+          <motion.p
+            variants={QR_ITEM}
+            className="m-0 text-center font-['Poppins',_sans-serif] font-semibold text-[#0E0E0E]"
+            style={{
+              marginTop: "clamp(14px, 1.4vw, 22px)",
+              fontSize: "clamp(15px, min(1.3vw, 2vh), 18px)",
+              lineHeight: 1.4,
+            }}
+          >
+            {heading}
+          </motion.p>
+        )}
+
+        <motion.div
+          variants={QR_ITEM}
+          className="relative w-full overflow-hidden"
+          style={{
+            marginTop: "clamp(14px, 1.4vw, 22px)",
+            aspectRatio: "1 / 1",
+            maxWidth: "clamp(180px, min(15vw, 26vh), 230px)",
+          }}
+        >
+          <Image
+            src={src}
+            alt={heading || "QR code"}
+            fill
+            sizes="230px"
+            className="object-contain"
+            // A QR must not be resampled soft or a phone may fail to read it.
+            unoptimized
+          />
+
+          {/* A SCAN SWEEP over the code, once, as it lands. It reads as the
+              thing being scanned, which is what the card is asking for — and
+              it is `pointer-events-none` over the image so it cannot get in
+              the way of a long-press to save. */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0"
+            style={{
+              height: "42%",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(120,170,255,0.30) 45%, rgba(255,255,255,0.85) 55%, rgba(255,255,255,0) 100%)",
+            }}
+            initial={{ top: "-45%", opacity: 0 }}
+            animate={{ top: ["-45%", "105%"], opacity: [0, 1, 1, 0] }}
+            transition={{
+              duration: 1.1,
+              times: [0, 0.15, 0.8, 1],
+              ease: [0.22, 1, 0.36, 1],
+              delay: 0.5,
+            }}
+          />
+        </motion.div>
+
+        {caption && (
+          <motion.p
+            variants={QR_ITEM}
+            className="m-0 text-center font-['Poppins',_sans-serif] font-normal text-[#4a4a4a]"
+            style={{
+              marginTop: "clamp(12px, 1.2vw, 18px)",
+              fontSize: "clamp(11px, min(0.85vw, 1.3vh), 13px)",
+              lineHeight: 1.5,
+            }}
+          >
+            {caption}
+          </motion.p>
+        )}
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
+
 /**
  * HOW FAR EACH HALF STOPS SHORT OF THE CENTRE LINE.
  *
@@ -118,6 +319,11 @@ export default function TitanEcosystemPillarsClient({
   const heading = data?.heading || FALLBACK_HEADING;
   const parts =
     data?.parts && data.parts.length > 0 ? data.parts : FALLBACK_PARTS;
+
+  /* Which part's QR is open, by index. Null is closed. Keyed by index rather
+     than a boolean so two parts could each carry their own QR without
+     clashing. */
+  const [qrOpen, setQrOpen] = useState<number | null>(null);
 
   const railRef = useRef<HTMLDivElement>(null);
   /* The glow measures the cursor against THIS section, so the flashlight
@@ -311,20 +517,29 @@ export default function TitanEcosystemPillarsClient({
                     {part.description}
                   </p>
 
-                  {part.ctaLabel && (
-                    <Link
-                      href={part.ctaUrl || "#"}
-                      className="mt-[clamp(20px,min(2.4vw,3.7vh),42px)] inline-flex w-fit items-center justify-center rounded-full bg-white text-[#00112E] transition-colors duration-300 hover:bg-[#DCE8FF]"
-                      style={{
-                        padding:
-                          "clamp(10px, min(1.1vw, 1.7vh), 18px) clamp(20px, min(2.2vw, 3.4vh), 38px)",
-                        fontWeight: 600,
-                        fontSize: "clamp(12px, min(1.26vw, 2.0vh), 17px)",
-                      }}
-                    >
-                      {part.ctaLabel}
-                    </Link>
-                  )}
+                  {/* A QR on this part turns the button into a trigger; with
+                      none it stays the link it has always been. Same styling
+                      either way, so the two are indistinguishable until
+                      clicked. */}
+                  {part.ctaLabel &&
+                    (part.ctaQr ? (
+                      <button
+                        type="button"
+                        onClick={() => setQrOpen(i)}
+                        className={CTA_CLASS}
+                        style={CTA_STYLE}
+                      >
+                        {part.ctaLabel}
+                      </button>
+                    ) : (
+                      <Link
+                        href={part.ctaUrl || "#"}
+                        className={CTA_CLASS}
+                        style={CTA_STYLE}
+                      >
+                        {part.ctaLabel}
+                      </Link>
+                    ))}
                 </motion.div>
 
                 {/* Diagram — centred between the LINE and the outer gutter.
@@ -359,6 +574,20 @@ export default function TitanEcosystemPillarsClient({
           })}
         </div>
       </div>
+
+      {/* The pop-up lives at the SECTION level, not inside a part — it is
+          portalled to <body> from here, so it centres on the screen. */}
+      <AnimatePresence>
+        {qrOpen !== null && parts[qrOpen]?.ctaQr && (
+          <QrDialog
+            key={qrOpen}
+            src={parts[qrOpen].ctaQr!}
+            heading={parts[qrOpen].ctaQrHeading}
+            caption={parts[qrOpen].ctaQrCaption}
+            onClose={() => setQrOpen(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

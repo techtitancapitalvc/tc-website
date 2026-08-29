@@ -4,11 +4,10 @@ import Footer from "@/components/sections/Footer";
 import FoundersStoryCTA from "@/components/sections/FoundersStoryCTA";
 import {
   FounderStoryHeader,
-  FounderStoryActs,
-  FounderStoryToday,
-  FounderStoryExplore,
   type FounderStoryPageData,
 } from "@/components/sections/FounderStorySections";
+import StoryBlocks from "@/components/sections/FounderStoryBlocks";
+import FounderQuoteCard from "@/components/sections/FounderQuoteCard";
 import {
   FALLBACK_SLIDES,
   type FounderStory,
@@ -25,10 +24,9 @@ import { buildMetadata } from "@/sanity/lib/seo";
 /**
  * /foundersstory/[slug] — one page per company, entirely Sanity-driven.
  *
- * FOUR INDEPENDENT SECTIONS, each hidden when its content is empty. The page
- * renders all four unconditionally and lets each decide whether it belongs —
- * see the note at the top of FounderStorySections. So a story with no stats
- * simply has no blue band, with no branching here.
+ * A FIXED HEADER and then a composed body. Tags, headline, founders and hero
+ * image always open the story; everything after them is an ordered list of
+ * blocks the editor arranged, rendered in that order by FounderStoryBlocks.
  *
  * If the slug matches no document the page 404s rather than silently serving
  * another company's story, which is what the previous hardcoded version did.
@@ -142,17 +140,13 @@ export default async function FoundersStoryDetailPage({
   return (
     <main className="flex min-h-screen w-full flex-col bg-white">
       <FounderStoryHeader data={story} />
-      <FounderStoryActs acts={story.acts} />
-      <FounderStoryToday
-        heading={story.todayHeading}
-        stats={story.todayStats}
-        footnote={story.todayFootnote}
-      />
-      <FounderStoryExplore
-        heading={story.exploreHeading}
-        browseLabel={story.exploreBrowseLabel}
-        browseHref={story.exploreBrowseHref}
-        stories={exploreStories}
+      {/* Everything below the header is whatever the editor composed, in the
+          order they put it in. */}
+      <StoryBlocks
+        blocks={story.blocks}
+        cards={exploreStories
+          .slice(0, 3)
+          .map((s, i) => <FounderQuoteCard key={`${s.name}-${i}`} story={s} />)}
       />
 
       <FoundersStoryCTA

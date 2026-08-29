@@ -75,9 +75,41 @@ export const titanEcosystemPillars = defineType({
             defineField({
               name: "ctaUrl",
               title: "Button link",
-              description: 'Where the button goes, e.g. "/getInvestment".',
+              description:
+                'Where the button goes, e.g. "/getInvestment". Ignored if a QR code is set below — the button opens the QR instead of navigating.',
               type: "string",
               hidden: ({ parent }) => !parent?.ctaLabel,
+            }),
+
+            /* ─── The QR pop-up ───
+               THE QR IMAGE IS THE SWITCH. Upload one and this part's button
+               stops being a link and opens a centred pop-up instead; leave it
+               empty and the button navigates to the URL above exactly as it
+               always has. Nothing else needs setting, and no other part is
+               affected — which is why there is no "show the QR" checkbox to
+               get out of step with whether a QR actually exists. */
+            defineField({
+              name: "ctaQr",
+              title: "QR code",
+              description:
+                "Optional. Upload a QR and this part's button opens it in a pop-up in the middle of the screen instead of following the link.",
+              type: "image",
+              hidden: ({ parent }) => !parent?.ctaLabel,
+            }),
+            defineField({
+              name: "ctaQrHeading",
+              title: "QR — heading",
+              description: 'Above the code, e.g. "Scan QR To Join Group".',
+              type: "string",
+              hidden: ({ parent }) => !parent?.ctaQr,
+            }),
+            defineField({
+              name: "ctaQrCaption",
+              title: "QR — caption",
+              description: "Optional small line under the code.",
+              type: "text",
+              rows: 2,
+              hidden: ({ parent }) => !parent?.ctaQr,
             }),
           ],
           preview: { select: { title: "title", subtitle: "visual" } },

@@ -769,18 +769,21 @@ export const blogPostBySlugQuery = groq`
   *[_type == "blogsPage"][0]{
     "post": posts[slug.current == $slug][0]{
       ${BLOG_CARD_FIELDS},
-      acts[]{
-        eyebrow,
-        title,
-        body,
-        bodyBold,
-        quote,
-        stats[]{ num, label },
-        "image": image.asset->url
-      },
-      exploreHeading,
-      exploreBrowseLabel,
-      exploreBrowseHref
+      blocks[]{
+        _type,
+        _key,
+        _type == "storyContent" => { body, dropCap },
+        _type == "storyQuote" => { text, attribution },
+        _type == "storyNote" => { text },
+        _type == "storyPicture" => { "image": image.asset->url, caption },
+        _type == "storyFactBar" => {
+          facts[]{ label, value },
+          ctaLabel,
+          ctaUrl
+        },
+        _type == "storyFigures" => { stats[]{ num, label }, footnote },
+        _type == "storyExplore" => { heading, browseLabel, browseHref }
+      }
     }
   }.post
 `;
@@ -819,20 +822,21 @@ export const founderStoryPageBySlugQuery = groq`
       headline,
       founders,
       "heroImage": heroImage.asset->url,
-      facts,
-      acts[]{
-        eyebrow,
-        title,
-        body,
-        bodyBold,
-        quote
-      },
-      todayHeading,
-      todayStats[]{ num, label },
-      todayFootnote,
-      exploreHeading,
-      exploreBrowseLabel,
-      exploreBrowseHref
+      blocks[]{
+        _type,
+        _key,
+        _type == "storyContent" => { body, dropCap },
+        _type == "storyQuote" => { text, attribution },
+        _type == "storyNote" => { text },
+        _type == "storyPicture" => { "image": image.asset->url, caption },
+        _type == "storyFactBar" => {
+          facts[]{ label, value },
+          ctaLabel,
+          ctaUrl
+        },
+        _type == "storyFigures" => { stats[]{ num, label }, footnote },
+        _type == "storyExplore" => { heading, browseLabel, browseHref }
+      }
     }
   }.story
 `;
@@ -853,7 +857,10 @@ export const titanEcosystemPillarsQuery = groq`
       description,
       visual,
       ctaLabel,
-      ctaUrl
+      ctaUrl,
+      "ctaQr": ctaQr.asset->url,
+      ctaQrHeading,
+      ctaQrCaption
     }
   }
 `;

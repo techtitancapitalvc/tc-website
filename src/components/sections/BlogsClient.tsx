@@ -74,7 +74,9 @@ export function toBlog(p: BlogPostCard, i: number): Blog {
     category: p.category || "",
     title: p.title || "",
     excerpt: p.excerpt || "",
-    href: p.slug ? `/blogs/${p.slug}` : "#",
+    // Trim stray slashes: a slug typed as "/bobabhai" would otherwise build
+    // "/blogs//bobabhai", which is not the route and 404s.
+    href: p.slug?.replace(/^\/+|\/+$/g, "") ? `/blogs/${p.slug.replace(/^\/+|\/+$/g, "")}` : "#",
     tags: p.tags,
   };
 }
@@ -156,12 +158,20 @@ function NavyPill({
 }
 
 function MetaLine({ blog }: { blog: Blog }) {
+  /* Built from whatever is actually filled in. Joining unconditionally left a
+     post with no author or read time opening on bare separators and a dangling
+     "Category:" — the separator belongs BETWEEN parts, so there is no line at
+     all when there are no parts. */
+  const meta = [blog.author, blog.readTime, blog.category && `Category: ${blog.category}`]
+    .filter(Boolean)
+    .join(" · ");
+  if (!meta) return null;
   return (
     <p
       className="m-0 font-['Poppins',_sans-serif] font-normal text-[#6b6b6b]"
       style={{ fontSize: "clamp(11px, 0.9vw, 13px)", lineHeight: "150%" }}
     >
-      {blog.author} · {blog.readTime} · Category: {blog.category}
+      {meta}
     </p>
   );
 }
@@ -306,12 +316,19 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
     const flagged = posts?.length
       ? all.filter((_, i) => posts[i]?.featured)
       : all.slice(0, 3);
-    const header = [...flagged, ...all.filter((b) => !flagged.includes(b))].slice(0, 3);
+    /* ONE featured + FOUR beside it. The side column has to be taller than the
+       featured card for the sticky pin below to have anything to hold against
+       — with two it was shorter, so there was nothing to scroll past. */
+    const header = [...flagged, ...all.filter((b) => !flagged.includes(b))].slice(0, 5);
 
     return {
       FEATURED: header[0] ?? all[0],
-      FEATURED_SIDE: header.slice(1, 3),
-      BLOGS: all.filter((b) => !header.includes(b)),
+      FEATURED_SIDE: header.slice(1, 5),
+      /* EVERY post, including the three above. The grid used to get only the
+         leftovers, so a site with three posts or fewer showed "No notes match
+         your search" under the filter bar — and searching could never reach a
+         featured post. The header is a spotlight, not a subtraction. */
+      BLOGS: all,
       /* Categories come from the posts themselves rather than a hardcoded
          list, so adding one in Sanity is enough — nothing to keep in step. */
       categories: posts?.length
@@ -385,8 +402,14 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
           className="grid w-full grid-cols-1 items-start lg:grid-cols-2"
           style={{ gap: "clamp(20px, 2vw, 34px)" }}
         >
-          {/* ── The big one ── */}
-          <div className="flex w-full flex-col overflow-hidden bg-white">
+          {/* ── The big one. PINNED on desktop: it holds while the four beside
+                it scroll past, which is what makes the right-hand column read
+                as its own reel rather than a second stack of cards.
+                `items-start` on the grid is what lets this work — the grid AREA
+                still spans the full row height, so the pin has the side
+                column's whole run to hold against. Below lg the two columns are
+                stacked, where pinning one over the other would trap the page. ── */}
+          <div className="flex w-full flex-col overflow-hidden bg-white lg:sticky lg:top-[calc(var(--nav-height,80px)+clamp(16px,2vw,32px))]">
             <div
               className="group relative w-full overflow-hidden"
               style={{ aspectRatio: "16 / 10" }}
@@ -432,7 +455,7 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
             </div>
           </div>
 
-          {/* ── The two beside it ── */}
+          {/* ── The four beside it, which do the scrolling ── */}
           <div className="flex w-full flex-col" style={{ gap: "clamp(20px, 2vw, 34px)" }}>
             {FEATURED_SIDE.map((blog, i) => (
               <div key={blog.id} className="flex w-full flex-col">

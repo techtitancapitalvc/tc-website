@@ -50,9 +50,15 @@ export const VISUAL_SIZE = "clamp(220px, min(26vw, 40vh), 440px)";
 const MANDALA_SIZE = "clamp(280px, min(40vw, 60vh), 660px)";
 
 const STROKE = "rgba(255,255,255,0.45)";
-/** Mandala. Edges are faint on purpose — they only read where they overlap,
- *  which is what gives the reference its woven look. */
+/** Mandala. The ring-to-ring spokes stay faint on purpose — they only read
+ *  where they overlap, which is what gives the reference its woven look. */
 const MANDALA_EDGE = "rgba(255,255,255,0.13)";
+/** The polygon each ring closes on itself — the figure, as opposed to the web
+ *  behind it. Its alpha ramps with the ring's own radius: white when the ring
+ *  is at its innermost, and back down to the spokes' tone at its outermost, so
+ *  only the inner figure is picked out. */
+const MANDALA_EDGE_IN = 0.55;
+const MANDALA_EDGE_OUT = 0.13;
 const MANDALA_NODE_FILL = "rgba(255,255,255,0.92)";
 /** The spider. White on navy, as the reference is white on black — the threads
  *  keep only a faint cool cast so they sit in the section's palette. */
@@ -188,7 +194,7 @@ const ORBIT_DOT_SLOPE = 0.1685;
 /** Wall-clock seconds for the whole thing. The clip's own span is 23.6s; this
  *  runs it faster while keeping every proportion, so the two loops stay in the
  *  ratio they were measured in. One number changes the pace of all of it. */
-const ORBIT_SECONDS = 18;
+const ORBIT_SECONDS = 12;
 
 /** Six elements is the most the clip ever shows at once. */
 const ORBIT_SLOTS = 6;
@@ -287,6 +293,17 @@ function Orbit() {
       const count = orbitAt(ORBIT_COUNT_STOPS, t);
       const dia = ORBIT_DOT_BASE + ORBIT_DOT_SLOPE * satR;
 
+      /* A SATELLITE IS NOT DRAWN UNTIL IT HAS CLEARED THE CORE IT CAME FROM.
+         The old guard was `satR < 0.5`, which let all six appear at full size
+         while still centred on the core: measured 405ms of loop one with six
+         rings piled on one dot, reading as four or five shapes boiling out of
+         the middle. It was invisible while they were 95% transparent and
+         obvious the moment they became opaque white.
+         Fading over the clearance distance also runs in reverse, so they are
+         absorbed into the core on the way home instead of blinking out. */
+      const clear = ORBIT_DOT_BASE / 2 + dia / 2;
+      const emerge = Math.min(1, Math.max(0, (satR - clear * 0.45) / (clear * 0.55)));
+
       for (let i = 0; i < ORBIT_SLOTS; i++) {
         const el = satRefs.current[i];
         if (!el) continue;
@@ -330,7 +347,8 @@ function Orbit() {
           }
         }
 
-        if (satR < 0.5 || opacity <= 0.002) {
+        opacity *= emerge;
+        if (opacity <= 0.002) {
           el.setAttribute("opacity", "0");
           continue;
         }
@@ -362,10 +380,11 @@ function Orbit() {
         style={{ overflow: "visible" }}
       >
         <defs>
-          {/* 95% transparent — a hint of light inside the outline, not a disc. */}
+          {/* Light pooling inside the outline. Kept well under the stroke so the
+              dashes still read as dashes rather than filling in to a disc. */}
           <radialGradient id={ORBIT_SAT_FILL}>
-            <stop offset="0%" stopColor="#CFE2FF" stopOpacity="0.05" />
-            <stop offset="58%" stopColor="#8FB4FF" stopOpacity="0.03" />
+            <stop offset="0%" stopColor="#EAF2FF" stopOpacity="0.20" />
+            <stop offset="58%" stopColor="#BBD3FF" stopOpacity="0.11" />
             <stop offset="100%" stopColor="#8FB4FF" stopOpacity="0" />
           </radialGradient>
         </defs>
@@ -397,10 +416,17 @@ function Orbit() {
             r={0}
             opacity={0}
             fill={`url(#${ORBIT_SAT_FILL})`}
-            stroke="rgba(255,255,255,0.7)"
-            strokeWidth="1"
+            /* Fully opaque white, with the shine carried by two drop-shadows
+               rather than a thicker stroke — a wider line would swallow the
+               gaps in the dash and turn the outline back into a solid ring. */
+            stroke="#FFFFFF"
+            strokeWidth="1.15"
             strokeDasharray={ORBIT_SAT_DASH}
             vectorEffect="non-scaling-stroke"
+            style={{
+              filter:
+                "drop-shadow(0 0 2.5px rgba(255,255,255,0.9)) drop-shadow(0 0 7px rgba(175,205,255,0.5))",
+            }}
           />
         ))}
 
@@ -583,19 +609,21 @@ function Mandala() {
          one stroke of a hundred-odd hairlines is far cheaper than a hundred
          strokes, and it lets overlaps build brightness the way the reference
          does. */
-      ctx.strokeStyle = MANDALA_EDGE;
+      /* TWO PASSES, because the two kinds of edge no longer share a tone.
+         The polygon each ring closes on itself is the shape you actually read
+         — it is what draws the figure at the centre — so it is stroked white.
+         The spokes fanning between rings are the web behind it and stay faint;
+         at one tone the shape was lost in its own scaffolding.
+
+         Each pass is still a SINGLE path: one stroke of fifty-odd hairlines is
+         far cheaper than fifty strokes, and it keeps the overlap brightness
+         that gives the figure its density. */
       ctx.lineWidth = 1;
+
+      // Behind: the ring-to-ring spokes, two per node, which fan the star.
+      ctx.strokeStyle = MANDALA_EDGE;
       ctx.beginPath();
       rings.forEach((ring, a) => {
-        // Within the ring: the polygon, plus a skip-one chord for density.
-        ring.pts.forEach((p, i) => {
-          for (const step of [1, 2]) {
-            const q = ring.pts[(i + step) % MANDALA_NODES];
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-          }
-        });
-        // To every other ring: two spokes per node, which is what fans the star.
         for (let b = a + 1; b < rings.length; b++) {
           const other = rings[b];
           ring.pts.forEach((p, i) => {
@@ -608,6 +636,32 @@ function Mandala() {
         }
       });
       ctx.stroke();
+
+      /* In front: each ring's own polygon, plus a skip-one chord for density.
+         BRIGHTNESS FALLS OFF WITH RADIUS — the innermost polygon is white, the
+         outermost fades back into the web. Stroking only "the inner ring" as a
+         hard choice is what NOT to do here: the rings genuinely swap places, and
+         at the moment two cross they carry different node offsets, so handing
+         the highlight over would snap the lit polygon round by 13 degrees. A
+         continuous ramp has no handover to snap — a ring simply brightens as it
+         travels inward, which is also what the reference does. */
+      const rMin = (MANDALA_MID - MANDALA_SWING) * MANDALA_FIT * half;
+      const rMax = (MANDALA_MID + MANDALA_SWING) * MANDALA_FIT * half;
+      rings.forEach((ring) => {
+        const u = Math.min(1, Math.max(0, (ring.radius - rMin) / (rMax - rMin)));
+        ctx.strokeStyle = `rgba(255,255,255,${(
+          MANDALA_EDGE_IN + (MANDALA_EDGE_OUT - MANDALA_EDGE_IN) * u
+        ).toFixed(3)})`;
+        ctx.beginPath();
+        ring.pts.forEach((p, i) => {
+          for (const step of [1, 2]) {
+            const q = ring.pts[(i + step) % MANDALA_NODES];
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+          }
+        });
+        ctx.stroke();
+      });
 
       /* Nodes, each carrying a halo. The shadow is set per RING rather than
          per node, because the blur scales with the ring's own dot size — an
