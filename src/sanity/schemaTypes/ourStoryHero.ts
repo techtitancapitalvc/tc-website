@@ -31,6 +31,15 @@ export const ourStoryHero = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
+      name: "photos",
+      title: "Drifting photos",
+      description:
+        "The photographs that drift up behind the heading. ANY SHAPE — tall, wide or square; each one is shown at its own aspect ratio and is never cropped, so there is nothing to fit to. Add as many as you like: they are cycled to fill the field, so even a handful covers it. Leave empty to use the built-in set.",
+      type: "array",
+      of: [{ type: "image", options: { hotspot: true } }],
+      options: { layout: "grid" },
+    }),
+    defineField({
       name: "image",
       title: "Founders image",
       description:

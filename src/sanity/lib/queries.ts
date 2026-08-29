@@ -57,7 +57,13 @@ export const ourStoryHeroQuery = groq`
     headingFirst,
     headingHighlight,
     quote,
-    "image": image.asset->url
+    "image": image.asset->url,
+    "photos": photos[]{
+      "url": asset->url,
+      /* The asset's own aspect ratio, so the tile can be cut to the picture
+         rather than the picture cropped to the tile. */
+      "aspect": asset->metadata.dimensions.aspectRatio
+    }
   }
 `;
 

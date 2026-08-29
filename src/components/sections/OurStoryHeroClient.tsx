@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useLenis } from "lenis/react";
 import {
-  HERO_HEADING_LIGHT_CLASS,
-  HERO_HEADING_LIGHT_STYLE,
+  HERO_HEADING_DARK_CLASS,
+  HERO_HEADING_DARK_STYLE,
   HERO_BODY_CLASS,
   HERO_BODY_STYLE,
 } from "@/styles/heroTypography";
@@ -12,11 +12,18 @@ import {
 /* ─────────────────────────────────────────────────────────
    Types — shared with the server wrapper (OurStoryHero.tsx).
    ───────────────────────────────────────────────────────── */
+export interface OurStoryHeroPhoto {
+  url?: string;
+  /** width / height, straight off the asset. 1 when Sanity can't report it. */
+  aspect?: number;
+}
+
 export interface OurStoryHeroData {
   headingFirst?: string;
   headingHighlight?: string;
   quote?: string;
   image?: string;
+  photos?: OurStoryHeroPhoto[];
 }
 
 /**
@@ -98,15 +105,25 @@ const PARTICLES = (() => {
   });
 })();
 
-/** Photographs to fill the tiles. Cycled, so the count is independent of how
- *  many there happen to be. Swap this array to change the field. */
-const PHOTOS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].map(
-  (n) => `/images/hero_founders_images/${n}.png`
-);
+/** The built-in field, used until Sanity has photos of its own. These are
+ *  square crops, hence aspect 1 — anything uploaded is shown at its own. */
+const FALLBACK_PHOTOS: OurStoryHeroPhoto[] = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16,
+].map((n) => ({ url: `/images/hero_founders_images/${n}.png`, aspect: 1 }));
 
 /** 104px at the 1728 reference, down to 50px on a phone — the reference's own
- *  `w-[50px] md:w-[104px]`, expressed so it also responds to short screens. */
+ *  `w-[50px] md:w-[104px]`, expressed so it also responds to short screens.
+ *
+ *  THIS IS THE TILE'S WIDTH ONLY. Height comes from each photo's own aspect
+ *  ratio, so a portrait shot is tall and a panorama is wide — nothing is
+ *  cropped to a square. A tile's height is measured at runtime by the ticker
+ *  (`getBoundingClientRect`), so mixed shapes wrap correctly without the
+ *  drift maths needing to know anything about them. */
 const TILE = "clamp(50px, min(6vw, 9vh), 104px)";
+/** Guard rails so one extreme upload can't become a hairline or a skyscraper
+ *  in the field. A 1:3 portrait and a 3:1 panorama both still read as photos. */
+const ASPECT_MIN = 0.34;
+const ASPECT_MAX = 3;
 
 const lerp = (a: number, b: number, t: number) => (1 - t) * a + t * b;
 
@@ -117,7 +134,7 @@ const HERO_CSS = `
 }
 `;
 
-function PhotoGalaxy() {
+function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
   /* Scroll velocity is written by Lenis and read by the ticker. A ref rather
@@ -254,7 +271,17 @@ function PhotoGalaxy() {
       className="pointer-events-none absolute left-0 z-0 w-full"
       style={{ top: "-25%", height: "150%", perspective: `${PERSPECTIVE}px` }}
     >
-      {PARTICLES.map((p, i) => (
+      {PARTICLES.map((p, i) => {
+        const photo = photos[i % photos.length];
+        /* The tile is cut to the picture. `object-contain` rather than `cover`
+           so nothing is trimmed even if the reported aspect and the file ever
+           disagree — with the box already at the right shape there are no bars
+           to show. */
+        const aspect = Math.min(
+          ASPECT_MAX,
+          Math.max(ASPECT_MIN, Number(photo?.aspect) || 1)
+        );
+        return (
         <div
           key={i}
           ref={(el) => {
@@ -265,17 +292,17 @@ function PhotoGalaxy() {
             left: `${p.x}%`,
             top: `${p.y}%`,
             width: TILE,
-            aspectRatio: "1 / 1",
+            aspectRatio: `${aspect}`,
             willChange: "transform",
           }}
         >
           <div className="absolute inset-0 overflow-hidden rounded-[2px] bg-[#D9D9D9]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={PHOTOS[i % PHOTOS.length]}
+              src={photo?.url}
               alt=""
               draggable={false}
-              className="h-full w-full select-none object-cover object-center"
+              className="h-full w-full select-none object-contain object-center"
             />
           </div>
           {/* The paling sheet. Static per tile — it is a function of depth,
@@ -285,7 +312,8 @@ function PhotoGalaxy() {
             style={{ opacity: 1 - p.opacity }}
           />
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -295,9 +323,11 @@ export default function OurStoryHeroClient({
 }: {
   data?: OurStoryHeroData | null;
 }) {
-  // Heading is fixed for this hero design. `data` is retained for future
-  // Sanity wiring (images / quote) but is not used for layout.
-  void data;
+  /* The drifting field comes from Sanity when it has been filled in, and from
+     the built-in set otherwise, so the hero is never empty mid-migration. */
+  const photos = data?.photos?.length
+    ? data.photos.filter((p) => p?.url)
+    : FALLBACK_PHOTOS;
 
   const line1 = "Being Founder";
   const line2 = "Takes Guts";
@@ -320,14 +350,20 @@ export default function OurStoryHeroClient({
     >
       <style>{HERO_CSS}</style>
 
-      <PhotoGalaxy />
+      <PhotoGalaxy photos={photos.length ? photos : FALLBACK_PHOTOS} />
 
-      {/* ── HEADING + DESCRIPTION (centered, above the field) ── */}
-      <div className="relative z-10 flex max-w-[760px] flex-col items-center text-center">
+      {/* ── HEADING + DESCRIPTION (centered, above the field) ──
+          THE COLUMN IS FULL WIDTH, the description narrow inside it. At level 2
+          the whole block fitted in 760px; at level 1 "BEING FOUNDER" alone
+          needs about 1370px, so that cap broke each line into two and the
+          heading set in four lines instead of two. Width belongs to the
+          heading, measure belongs to the description — so the cap moved down
+          onto the paragraph, which is the only part that wants it. */}
+      <div className="relative z-10 flex w-full flex-col items-center text-center">
         <h1
-          className={`m-0 text-[#0E0E0E] ${HERO_HEADING_LIGHT_CLASS}`}
+          className={`m-0 text-[#0E0E0E] md:whitespace-nowrap ${HERO_HEADING_DARK_CLASS}`}
           style={{
-            ...HERO_HEADING_LIGHT_STYLE,
+            ...HERO_HEADING_DARK_STYLE,
             opacity: 0,
             animation: "ourstory-rise 0.8s cubic-bezier(0.22,1,0.36,1) 0.1s forwards",
           }}
@@ -336,9 +372,9 @@ export default function OurStoryHeroClient({
         </h1>
 
         <h1
-          className={`m-0 text-[#0E0E0E] ${HERO_HEADING_LIGHT_CLASS}`}
+          className={`m-0 text-[#0E0E0E] md:whitespace-nowrap ${HERO_HEADING_DARK_CLASS}`}
           style={{
-            ...HERO_HEADING_LIGHT_STYLE,
+            ...HERO_HEADING_DARK_STYLE,
             opacity: 0,
             animation: "ourstory-rise 0.8s cubic-bezier(0.22,1,0.36,1) 0.28s forwards",
           }}
@@ -347,7 +383,7 @@ export default function OurStoryHeroClient({
         </h1>
 
         <p
-          className={`font-normal m-0 text-[#1a1a1a] ${HERO_BODY_CLASS}`}
+          className={`font-normal m-0 max-w-[760px] text-[#1a1a1a] ${HERO_BODY_CLASS}`}
           style={{
             ...HERO_BODY_STYLE,
             marginTop: "clamp(16px, min(2.5vw, 4vh), 36px)",

@@ -157,15 +157,19 @@ function NavyPill({
   );
 }
 
-function MetaLine({ blog }: { blog: Blog }) {
+function MetaLine({ blog, reserve }: { blog: Blog; reserve?: boolean }) {
   /* Built from whatever is actually filled in. Joining unconditionally left a
      post with no author or read time opening on bare separators and a dangling
      "Category:" — the separator belongs BETWEEN parts, so there is no line at
-     all when there are no parts. */
+     all when there are no parts.
+
+     `reserve` is for the grid, where cards sit side by side: there the empty
+     line still has to occupy its row, or the card without a byline pulls every
+     line below it up out of step with its neighbours. */
   const meta = [blog.author, blog.readTime, blog.category && `Category: ${blog.category}`]
     .filter(Boolean)
     .join(" · ");
-  if (!meta) return null;
+  if (!meta) return reserve ? <p className="m-0" style={{ fontSize: "clamp(11px, 0.9vw, 13px)", lineHeight: "150%" }}>&nbsp;</p> : null;
   return (
     <p
       className="m-0 font-['Poppins',_sans-serif] font-normal text-[#6b6b6b]"
@@ -280,20 +284,51 @@ export function BlogCard({
           gap: "clamp(8px, 0.9vw, 14px)",
         }}
       >
-        <MetaLine blog={blog} />
+        {/* EVERY ROW OF A CARD LINES UP WITH THE SAME ROW OF ITS NEIGHBOURS.
+            `reserve` keeps the meta line's height on a post that has no author
+            or category, so its title does not ride up while the card beside it
+            starts a line lower. */}
+        <MetaLine blog={blog} reserve />
         <h3
           className="m-0 font-['Poppins',_sans-serif] font-semibold text-[#0E0E0E]"
-          style={{ fontSize: "clamp(18px, 1.5vw, 22px)", lineHeight: "130%" }}
+          style={{
+            fontSize: "clamp(18px, 1.5vw, 22px)",
+            lineHeight: "130%",
+            /* EXACTLY two lines, always. The min-height stops a one-line title
+               starting its description a line above its neighbour; the clamp
+               stops a three-line title pushing it a line below. Together they
+               make the block a fixed size, which is what lets every card in
+               the grid agree on where the copy sits. */
+            minHeight: "2.6em",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
         >
           {blog.title}
         </h3>
         <p
           className="m-0 font-['Poppins',_sans-serif] font-normal text-[#4a4a4a]"
-          style={{ fontSize: "clamp(13px, 1.05vw, 15px)", lineHeight: "160%" }}
+          style={{
+            fontSize: "clamp(13px, 1.05vw, 15px)",
+            lineHeight: "160%",
+            /* Three lines, same reasoning. Without this one long excerpt made
+               its row 973px against the others' 613px — and every other row
+               was then stretched to match it. */
+            minHeight: "4.8em",
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
         >
           {blog.excerpt}
         </p>
-        <div style={{ marginTop: "clamp(6px, 0.8vw, 12px)" }}>
+        {/* `mt-auto` takes up whatever slack the card has, so the button sits
+            on the card's floor rather than wherever the copy happened to end.
+            This is what the equal-height rows above are for. */}
+        <div style={{ marginTop: "auto", paddingTop: "clamp(10px, 1.1vw, 18px)" }}>
           <NavyPill label="Read Note" href={blog.href} small />
         </div>
       </div>
@@ -598,9 +633,19 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
             </p>
           ) : (
             <>
+              {/* EQUAL ROWS, and that is load-bearing twice over.
+                  The dividers below are placed by dividing the grid's height
+                  into `rows` equal parts in CSS. Auto-sized rows are each as
+                  tall as their own tallest card, so the real boundaries drift
+                  from the even split and the rule was landing across the next
+                  row's images. `1fr` auto-rows makes every row the height of
+                  the tallest card in the grid, which is the assumption that
+                  calc was making all along. It is also what lets a card
+                  stretch, so `mt-auto` can pin every Read Note to a common
+                  baseline. */}
               <div
                 className="grid w-full grid-cols-3 max-md:!grid-cols-1 max-md:!gap-[28px]"
-                style={{ gap: STORY_GAP }}
+                style={{ gap: STORY_GAP, gridAutoRows: "1fr" }}
               >
                 {filtered.map((blog) => (
                   <BlogCard key={blog.id} blog={blog} />
