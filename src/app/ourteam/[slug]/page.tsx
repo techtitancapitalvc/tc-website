@@ -101,7 +101,7 @@ export default async function TeamMemberPage({
           {/* ── Row 1: Back  ⟂  About/<Name> (Stagger 1) ── */}
           <div className="flex w-full flex-row items-center justify-between animate-reveal anim-delay-100">
             <BackLink
-              fallbackHref="/ourTeam"
+              fallbackHref="/ourteam"
               ariaLabel="Back to our team"
               className="group inline-flex cursor-pointer items-center bg-transparent transition-transform duration-300 hover:scale-105 hover:opacity-80"
               style={{ gap: "clamp(8px, min(0.8vw, 1.2vh), 14px)" }}

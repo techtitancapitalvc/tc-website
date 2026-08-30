@@ -17,12 +17,12 @@ import { motion, useScroll, useTransform } from "framer-motion";
 /* Map specific footer link labels to custom routes */
 const footerHrefs: Record<string, string> = {
   "Our Story": "/ourstory",
-  "Our Team": "/ourTeam",
-  "Fund Details": "/winnersFund",
+  "Our Team": "/ourteam",
+  "Fund Details": "/winnersfund",
   "Our Portfolio": "/portfolio",
   "Founders' Stories": "/foundersstory",
-  "Get Investment": "/getInvestment",
-  "Titan Ecosystem": "/beyondTheCheque",
+  "Get Investment": "/getinvestment",
+  "Titan Ecosystem": "/beyondthecheque",
   "Indicorns": "/indicorns",
   "Blogs & News": "/blogs",
 };

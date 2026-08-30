@@ -1,7 +1,7 @@
 import { defineField, defineType } from "sanity";
 
 /**
- * /titanEcosystem — page hero. Singleton.
+ * /titanecosystem — page hero. Singleton.
  *
  * Heading, an overlapping stack of founder avatars with a count beside it,
  * and a description. The avatar stack is decorative: it is there to show that

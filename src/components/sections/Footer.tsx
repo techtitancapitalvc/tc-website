@@ -34,11 +34,11 @@ const DISABLED_FOOTER_LINKS = new Set([
 /* Map specific footer link labels to custom routes */
 const footerHrefs: Record<string, string> = {
   "Our Story": "/ourstory",
-  "Meet The Team": "/ourTeam",
+  "Meet The Team": "/ourteam",
   "Our Portfolio": "/portfolio",
   "Founders' Stories": "/foundersstory",
-  "Get Investment": "/getInvestment",
-  "Titan Ecosystem": "/beyondTheCheque",
+  "Get Investment": "/getinvestment",
+  "Titan Ecosystem": "/beyondthecheque",
   "Indicorns": "/indicorns",
   "Blogs & News": "/blogs",
 };

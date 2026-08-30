@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 /**
- * The four diagrams on the /titanEcosystem rail.
+ * The four diagrams on the /titanecosystem rail.
  *
  * They live apart from the section so that file stays about LAYOUT — the
  * scroll line, the pointer, the alternating columns — and this one is only

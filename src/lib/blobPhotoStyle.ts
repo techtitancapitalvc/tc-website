@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
  * Framing for a team member's portrait inside the blob cutout.
  *
  * Lives here rather than in OurTeamClient because that file is `"use client"`,
- * and the /ourTeam/[slug] page is a server component — a server component can
+ * and the /ourteam/[slug] page is a server component — a server component can
  * render a client component but cannot call a function exported from one. This
  * module has no "use client" pragma and no React runtime, so both sides can
  * import it.

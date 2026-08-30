@@ -46,8 +46,8 @@ async function main() {
         title: "FOR FOUNDERS",
         subItems: [
           { _key: "get-investment", _type: "navbarSubItem", label: "Get Investment", url: "/getinvestment" },
-          { _key: "titan-seed-fund", _type: "navbarSubItem", label: "Titan Seed Fund", url: "/titanSeedFund" },
-          { _key: "titan-winners-fund", _type: "navbarSubItem", label: "Titan Winners Fund", url: "/winnersFund" },
+          { _key: "titan-seed-fund", _type: "navbarSubItem", label: "Titan Seed Fund", url: "/titanseedfund" },
+          { _key: "titan-winners-fund", _type: "navbarSubItem", label: "Titan Winners Fund", url: "/winnersfund" },
         ],
       },
       {

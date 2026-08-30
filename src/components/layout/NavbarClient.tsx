@@ -23,11 +23,11 @@ const EASE = cubicBezier(0.22, 1, 0.36, 1);
    threshold. Once scrolled past 60px it snaps back to the
    default navy pill for consistency with every other section. */
 const INVERTED_HERO_ROUTES = new Set([
-  "/ourTeam",
+  "/ourteam",
   "/indicorns",
   "/ourstory",
   "/founders",
-  "/titanEcosystem",
+  "/titanecosystem",
 ]);
 
 /* Listings whose OWN hero is dark but whose detail pages render on white.
@@ -182,7 +182,7 @@ const FALLBACK_SECTIONS: NavbarSection[] = [
     id: "for-founders",
     title: "FOR FOUNDERS",
     subItems: [
-      { label: "Get Investment", url: "/getInvestment" },
+      { label: "Get Investment", url: "/getinvestment" },
       { label: "Titan Seed Fund", url: "#disabled" },
       { label: "Titan Winners Fund", url: "#disabled" },
     ],
@@ -198,7 +198,7 @@ const FALLBACK_SECTIONS: NavbarSection[] = [
     title: "ABOUT US ",
     subItems: [
       { label: "Our Story", url: "#disabled" },
-      { label: "Meet The Team", url: "/ourTeam" },
+      { label: "Meet The Team", url: "/ourteam" },
       { label: "Indicorns", url: "#disabled" },
     ],
   },
@@ -220,7 +220,7 @@ const FALLBACK_SECTIONS: NavbarSection[] = [
 ];
 
 const FALLBACK_CTA_LABEL = "Get Investment";
-const FALLBACK_CTA_URL = "/getInvestment";
+const FALLBACK_CTA_URL = "/getinvestment";
 
 export default function NavbarClient({ data }: { data?: NavbarData }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -228,7 +228,7 @@ export default function NavbarClient({ data }: { data?: NavbarData }) {
   const [scrolled, setScrolled] = useState(false);
 
   const pathname = usePathname();
-  // Match the route itself AND any sub-page (e.g. /ourTeam/<slug> team detail
+  // Match the route itself AND any sub-page (e.g. /ourteam/<slug> team detail
   // pages, which also render on a light background). Without the prefix check
   // the nav stays white-on-white and disappears on those detail pages.
   const isInvertedRoute =
@@ -244,12 +244,12 @@ export default function NavbarClient({ data }: { data?: NavbarData }) {
   // Restored the missing variables here!
   // DISABLED_ITEMS: Override URLs for items that should be disabled during demo
   const DISABLED_URLS = [
-    "/titanSeedFund",
-    "/winnersFund",
+    "/titanseedfund",
+    "/winnersfund",
     "/ourstory",
     "/foundersstory",
     "/blogs",
-    "/beyondTheCheque",
+    "/beyondthecheque",
   ];
 
   const DISABLED_LABELS = [

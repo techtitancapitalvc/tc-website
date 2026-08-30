@@ -21,7 +21,7 @@ import {
 } from "@/styles/heroTypography";
 
 /**
- * /titanEcosystem — the long dark rail beneath the hero.
+ * /titanecosystem — the long dark rail beneath the hero.
  *
  * Several parts stacked down a vertical line that DRAWS ITSELF as the section
  * scrolls, with a ringed pointer riding the line's growing tip. Opposite each
@@ -85,7 +85,7 @@ const FALLBACK_PARTS: TitanEcosystemPart[] = [
     description: FALLBACK_BODY,
     visual: "web",
     ctaLabel: "Join Community",
-    ctaUrl: "/getInvestment",
+    ctaUrl: "/getinvestment",
   },
   {
     title: "Titan Connect",

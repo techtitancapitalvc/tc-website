@@ -20,7 +20,7 @@ import type { FounderProfile } from "@/components/sections/LedByFoundersClient";
 /**
  * /founders/[slug] — detail page for a Titan Capital founder.
  *
- * Mirrors /ourTeam/[slug]: same blob-cutout portrait, same type scale, same
+ * Mirrors /ourteam/[slug]: same blob-cutout portrait, same type scale, same
  * bio card. The one difference is the socials — these two use Instagram
  * rather than email.
  */
@@ -109,7 +109,7 @@ export default async function FounderPage({
           {/* ── Row 1: Back  ⟂  About/<Name> ── */}
           <div className="flex w-full flex-row items-center justify-between">
             <BackLink
-              fallbackHref="/ourTeam"
+              fallbackHref="/ourteam"
               ariaLabel="Back to our team"
               className="group inline-flex cursor-pointer items-center bg-transparent transition-transform duration-300 hover:scale-105 hover:opacity-80"
               style={{ gap: "clamp(8px, min(0.8vw, 1.2vh), 14px)" }}
@@ -133,7 +133,7 @@ export default async function FounderPage({
               }}
             >
               <Link
-                href="/ourTeam"
+                href="/ourteam"
                 className="font-light transition-opacity duration-200 hover:opacity-70"
               >
                 About

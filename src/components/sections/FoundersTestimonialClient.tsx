@@ -712,7 +712,7 @@ export default function FoundersTestimonialClient({
           </motion.h2>
         </motion.div>
 
-        <CursorFillButtonTestimonial href="/getInvestment" label={ctaLabel} />
+        <CursorFillButtonTestimonial href="/getinvestment" label={ctaLabel} />
       </div>
     </section>
   );

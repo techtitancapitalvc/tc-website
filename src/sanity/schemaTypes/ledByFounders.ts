@@ -99,7 +99,7 @@ export const ledByFounders = defineType({
               name: "image",
               title: "Photo — with background (Led By Founders section)",
               description:
-                'The rectangular portrait beside the bio on /ourTeam. Keeps its background. Separate from "Photo — cut out", which is used on the detail page.',
+                'The rectangular portrait beside the bio on /ourteam. Keeps its background. Separate from "Photo — cut out", which is used on the detail page.',
               type: "image",
               options: { hotspot: true },
             }),

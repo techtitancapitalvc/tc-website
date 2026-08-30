@@ -10,7 +10,7 @@ import {
 } from "@/styles/heroTypography";
 
 /**
- * /titanEcosystem page hero.
+ * /titanecosystem page hero.
  *
  * Heading, a stack of overlapping founder avatars with a count beside them,
  * and a description. Black type on white.

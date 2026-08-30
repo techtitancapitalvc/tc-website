@@ -225,7 +225,10 @@ export default function FoundersStoryHero({
   return (
     <section
       ref={sectionRef}
-      className="relative flex w-full flex-col overflow-hidden bg-[#00112E] min-h-[100svh]"
+      /* Mobile matches BackedEarly: the strip becomes a grid inside the page
+         gutter, so the section needs a floor under it rather than running the
+         photos flush to the bottom edge the way the marquee does. */
+      className="relative flex w-full flex-col overflow-hidden max-md:overflow-x-hidden max-md:w-[100vw] max-md:ml-[calc(50%-50vw)] max-md:!pb-[clamp(20px,min(4vw,6vh),60px)] bg-[#00112E] min-h-[100svh]"
       style={{
         paddingTop: "calc(var(--nav-height) + clamp(20px, min(4vw, 6vh), 60px))",
         paddingBottom: 0,
@@ -236,10 +239,13 @@ export default function FoundersStoryHero({
 
       <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-between">
         {/* ── HEADING ── */}
-        <div className="flex w-full flex-1 flex-col items-center justify-center px-[var(--section-px-wide)]">
+        <div className="flex w-full flex-1 flex-col items-center justify-center px-[var(--section-px-wide)] max-md:!flex-none max-md:!justify-start max-md:!mt-[clamp(44px,16vw,80px)] max-md:!mb-[clamp(16px,4vw,28px)]">
           <h1
             className={`m-0 flex w-full flex-col items-center justify-center text-center text-white ${HERO_HEADING_DARK_CLASS}`}
-            style={HERO_HEADING_DARK_STYLE}
+            /* The two lines are flex items, so level 1's 86% line-height is the
+               only thing between them and the boxes touch at 0px — the same
+               reason BackedEarly's heading carries this. */
+            style={{ ...HERO_HEADING_DARK_STYLE, rowGap: "0.12em" }}
           >
             <RevealLine show={show} delay={0}>{lineOne}</RevealLine>
             {lineTwo && (
@@ -248,11 +254,18 @@ export default function FoundersStoryHero({
           </h1>
         </div>
 
-        {/* ── FULL-BLEED MARQUEE OF FOUNDER PHOTOS ──
-            Four across at any width, travelling left, looping seamlessly. */}
+        {/* ── FULL-BLEED MARQUEE OF FOUNDER PHOTOS — DESKTOP ──
+            Four across, travelling left, looping seamlessly.
+
+            IT IS DESKTOP ONLY, exactly as BackedEarly's is. Four tiles across a
+            phone puts each one at ~94px, which is too small for a face; below
+            `md` the two-up grid underneath takes over. The measuring effect
+            keeps running while this is display:none — it reads a width of 0,
+            bails, and picks the real numbers up from the ResizeObserver the
+            moment the breakpoint puts it back on screen. */}
         <motion.div
           ref={viewportRef}
-          className="fs-marquee-viewport w-full shrink-0 overflow-hidden"
+          className="fs-marquee-viewport hidden w-full shrink-0 overflow-hidden md:block"
           initial={{ opacity: 0, y: 30 }}
           animate={show ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: "easeOut", delay: 1.2 }}
@@ -294,6 +307,38 @@ export default function FoundersStoryHero({
               </div>
             ))}
           </div>
+        </motion.div>
+
+        {/* ── 2 x 2 GRID — MOBILE ──
+            BackedEarly's mobile treatment: the photos sit in the page gutter
+            as a static grid rather than a strip, so each one is about half the
+            screen instead of a quarter. Same 12px gap.
+
+            EXACTLY FOUR, whatever the editor has added. The grid is a fixed
+            2x2 block, so a fifth photo would start a third row on its own and
+            leave a hole beside it. The rest still appear on desktop, where the
+            marquee shows every one of them. */}
+        <motion.div
+          className="grid w-full shrink-0 grid-cols-2 grid-rows-2 gap-[12px] px-[var(--section-px-wide)] md:hidden"
+          initial={{ opacity: 0, y: 30 }}
+          animate={show ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 1.2 }}
+        >
+          {founders.slice(0, 4).map((src, i) => (
+            <div
+              key={`m-${i}`}
+              className="relative w-full overflow-hidden bg-[#0e1120]"
+              style={{ aspectRatio: "1433 / 1167" }}
+            >
+              <Image
+                src={src}
+                alt={`Founder ${i + 1}`}
+                fill
+                sizes="50vw"
+                className="object-cover object-center"
+              />
+            </div>
+          ))}
         </motion.div>
       </div>
     </section>

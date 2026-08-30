@@ -51,6 +51,14 @@ export const indicornSpotlightQuery = groq`
 /**
  * Our Story page — Hero section. Singleton.
  * Founders image URL resolved here so the frontend receives a plain string.
+ *
+ * `photos` carries each asset's own aspect ratio alongside its URL, so the
+ * drifting tiles can be cut to the picture rather than the picture cropped to
+ * the tile.
+ *
+ * NOTE: GROQ HAS NO COMMENT SYNTAX. A `/* … *​/` inside this template is query
+ * text, not a comment, and fails to parse at runtime — explanations belong in
+ * this JSDoc block, above the template, never inside it.
  */
 export const ourStoryHeroQuery = groq`
   *[_type == "ourStoryHero"][0]{
@@ -60,8 +68,6 @@ export const ourStoryHeroQuery = groq`
     "image": image.asset->url,
     "photos": photos[]{
       "url": asset->url,
-      /* The asset's own aspect ratio, so the tile can be cut to the picture
-         rather than the picture cropped to the tile. */
       "aspect": asset->metadata.dimensions.aspectRatio
     }
   }

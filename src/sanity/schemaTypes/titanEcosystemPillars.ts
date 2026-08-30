@@ -1,7 +1,7 @@
 import { defineField, defineType } from "sanity";
 
 /**
- * /titanEcosystem — the scroll rail beneath the hero. Singleton.
+ * /titanecosystem — the scroll rail beneath the hero. Singleton.
  *
  * One long dark section holding several parts, stacked down a vertical line
  * that draws itself as you scroll. Each part is a heading, a rule and a
@@ -76,7 +76,7 @@ export const titanEcosystemPillars = defineType({
               name: "ctaUrl",
               title: "Button link",
               description:
-                'Where the button goes, e.g. "/getInvestment". Ignored if a QR code is set below — the button opens the QR instead of navigating.',
+                'Where the button goes, e.g. "/getinvestment". Ignored if a QR code is set below — the button opens the QR instead of navigating.',
               type: "string",
               hidden: ({ parent }) => !parent?.ctaLabel,
             }),

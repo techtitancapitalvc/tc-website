@@ -12,7 +12,7 @@ import type { CSSProperties } from "react";
  *
  * (Rendered sizes are desktop at the 1728x1117 reference / mobile at 390px.)
  *
- * Scope: all pages EXCEPT /titanSeedFund, /winnersFund and /beyondTheCheque,
+ * Scope: all pages EXCEPT /titanseedfund, /winnersfund and /beyondthecheque,
  * which keep their own treatment.
  *
  * What lives here: the type *scale* — family, weight, size, line-height, case.

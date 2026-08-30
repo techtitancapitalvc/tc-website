@@ -13,7 +13,7 @@ import { HeroGlow, CursorFillButton } from "./JoinPortfolio";
 export default function FoundersStoryCTA({
   text,
   readAllHref = "/foundersstory",
-  pitchHref = "/getInvestment",
+  pitchHref = "/getinvestment",
 }: {
   text: string;
   readAllHref?: string;

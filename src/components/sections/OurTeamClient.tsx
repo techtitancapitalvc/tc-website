@@ -167,7 +167,7 @@ function TeamCard({
       transition={{ duration: 0.55, ease: "easeOut" }}
     >
       <Link
-        href={`/ourTeam/${slug}`}
+        href={`/ourteam/${slug}`}
         aria-label={`${member.name} — ${member.title}`}
         className="flex w-full flex-col items-start focus:outline-none max-md:!items-center"
       >

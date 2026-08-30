@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import { markAppMounted } from "@/lib/appNavState";
 
-const RESTORE_SCROLL_FROM = ["/ourTeam/", "/founders/"];
+const RESTORE_SCROLL_FROM = ["/ourteam/", "/founders/"];
 
 function ScrollToTopOnNav({ children }: { children: ReactNode }) {
   const lenis = useLenis();
