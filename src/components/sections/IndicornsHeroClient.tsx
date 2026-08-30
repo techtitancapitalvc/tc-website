@@ -114,6 +114,35 @@ const WORDMARK_ASPECT = "1712 / 404";
 const PANEL_PAD_Y = "clamp(11px, min(1.25vw, 1.9vh), 22px)";
 const PANEL_PAD_X = "clamp(24px, min(6vw, 8vh), 96px)";
 
+/**
+ * How far the wordmark is nudged UP so it sits optically level with the
+ * heading beside it, as a positive length. The transform below negates it.
+ *
+ * It is a named constant because the card's top padding has to add the same
+ * amount back — see CARD_PAD_TOP. The two were previously independent, and the
+ * lift ate the padding whole: at 1728x1117 the padding is 24px and the lift
+ * 25.9px, so the wordmark sat 1px from the card's top edge while the heading
+ * beside it kept its full 24px. The card is `overflow: hidden`, so a slightly
+ * shorter viewport clipped the artwork outright.
+ */
+const WORDMARK_LIFT = "clamp(14px, 1.5vw, 36px)";
+
+/**
+ * The card face's own padding.
+ *
+ * TOP CARRIES THE LIFT. Adding WORDMARK_LIFT back means the gap above the
+ * wordmark is CARD_PAD_Y no matter what the lift resolves to — the same gap
+ * the heading gets — instead of whatever the two happen to leave over.
+ *
+ * BOTTOM DOES NOT. It is the lever on the gap below the heading once the card
+ * opens (that gap is this plus the first fold panel's own top padding), so it
+ * is left where it was tuned. Longhands rather than the old `padding`
+ * shorthand precisely so the two axes can differ.
+ */
+const CARD_PAD_Y = "clamp(14px, min(1.5vw, 2.2vh), 24px)";
+const CARD_PAD_X = "clamp(16px, min(2vw, 3vh), 32px)";
+const CARD_PAD_TOP = `calc(${CARD_PAD_Y} + ${WORDMARK_LIFT})`;
+
 /** Hero body copy — the description and the bullets beneath it. */
 const BODY_TEXT_STYLE: React.CSSProperties = {
   ...HERO_BODY_STYLE,
@@ -580,8 +609,10 @@ export default function IndicornsHeroClient({
                    fold panels carry their own, much wider, PANEL_PADDING — so
                    side padding here buys no readability, it only narrows the
                    line and forces the wrap described below. */
-                padding:
-                  "clamp(14px, min(1.5vw, 2.2vh), 24px) clamp(16px, min(2vw, 3vh), 32px)",
+                paddingTop: CARD_PAD_TOP,
+                paddingBottom: CARD_PAD_Y,
+                paddingLeft: CARD_PAD_X,
+                paddingRight: CARD_PAD_X,
                 borderRadius: "2px",
                 boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
               }}
@@ -626,7 +657,7 @@ export default function IndicornsHeroClient({
                   style={{
                     height: "clamp(66px, min(12.29vw, 14.75vh), 118px)",
                     aspectRatio: WORDMARK_ASPECT,
-                    transform: "translateY(clamp(-36px, -1.5vw, -14px))",
+                    transform: `translateY(calc(-1 * ${WORDMARK_LIFT}))`,
                   }}
                 >
                   <Image
