@@ -137,7 +137,7 @@ const PT: PortableTextComponents = {
     h2: ({ children }) => (
       <h2
         className={`m-0 text-[#0E0E0E] ${SECTION_HEADING_CLASS}`}
-        style={{ ...SECTION_HEADING_STYLE, marginTop: "clamp(24px, min(2.6vw, 3.8vh), 48px)" }}
+        style={{ ...SECTION_HEADING_STYLE, marginTop: "clamp(18px, min(1.9vw, 2.8vh), 34px)" }}
       >
         {children}
       </h2>
@@ -145,7 +145,7 @@ const PT: PortableTextComponents = {
     h3: ({ children }) => (
       <h3
         className={`m-0 font-semibold text-[#0E0E0E] ${SUBHEADING_CLASS}`}
-        style={{ ...SUBHEADING_STYLE, marginTop: "clamp(18px, min(2vw, 2.9vh), 34px)" }}
+        style={{ ...SUBHEADING_STYLE, marginTop: "clamp(14px, min(1.5vw, 2.2vh), 26px)" }}
       >
         {children}
       </h3>
@@ -282,14 +282,24 @@ function CreamSlab({
           attribution on the same left edge as the quote it belongs to — with
           the caption outside this row it started at the padding edge, one
           mark-width to the left of the text, and read as loose from it. */}
-      <div className="flex" style={{ gap: "clamp(12px, 1.4vw, 20px)" }}>
+      {/* `items-start`, NOT the default stretch. The mark belongs beside the
+          FIRST LINE of the quote, where the sentence begins — centred against
+          the whole block it drifted to the middle of a long quote and read as
+          a decoration floating in the slab rather than an opening mark. The
+          small top offset drops it onto the first line's cap height, since the
+          glyph's own box starts above where the letters do. */}
+      <div className="flex items-start" style={{ gap: "clamp(12px, 1.4vw, 20px)" }}>
         {withMark && (
           <svg
             viewBox="0 0 42 33"
             fill="none"
             aria-hidden
             className="shrink-0"
-            style={{ width: "clamp(24px, 2.2vw, 38px)", height: "auto" }}
+            style={{
+              width: "clamp(24px, 2.2vw, 38px)",
+              height: "auto",
+              marginTop: "0.25em",
+            }}
           >
             <path
               d="M24.5946 22.5385C24.5946 15.948 26.7387 9.90141 31.027 4.3987C33.7387 1.07148 35.9144 -0.368185 37.5541 0.0797102C39.0676 0.655575 39.8243 1.51937 39.8243 2.6711C39.8243 3.75885 39.3198 4.91058 38.3108 6.12629C37.3649 7.34201 36.6081 8.33378 36.0405 9.1016C35.473 9.86942 35 10.7012 34.6216 11.597C33.7387 13.3886 33.2973 15.5641 33.2973 18.1235C34.8108 17.6756 36.3243 17.8675 37.8378 18.6994C40.6126 20.299 42 22.3465 42 24.8419C42 27.2733 41.2432 29.2569 39.7297 30.7925C38.2793 32.2642 36.2613 33 33.6757 33C31.0901 33 28.9144 32.0082 27.1486 30.0247C25.4459 27.9772 24.5946 25.4818 24.5946 22.5385ZM0 22.5385C0 15.6921 2.11261 9.64547 6.33784 4.3987C9.55405 0.495613 12.2342 -0.68811 14.3784 0.84753C14.8198 1.16746 15.0405 1.67934 15.0405 2.38317C15.0405 3.66287 14.5676 4.91058 13.6216 6.12629C12.7387 7.34201 12.0135 8.33378 11.4459 9.1016C10.8784 9.86942 10.4054 10.7012 10.027 11.597C9.14414 13.3886 8.7027 15.5641 8.7027 18.1235C10.2162 17.6756 11.6982 17.8675 13.1486 18.6994C15.8604 20.299 17.2162 22.3465 17.2162 24.8419C17.2162 27.2733 16.491 29.2569 15.0405 30.7925C13.5901 32.2642 11.5721 33 8.98649 33C6.4009 33 4.25676 32.0082 2.55405 30.0247C0.851351 27.9772 0 25.4818 0 22.5385Z"
@@ -621,7 +631,12 @@ export default function StoryBlocks({
             <div className="mx-auto w-full" style={{ maxWidth: COLUMN }}>
               <motion.div
                 className={`flex w-full flex-col ${INSET}`}
-                style={{ gap: "clamp(28px, min(3.4vw, 5vh), 60px)" }}
+                /* TIGHTENED from a 60px ceiling. Blocks are the editor's
+                   paragraphs of the page, not separate sections — at the old
+                   spacing a quote sat far enough from the passage it belongs
+                   to that the article read as a list of disconnected cards.
+                   The type's own margins still separate them within a block. */
+                style={{ gap: "clamp(18px, min(2.2vw, 3.2vh), 38px)" }}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.08 }}

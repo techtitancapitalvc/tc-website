@@ -111,13 +111,31 @@ export const blogPost = defineType({
       group: "card",
     }),
     defineField({
-      name: "featured",
-      title: "Feature on the listing",
+      name: "placement",
+      title: "Spotlight placement",
       description:
-        "The first featured post takes the large card; the next two take the pair beside it. Everything else falls into the grid.",
+        "Where this post sits in the block at the top of the listing. LEFT is the single large card that stays put; RIGHT is the column that scrolls past it (the first four are used). Everything appears in the grid below regardless.",
+      type: "string",
+      options: {
+        list: [
+          { title: "Left — the large card", value: "left" },
+          { title: "Right — the scrolling column", value: "right" },
+          { title: "Not in the spotlight", value: "none" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "none",
+      group: "card",
+    }),
+    defineField({
+      name: "featured",
+      title: "Feature on the listing (old)",
+      description:
+        "Superseded by Spotlight placement above, which says WHICH side a post takes rather than only that it is featured. Still read as a fallback for posts that have no placement set yet — set a placement and this is ignored.",
       type: "boolean",
       initialValue: false,
       group: "card",
+      readOnly: true,
     }),
 
     /* ─────────── Article ─────────── */

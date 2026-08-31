@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLenis } from "lenis/react";
+import { RevealLine } from "./BackedEarlyClient";
 import {
   HERO_HEADING_DARK_CLASS,
   HERO_HEADING_DARK_STYLE,
@@ -19,10 +20,9 @@ export interface OurStoryHeroPhoto {
 }
 
 export interface OurStoryHeroData {
-  headingFirst?: string;
-  headingHighlight?: string;
-  quote?: string;
-  image?: string;
+  headingLineOne?: string;
+  headingLineTwo?: string;
+  description?: string;
   photos?: OurStoryHeroPhoto[];
 }
 
@@ -62,15 +62,28 @@ export interface OurStoryHeroData {
  *     the middle of animating.
  */
 
-/** Straight from the reference bundle. */
+/** Straight from the reference bundle, except `speed` — see below. */
 const CFG = {
-  speed: 0.15,
+  /* The reference's own value is 0.15. Eased down a little: this field sits
+     behind a heading people are meant to read, where the reference's is the
+     whole page. Every other constant is left at the reference's number. */
+  speed: 0.115,
   ease: 0.1,
   scaleEase: 0.25,
   scrollMultiplier: 0.05,
-  scaleMin: 0.5,
-  scaleMax: 1.4,
 };
+
+/**
+ * HOW A TILE'S SIZE CHANGES ACROSS ITS TRAVEL — start of the climb to the end.
+ *
+ * A DELIBERATE DEPARTURE FROM THE REFERENCE, flagged because the rest of this
+ * file is a port of it. The reference runs 1.4 down to 0.5, so its tiles
+ * RECEDE as they rise. These GROW, 1x to 1.65x, which is the opposite
+ * direction — worth knowing when the real bundle is ported, so this is not
+ * mistaken for a mis-read of it.
+ */
+const SCALE_START = 1;
+const SCALE_END = 1.65;
 /** The depth ladder, in px of z. Cycled, so the field is layered evenly. */
 const Z_STEPS = [-200, -150, -100, -50, 0, 50, 100, 150, 200];
 /** Parallax multipliers, cycled — tiles at the same depth still drift apart. */
@@ -88,8 +101,28 @@ function mulberry32(seed: number) {
   };
 }
 
+/**
+ * SOME TILES ARE BIGGER. `BOOST` is a plain multiplier on the tile's width —
+ * and because the tile carries `aspectRatio`, the height follows on its own,
+ * so the picture is zoomed and never reshaped or cropped.
+ *
+ * It is a WIDTH, not a transform `scale`. The drift measures each tile's real
+ * height to know when it has left the frame and must wrap; a scale applied in
+ * the transform is invisible to that measurement (the ticker clears transforms
+ * before measuring), so a scaled-up tile would wrap on its unscaled height and
+ * pop out early. As a width it is genuine layout, and the ResizeObserver picks
+ * it up like any other size.
+ *
+ * SEPARATE PRNG, seeded differently. Drawing these from the layout's own
+ * generator would consume its sequence and shuffle every x/y after the first
+ * boost — rearranging the whole field just to change some sizes.
+ */
+const BOOST = 1.25;
+const BOOST_SHARE = 0.35;
+
 const PARTICLES = (() => {
   const rand = mulberry32(0x5eed);
+  const boostRand = mulberry32(0xb005);
   return Array.from({ length: COUNT }, (_, i) => {
     const z = Z_STEPS[i % Z_STEPS.length];
     /* The reference's own falloff: past -100 it clamps, so the furthest tiles
@@ -101,9 +134,16 @@ const PARTICLES = (() => {
       speed: SPEEDS[i % SPEEDS.length],
       z,
       opacity,
+      boost: boostRand() < BOOST_SHARE ? BOOST : 1,
     };
   });
 })();
+
+/** Copy used until the Sanity singleton is filled in. */
+const FALLBACK_LINE_ONE = "Being Founder";
+const FALLBACK_LINE_TWO = "Takes Guts";
+const FALLBACK_DESCRIPTION =
+  "Built by founders, for founders — the story behind every conviction, every cheque, and every late-night call.";
 
 /** The built-in field, used until Sanity has photos of its own. These are
  *  square crops, hence aspect 1 — anything uploaded is shown at its own. */
@@ -127,6 +167,67 @@ const ASPECT_MAX = 3;
 
 const lerp = (a: number, b: number, t: number) => (1 - t) * a + t * b;
 
+/**
+ * WHICH PHOTO GOES ON WHICH TILE.
+ *
+ * There are 32 tiles and usually far fewer photographs, so pictures repeat —
+ * that is unavoidable. What is avoidable is two copies of the same face
+ * sitting side by side, which is what `photos[i % photos.length]` produced:
+ * that walks the list in order with no idea where the tiles are, so whether a
+ * repeat lands next to itself is pure luck of the seeded layout.
+ *
+ * This places them deliberately instead. Walking the tiles, each one takes the
+ * photo that is (a) least used so far, so the set stays evenly spread, and
+ * (b) among those, the one sitting FURTHEST HORIZONTALLY FROM ITS NEAREST
+ * EXISTING COPY.
+ *
+ * "Nearest existing copy" — every placement, not just the most recent one —
+ * is the part that actually works. Scoring against only the last placement
+ * barely helped (minimum gap 1% -> 5% across 15 photos, 6 close pairs down to
+ * 2), because a photo already on the field several times was being judged on
+ * one of them and dropped straight next to another. Measuring against all of
+ * them takes the same 15 photos to a 15% minimum gap and NO pair closer than
+ * 12% of the field's width.
+ *
+ * Distance is capped at SPREAD_ENOUGH so the tie-break stops chasing ever
+ * larger gaps once a pair is comfortably apart — past that the choice is made
+ * on usage, which keeps the distribution even. 45 measures better than an
+ * uncapped span at middling photo counts.
+ *
+ * WITH VERY FEW PHOTOS THE GEOMETRY WINS. Three photos over 32 tiles is
+ * eleven copies each across the field; they cannot all be far apart, and no
+ * assignment fixes that. More photos in Sanity is the only real answer, and
+ * the fallback set of 15 is already comfortably past it.
+ */
+const SPREAD_ENOUGH = 45;
+
+function assignPhotos(
+  particles: { x: number }[],
+  photoCount: number
+): number[] {
+  if (photoCount <= 0) return particles.map(() => 0);
+  const uses = new Array(photoCount).fill(0);
+  const placedX: number[][] = Array.from({ length: photoCount }, () => []);
+
+  return particles.map((p) => {
+    let best = 0;
+    let bestScore = -Infinity;
+    for (let j = 0; j < photoCount; j++) {
+      let gap = SPREAD_ENOUGH; // unused photo — as good as far away
+      for (const x of placedX[j]) gap = Math.min(gap, Math.abs(p.x - x));
+      // Usage dominates; horizontal clearance breaks the tie.
+      const score = -uses[j] * 1000 + gap;
+      if (score > bestScore) {
+        bestScore = score;
+        best = j;
+      }
+    }
+    uses[best] += 1;
+    placedX[best].push(p.x);
+    return best;
+  });
+}
+
 const HERO_CSS = `
 @keyframes ourstory-rise {
   0%   { opacity: 0; transform: translateY(40px); }
@@ -134,9 +235,36 @@ const HERO_CSS = `
 }
 `;
 
+/**
+ * Gap between words on a heading line.
+ *
+ * IT HAS TO STAND IN FOR A REAL SPACE, in `em` so it tracks the font size.
+ * Splitting the heading into one RevealLine per word throws the actual space
+ * characters away — inside a RevealLine a space is rendered as a glyph
+ * (`" "`), but between two of them there is nothing at all, and the gap is
+ * the only thing holding the words apart.
+ *
+ * HeroClient's `min(0.8vw, 1.4vh)` is the wrong value to borrow here: there it
+ * separates three whole elements on one line, while its own words live inside a
+ * single RevealLine and keep their real spaces. Measured against this font, it
+ * came to 0.093em against a real space of 0.17em — a bit over half — so the
+ * words read as run together. 0.2em sits just wider than a true space, which
+ * suits a display heading.
+ */
+const WORD_GAP = "0.2em";
+
 function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
+  /* Depends only on how many photos there are — the tile layout is a module
+     constant — so this is computed once per photo count, not per frame. */
+  const assignment = useMemo(
+    () => assignPhotos(PARTICLES, photos.length),
+    [photos.length]
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
+  /* The white veils, driven per frame alongside the tiles — see the note where
+     they are rendered. */
+  const veilRefs = useRef<(HTMLDivElement | null)[]>([]);
   /* Scroll velocity is written by Lenis and read by the ticker. A ref rather
      than state: this changes many times a second and must not re-render. */
   const impulse = useRef({ target: 0, sign: 1 });
@@ -237,14 +365,33 @@ function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
           t.extra = t.extra + containerHeight;
         }
 
-        /* Scale from how far down the frame the tile currently is: full size
-           at the bottom, smallest at the top, so it recedes as it climbs. */
+        /* SCALE ACROSS THE TILE'S TRAVEL — it GROWS as it climbs.
+           `l` is how far down the frame the tile sits: 1 at the bottom where it
+           enters, 0 at the top where it leaves. `travel` flips that into 0 at
+           the start of the journey and 1 at the end, so the two constants read
+           in the order they happen.
+
+           Eased, not linear: `1 - (1 - travel)^2` puts most of the growth in
+           the first part of the climb and settles as the tile approaches the
+           top, which is the "grows quickly from the start point" the design
+           asks for. Linear made the change hard to notice until half way up. */
         const top = t.position + t.top;
         const l = Math.max(0, Math.min(1, top / containerHeight));
-        const want = CFG.scaleMin + l * (CFG.scaleMax - CFG.scaleMin);
+        const travel = 1 - l;
+        const eased = 1 - (1 - travel) * (1 - travel);
+        const want = SCALE_START + eased * (SCALE_END - SCALE_START);
         t.currentScale = lerp(t.currentScale, want, CFG.scaleEase);
 
         el.style.transform = `translate3d(0, ${t.position}px, ${p.z}px) scale(${t.currentScale})`;
+
+        /* The veil clears on the same eased curve the tile grows on: a tile
+           that enters pale brightens quickly at first, and is fully opaque by
+           the time it reaches the top. A tile with no paleness to start with
+           (z >= 0) has a base of 0 and is unaffected. */
+        const veil = veilRefs.current[n];
+        if (veil) {
+          veil.style.opacity = ((1 - p.opacity) * (1 - eased)).toFixed(3);
+        }
       });
 
       last = current;
@@ -272,7 +419,7 @@ function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
       style={{ top: "-25%", height: "150%", perspective: `${PERSPECTIVE}px` }}
     >
       {PARTICLES.map((p, i) => {
-        const photo = photos[i % photos.length];
+        const photo = photos[assignment[i]];
         /* The tile is cut to the picture. `object-contain` rather than `cover`
            so nothing is trimmed even if the reported aspect and the file ever
            disagree — with the box already at the right shape there are no bars
@@ -291,7 +438,7 @@ function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,
-            width: TILE,
+            width: p.boost === 1 ? TILE : `calc(${TILE} * ${p.boost})`,
             aspectRatio: `${aspect}`,
             willChange: "transform",
           }}
@@ -305,9 +452,22 @@ function PhotoGalaxy({ photos }: { photos: OurStoryHeroPhoto[] }) {
               className="h-full w-full select-none object-contain object-center"
             />
           </div>
-          {/* The paling sheet. Static per tile — it is a function of depth,
-              which never changes, so it costs nothing per frame. */}
+          {/* THE PALING SHEET — a white veil over the photograph, and it now
+              CLEARS AS THE TILE TRAVELS.
+
+              It used to be static: a function of the tile's `z`, which never
+              changes, so a deep tile stayed washed out for its whole life and
+              simply looked like a faded photo. It is driven per frame by the
+              ticker instead, from the same eased travel that grows the tile —
+              so the ones that enter faintest are the ones that gain the most,
+              and every tile is fully opaque by the time it leaves the top.
+
+              The inline value is the tile's starting paleness, so the first
+              painted frame is right before the ticker has run. */}
           <div
+            ref={(el) => {
+              veilRefs.current[i] = el;
+            }}
             className="pointer-events-none absolute inset-0 bg-white"
             style={{ opacity: 1 - p.opacity }}
           />
@@ -329,20 +489,33 @@ export default function OurStoryHeroClient({
     ? data.photos.filter((p) => p?.url)
     : FALLBACK_PHOTOS;
 
-  const line1 = "Being Founder";
-  const line2 = "Takes Guts";
-  // TODO: replace with the real hero subtitle (placeholder copy for now).
-  const description =
-    "Built by founders, for founders — the story behind every conviction, every cheque, and every late-night call.";
+  /* Sanity first, the constants below only as a fallback — so the hero still
+     reads properly before the singleton is created, and follows the CMS the
+     moment it is. */
+  const line1 = data?.headingLineOne || FALLBACK_LINE_ONE;
+  const line2 = data?.headingLineTwo ?? FALLBACK_LINE_TWO;
+  const description = data?.description || FALLBACK_DESCRIPTION;
+
+  /* The per-character reveal runs once the component is on the client. This
+     hero sits at the very top of the page, so mount is the right trigger —
+     there is no scrolling to it. */
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShow(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
 
   return (
     <section
-      className="relative flex w-full items-center justify-center overflow-hidden bg-white"
+      /* FULL SCREEN, the same way HeroClient is: `h-screen` with a `100dvh`
+         override under `md`, because mobile browser chrome makes `vh` taller
+         than the visible area and the hero would be cut off by the URL bar. */
+      className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-white max-md:!h-[100dvh]"
       style={{
         // White section starts at the very top so its background fills
         // behind the transparent navbar (nav strip matches the hero until
         // it turns blue on scroll). Content clears the nav via paddingTop.
-        height: "78svh",
         paddingTop: "var(--nav-height)",
         paddingLeft: "var(--section-px-wide)",
         paddingRight: "var(--section-px-wide)",
@@ -360,26 +533,54 @@ export default function OurStoryHeroClient({
           heading, measure belongs to the description — so the cap moved down
           onto the paragraph, which is the only part that wants it. */}
       <div className="relative z-10 flex w-full flex-col items-center text-center">
-        <h1
-          className={`m-0 text-[#0E0E0E] md:whitespace-nowrap ${HERO_HEADING_DARK_CLASS}`}
-          style={{
-            ...HERO_HEADING_DARK_STYLE,
-            opacity: 0,
-            animation: "ourstory-rise 0.8s cubic-bezier(0.22,1,0.36,1) 0.1s forwards",
-          }}
-        >
-          {line1}
-        </h1>
+        {/* ── HEADING ──
+            HeroClient's treatment, at HeroClient's size: level 1 exactly as the
+            shared token defines it, black here rather than white because the
+            level is the type scale and the colour belongs to the section.
+            NOTHING RESIZES IT — no fitted or derived size of its own.
 
+            THE REVEAL UNIT IS A WORD, not a whole line, and that is what lets
+            it wrap. RevealLine sets `whitespace-nowrap` on whatever it is given
+            (it must, or characters reflow mid-animation), so handing it a full
+            line made that line unbreakable — at level 1 a long one ran off both
+            edges and the section's `overflow-hidden` hid the ends. Per word,
+            each word stays intact while the line breaks between words, so a
+            heading that will not fit in two lines simply sets in three.
+
+            ROW GAP is the line spacing: level 1's 86% line-height is tighter
+            than the glyphs, so stacked lines touch at 0px. `0.12em` opens them
+            and tracks the font size — the same fix BackedEarly's and
+            FoundersStory's headings carry. WORD_GAP is HeroClient's own
+            word spacing. */}
         <h1
-          className={`m-0 text-[#0E0E0E] md:whitespace-nowrap ${HERO_HEADING_DARK_CLASS}`}
-          style={{
-            ...HERO_HEADING_DARK_STYLE,
-            opacity: 0,
-            animation: "ourstory-rise 0.8s cubic-bezier(0.22,1,0.36,1) 0.28s forwards",
-          }}
+          className={`m-0 flex w-full flex-col items-center text-center text-[#0E0E0E] ${HERO_HEADING_DARK_CLASS}`}
+          style={{ ...HERO_HEADING_DARK_STYLE, rowGap: "0.12em" }}
         >
-          {line2}
+          {[line1, line2].filter(Boolean).map((line, li) => {
+            /* Words keep revealing in reading order across both lines, so the
+               cascade does not restart half way down the heading. */
+            const before = li === 0 ? 0 : (line1 ?? "").trim().split(/\s+/).length;
+            return (
+              <span
+                key={li}
+                className="flex flex-wrap items-baseline justify-center"
+                style={{ columnGap: WORD_GAP, rowGap: "0.12em" }}
+              >
+                {(line as string)
+                  .trim()
+                  .split(/\s+/)
+                  .map((word, wi) => (
+                    <RevealLine
+                      key={`${li}-${wi}`}
+                      show={show}
+                      delay={(before + wi) * 0.09}
+                    >
+                      {word}
+                    </RevealLine>
+                  ))}
+              </span>
+            );
+          })}
         </h1>
 
         <p

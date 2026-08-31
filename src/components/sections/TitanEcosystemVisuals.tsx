@@ -1052,27 +1052,45 @@ function SpiderWeb() {
  */
 const MONO_ALPHABET = "TITANCAPITAL";
 /**
- * THE WORDMARK, drawn on the grid. A monoline "TC" one cell thick: a
- * nine-wide crossbar over a centred stem, and a C open on the right.
+ * THE WORDMARK — every letter authored in place, not derived.
  *
- * Authored, not sampled from a font — see the note in `build` for why sampling
- * cannot make this shape. Editing this array is how you change the mark: every
- * "1" becomes one letter, and the grid re-centres itself.
+ * IT USED TO BE A 0/1 MASK, with each cell's letter coming from its position
+ * on the lattice (`(row + col) % 12`). That made every row and column of the
+ * field read TITANCAPITAL, but it also meant the mark's own strokes took
+ * whatever letters the lattice happened to hand them — the T's bar and the C's
+ * arc spelled nothing. Reading along a stroke is the whole point of the mark,
+ * and a positional rule cannot do it: a stroke turns a corner, and the rule
+ * only knows about rows and columns.
+ *
+ * So the strokes are spelled out here, one character per cell, space for empty:
+ *
+ *   T   bar  TITANATIT across the top, stem CAPITAL + a closing T down the
+ *            middle — that extra T is what lengthens the stem so the mark is
+ *            not top-heavy
+ *   C   arc  NATIT along the top, CAPITAL down the left, TITAN along the
+ *            bottom on its own row
+ *
+ * THE TWO ARE THE SAME HEIGHT — nine rows each, top and bottom aligned. The C
+ * gets there by giving its bottom bar a row of its own rather than hanging it
+ * off the L, so its column still spells the whole of CAPITAL and the letter
+ * stands as tall as the T beside it.
+ *
+ * Editing this array is how you change the mark: it re-centres itself and the
+ * particle count follows.
  */
-const TC_GRID = [
-  "1111111110011110",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000100000",
-  "0000100000011110",
+const TC_LETTERS = [
+  "TITANATIT" + "  " + " NATIT",
+  "    C    " + "  " + "C     ",
+  "    A    " + "  " + "A     ",
+  "    P    " + "  " + "P     ",
+  "    I    " + "  " + "I     ",
+  "    T    " + "  " + "T     ",
+  "    A    " + "  " + "A     ",
+  "    L    " + "  " + "L     ",
+  "    T    " + "  " + " TITAN",
 ];
 /** Columns in the field. Wider than the wordmark, so the bands run past it. */
-const MONO_FIELD_COLS = 22;
+const MONO_FIELD_COLS = 24;
 /** Full-width rows of dimmer letters above and below the wordmark. */
 const MONO_BANDS = 2;
 /** Letter size as a share of the cell pitch. Below ~0.4 the grid reads empty. */
@@ -1198,56 +1216,45 @@ function Monogram() {
          bands are laid straight onto that grid. Everything lines up in rows
          and columns by construction. */
       const cols = MONO_FIELD_COLS;
-      const rows = TC_GRID.length + MONO_BANDS * 2;
+      const rows = TC_LETTERS.length + MONO_BANDS * 2;
       // Whichever axis runs out first decides the pitch, so it always fits.
       const pitch = Math.min((w * 0.98) / cols, (h * 0.94) / rows);
       const originX = (w - cols * pitch) / 2 + pitch / 2;
       const originY = (h - rows * pitch) / 2 + pitch / 2;
       // The wordmark is narrower than the field, so centre it in the columns.
-      const glyphCol = Math.round((cols - TC_GRID[0].length) / 2);
-
-      /* WHICH LETTER SITS IN WHICH CELL — from its grid position, so the word
-         reads BOTH WAYS.
-
-         Stepping one cell right advances the letter by one, and so does
-         stepping one cell down. That single rule gives every row and every
-         column the sequence T-I-T-A-N-C-A-P-I-T-A-L, and it is the only rule
-         that can: pinning each row to start on "T" would make a column read
-         TTTTT, and pinning each column to start on "T" would do the same to
-         the rows. Cell (0,0) is a T, so the top row and the left column both
-         open on it; the rest start further into the word and wrap. Identical
-         letters end up on diagonals, which is what gives the field its grain.
-
-         The wordmark uses its ABSOLUTE position on the grid, not its own local
-         one, so its letters line up with the band letters in the same columns
-         and the whole field is one lattice. */
-      const letterAt = (gr: number, gc: number) =>
-        MONO_SEQ[(((gr + gc) % MONO_SEQ.length) + MONO_SEQ.length) % MONO_SEQ.length];
+      const glyphCol = Math.round((cols - TC_LETTERS[0].length) / 2);
 
       const homes: { x: number; y: number; ch: number; dim?: boolean }[] = [];
 
-      // The wordmark, inset by the top band.
-      TC_GRID.forEach((row, r) => {
+      /* THE WORDMARK, inset by the top band. Each cell carries the letter
+         written for it in TC_LETTERS, so a stroke spells what it is meant to
+         spell wherever it turns. */
+      TC_LETTERS.forEach((row, r) => {
         row.split("").forEach((ch, c) => {
-          if (ch !== "1") return;
+          if (ch === " ") return;
           homes.push({
             x: originX + (glyphCol + c) * pitch,
             y: originY + (MONO_BANDS + r) * pitch,
-            ch: letterAt(MONO_BANDS + r, glyphCol + c),
+            ch: MONO_CHARS.indexOf(ch),
           });
         });
       });
 
       /* THE BANDS. Full-width rows of dimmer letters above and below, on the
          same pitch and columns — what stops the wordmark reading as an object
-         floating in empty space. */
+         floating in empty space.
+
+         EVERY BAND ROW OPENS ON THE "T", so each one reads TITANCAPITAL over
+         and over from the left. The old rule offset each row by its own index,
+         which kept the columns readable too but meant no row actually started
+         at the beginning of the word — a band read "...APITALTITANC...". */
       for (let b = 0; b < MONO_BANDS; b++) {
-        for (const r of [b, MONO_BANDS + TC_GRID.length + b]) {
+        for (const r of [b, MONO_BANDS + TC_LETTERS.length + b]) {
           for (let c = 0; c < cols; c++) {
             homes.push({
               x: originX + c * pitch,
               y: originY + r * pitch,
-              ch: letterAt(r, c),
+              ch: MONO_SEQ[c % MONO_SEQ.length],
               dim: true,
             });
           }

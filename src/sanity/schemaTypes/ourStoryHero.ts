@@ -3,11 +3,14 @@ import { defineField, defineType } from "sanity";
 /**
  * Our Story page — Hero section. Singleton.
  *
- * Editor controls:
- *   - Top line of the heading (plain weight, e.g. "Built by people who've been")
- *   - Highlighted italic line shown inside the cream pill (e.g. "where you are today.")
- *   - The pull-quote shown over the founders image
- *   - The founders photo itself
+ * The hero is a two-line heading over a subtitle, with a field of photographs
+ * drifting upward behind it.
+ *
+ * THE OLD PILL/QUOTE/FOUNDERS-PHOTO FIELDS ARE GONE. They belonged to an
+ * earlier design that this hero replaced, and the component had stopped
+ * rendering them — leaving them here only forced an editor to fill in a
+ * required quote and image that appear nowhere. Nothing had to be migrated:
+ * the singleton had never been created in the dataset.
  */
 export const ourStoryHero = defineType({
   name: "ourStoryHero",
@@ -16,47 +19,42 @@ export const ourStoryHero = defineType({
 
   fields: [
     defineField({
-      name: "headingFirst",
-      title: "Heading — first line",
-      description: 'Plain weight. e.g. "Built by people who\'ve been"',
+      name: "headingLineOne",
+      title: "Heading — line 1",
+      description: 'The first line of the big heading, e.g. "Being Founder".',
       type: "string",
       validation: (r) => r.required(),
     }),
     defineField({
-      name: "headingHighlight",
-      title: "Heading — italic highlighted line",
+      name: "headingLineTwo",
+      title: "Heading — line 2",
       description:
-        'Shown italic inside a cream pill. e.g. "where you are today."',
+        'The second line, e.g. "Takes Guts". Leave empty for a one-line heading.',
       type: "string",
-      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: "description",
+      title: "Subtitle",
+      description: "The sentence under the heading.",
+      type: "text",
+      rows: 3,
     }),
     defineField({
       name: "photos",
       title: "Drifting photos",
       description:
-        "The photographs that drift up behind the heading. ANY SHAPE — tall, wide or square; each one is shown at its own aspect ratio and is never cropped, so there is nothing to fit to. Add as many as you like: they are cycled to fill the field, so even a handful covers it. Leave empty to use the built-in set.",
+        "The photographs that drift up behind the heading. ANY SHAPE — tall, wide or square; each one is shown at its own aspect ratio and is never cropped, so there is nothing to fit to. Add as many as you like: they are spread across the field so a repeat never lands beside itself. Leave empty to use the built-in set.",
       type: "array",
       of: [{ type: "image", options: { hotspot: true } }],
       options: { layout: "grid" },
     }),
-    defineField({
-      name: "image",
-      title: "Founders image",
-      description:
-        "Photo shown below the heading with the quote overlaid. Use a high-resolution landscape image (recommended ≥1400×1200).",
-      type: "image",
-      options: { hotspot: true },
-      validation: (r) => r.required(),
-    }),
-    defineField({
-      name: "quote",
-      title: "Pull quote",
-      description: "Shown overlaid on the bottom of the founders image.",
-      type: "text",
-      rows: 3,
-      validation: (r) => r.required(),
-    }),
   ],
 
-  preview: { prepare: () => ({ title: "Our Story — Hero" }) },
+  preview: {
+    select: { title: "headingLineOne", subtitle: "headingLineTwo" },
+    prepare: ({ title, subtitle }) => ({
+      title: (title as string) || "Our Story — Hero",
+      subtitle: (subtitle as string) ?? "",
+    }),
+  },
 });

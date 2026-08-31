@@ -62,10 +62,9 @@ export const indicornSpotlightQuery = groq`
  */
 export const ourStoryHeroQuery = groq`
   *[_type == "ourStoryHero"][0]{
-    headingFirst,
-    headingHighlight,
-    quote,
-    "image": image.asset->url,
+    headingLineOne,
+    headingLineTwo,
+    description,
     "photos": photos[]{
       "url": asset->url,
       "aspect": asset->metadata.dimensions.aspectRatio
@@ -766,12 +765,23 @@ const BLOG_CARD_FIELDS = `
   author,
   readTime,
   category,
+  publishedAt,
+  placement,
   featured
 `;
 
+/**
+ * NEWEST FIRST, and UNDATED POSTS LAST.
+ *
+ * `order(publishedAt desc)` alone is not enough: GROQ sorts nulls to the FRONT
+ * of a descending order, so every post without a date jumped ahead of the
+ * dated ones — measured, the single dated post came out at the very bottom of
+ * the listing. Sorting on `defined(publishedAt)` first pushes the undated ones
+ * to the end, and the date then orders the rest.
+ */
 export const allBlogPostsQuery = groq`
   *[_type == "blogsPage"][0]{
-    "posts": posts[defined(slug.current)]{
+    "posts": posts[defined(slug.current)] | order(defined(publishedAt) desc, publishedAt desc){
       ${BLOG_CARD_FIELDS}
     }
   }.posts

@@ -1,7 +1,14 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useAnimationFrame,
+  useInView,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
 import {
   SECTION_HEADING_CLASS,
   SECTION_HEADING_STYLE,
@@ -16,13 +23,20 @@ import {
  * this is not the page's hero — using one here would make the closing band
  * shout louder than "A Central Hub For Founders" at the top.
  *
- * THE WALL is a fixed 12 x 3 grid on desktop, as designed. It steps down at
- * the breakpoints rather than reflowing freely, because a wall of portraits
- * only reads as a wall when the rows are full — an auto-fill grid leaves a
- * ragged last row at most widths, which reads as missing people.
+ * THE WALL IS THREE MARQUEES, not a static grid: row one travels left to
+ * right, row two right to left, row three left to right again. The counter-
+ * motion is what makes it read as a crowd rather than a sheet sliding past.
+ *
+ * The loop is BackedBefore's, deliberately — same `wrap`, same tripled pool,
+ * same per-frame advance — so the two never drift apart in feel. See the note
+ * on FaceMarquee for why the pool is tripled and measured rather than animated
+ * with a CSS keyframe.
  */
 
-const COLS = 12;
+/** Portraits per copy of a row. Enough that one copy is wider than any
+ *  viewport, which is the condition for the loop to be seamless — see
+ *  FaceMarquee. */
+const PER_ROW = 16;
 const ROWS = 3;
 
 /** Cycled to fill the wall until real portraits are wired up. */
@@ -42,6 +56,97 @@ export interface SixFiftyFoundersData {
 const FALLBACK_HEADING_TOP = "650+ Founders.";
 const FALLBACK_HEADING_BOTTOM = "One Extended Team";
 
+/** Square tiles, sized so ~12 fill a desktop row — the density the original
+ *  12-column wall had. */
+const TILE = "clamp(58px, min(7.4vw, 11vh), 104px)";
+const GAP = "clamp(6px, 0.8vw, 14px)";
+
+/** Row speeds in px/sec. Slightly different per row so the three never lock
+ *  into step and read as one moving block. */
+const ROW_SPEED = [46, 38, 52];
+/** +1 travels left to right, -1 right to left. */
+const ROW_DIRECTION = [1, -1, 1];
+
+const wrap = (min: number, max: number, v: number) => {
+  const rangeSize = max - min;
+  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+};
+
+/**
+ * ONE ROW.
+ *
+ * The pool handed in is THREE copies of the row, and the loop advances a plain
+ * x offset that is wrapped into `[-oneCopy, 0]` every frame. Because copy two
+ * is always sitting exactly where copy one was, the wrap is invisible and the
+ * strip never runs dry — that is the whole trick, and it is why the width of
+ * one copy is measured (`scrollWidth / 3`) rather than assumed.
+ *
+ * Driven per frame rather than by a CSS keyframe so the row can be paused when
+ * it scrolls out of view, and so the wrap point is exact at any tile size.
+ */
+function FaceMarquee({
+  faces,
+  direction,
+  speed,
+}: {
+  faces: string[];
+  direction: number;
+  speed: number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = useState(0);
+  const rawX = useMotionValue(0);
+  const inView = useInView(containerRef);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => setContentWidth(el.scrollWidth / 3);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [faces]);
+
+  useAnimationFrame((_, delta) => {
+    if (!inView || contentWidth === 0) return;
+    /* Capped: a backgrounded tab resumes with one huge delta, which would
+       throw the row a whole screen sideways in a single frame. */
+    const dt = Math.min(delta, 50) / 1000;
+    rawX.set(rawX.get() + direction * speed * dt);
+  });
+
+  const x = useTransform(rawX, (v) =>
+    contentWidth === 0 ? 0 : wrap(-contentWidth, 0, v)
+  );
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="flex w-max items-center"
+      style={{ gap: GAP, x, willChange: "transform" }}
+    >
+      {faces.map((src, i) => (
+        <div
+          key={i}
+          className="relative shrink-0 overflow-hidden bg-white"
+          style={{ width: TILE, aspectRatio: "1", borderRadius: "2px" }}
+        >
+          <Image
+            src={src}
+            alt=""
+            aria-hidden
+            fill
+            sizes="(max-width: 768px) 22vw, 104px"
+            className="object-cover object-center"
+            draggable={false}
+          />
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
 export default function SixFiftyFounders({
   data,
 }: {
@@ -51,7 +156,16 @@ export default function SixFiftyFounders({
   const headingBottom = data?.headingBottom || FALLBACK_HEADING_BOTTOM;
   const faces = data?.faces?.length ? data.faces : FALLBACK_FACES;
 
-  const tiles = Array.from({ length: COLS * ROWS }, (_, i) => faces[i % faces.length]);
+  /* Each row starts at a different point in the list, so the three do not
+     show the same face in the same column. Then tripled, which is what the
+     loop wraps against. */
+  const rows = Array.from({ length: ROWS }, (_, r) => {
+    const one = Array.from(
+      { length: PER_ROW },
+      (_, i) => faces[(i + r * 5) % faces.length]
+    );
+    return [...one, ...one, ...one];
+  });
 
   return (
     <section
@@ -90,48 +204,40 @@ export default function SixFiftyFounders({
           <br />
           {headingBottom}
         </motion.h2>
-
-        {/* THE WALL. One stagger across the whole grid rather than per row, so
-            the faces arrive as a spreading field instead of three sweeps. */}
-        <motion.div
-          className="grid w-full grid-cols-6 md:grid-cols-9 lg:grid-cols-12"
-          style={{ gap: "clamp(6px, 0.8vw, 14px)" }}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.022, delayChildren: 0.15 } },
-          }}
-        >
-          {tiles.map((src, i) => (
-            <motion.div
-              key={i}
-              className="relative w-full overflow-hidden bg-white"
-              /* Square tiles, per the design. aspect-ratio rather than a fixed
-                 height so every column stays square at every breakpoint. */
-              style={{ aspectRatio: "1", borderRadius: "2px" }}
-              variants={{
-                hidden: { opacity: 0, scale: 0.82 },
-                visible: {
-                  opacity: 1,
-                  scale: 1,
-                  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-                },
-              }}
-            >
-              <Image
-                src={src}
-                alt=""
-                aria-hidden
-                fill
-                sizes="(max-width: 768px) 16vw, (max-width: 1024px) 11vw, 8vw"
-                className="object-cover object-center"
-              />
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
+
+      {/* THE WALL — full bleed, so the rows run off both edges of the screen
+          rather than stopping at the content column. It sits OUTSIDE the
+          max-width wrapper above for that reason.
+
+          The mask fades each row out at the edges, so tiles arrive and leave
+          rather than popping at a hard boundary — the same treatment
+          BackedBefore's rows carry. */}
+      <motion.div
+        className="relative z-10 flex w-screen flex-col"
+        style={{
+          gap: GAP,
+          marginLeft: "calc(50% - 50vw)",
+          maskImage:
+            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+      >
+        {rows.map((row, r) => (
+          <div key={r} className="flex w-full overflow-hidden">
+            <FaceMarquee
+              faces={row}
+              direction={ROW_DIRECTION[r]}
+              speed={ROW_SPEED[r]}
+            />
+          </div>
+        ))}
+      </motion.div>
     </section>
   );
 }

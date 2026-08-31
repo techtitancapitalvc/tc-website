@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 /* ─────────────────────────────────────────────────────────
    Blogs listing — featured note + category/search filter bar +
@@ -61,6 +61,10 @@ export interface BlogPostCard {
   author?: string;
   readTime?: string;
   category?: string;
+  publishedAt?: string;
+  /** "left" | "right" | "none" — see the `placement` field in blogPost. */
+  placement?: string;
+  /** Superseded by `placement`; still read as a fallback. */
   featured?: boolean;
 }
 
@@ -345,20 +349,37 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
        renders as an empty shell while the team is still filling it in. */
     const all: Blog[] = posts?.length ? posts.map(toBlog) : FALLBACK_POSTS;
 
-    /* The first three FEATURED posts take the header block; if fewer than
-       three are flagged, the newest fill in behind them. Without that top-up
-       the header collapses the moment someone forgets the checkbox. */
-    const flagged = posts?.length
-      ? all.filter((_, i) => posts[i]?.featured)
-      : all.slice(0, 3);
-    /* ONE featured + FOUR beside it. The side column has to be taller than the
-       featured card for the sticky pin below to have anything to hold against
-       — with two it was shorter, so there was nothing to scroll past. */
-    const header = [...flagged, ...all.filter((b) => !flagged.includes(b))].slice(0, 5);
+    /* ── WHO SITS WHERE IN THE SPOTLIGHT ──
+       The editor now says it outright, per post: "left" takes the large card,
+       "right" joins the scrolling column. `featured` is still honoured for
+       posts written before that field existed — the first of them takes the
+       left, the rest fall to the right — so nothing has to be re-flagged for
+       the block to keep working.
+
+       EVERY SLOT IS THEN TOPPED UP from the remaining posts in date order, so
+       a half-set choice (or none at all) still fills the block rather than
+       collapsing it. */
+    const pick = (want: string) =>
+      posts?.length ? all.filter((_, i) => posts[i]?.placement === want) : [];
+    const legacy = posts?.length
+      ? all.filter((_, i) => posts[i]?.featured && !posts[i]?.placement)
+      : all.slice(0, 5);
+
+    const chosenLeft = pick("left")[0] ?? legacy[0];
+    const chosenRight = [
+      ...pick("right"),
+      ...legacy.filter((b) => b !== chosenLeft),
+    ];
+
+    const spoken = new Set([chosenLeft, ...chosenRight].filter(Boolean));
+    const rest = all.filter((b) => !spoken.has(b));
+
+    const left = chosenLeft ?? rest[0];
+    const side = [...chosenRight, ...rest.filter((b) => b !== left)].slice(0, 4);
 
     return {
-      FEATURED: header[0] ?? all[0],
-      FEATURED_SIDE: header.slice(1, 5),
+      FEATURED: left,
+      FEATURED_SIDE: side,
       /* EVERY post, including the three above. The grid used to get only the
          leftovers, so a site with three posts or fewer showed "No notes match
          your search" under the filter bar — and searching could never reach a
@@ -392,14 +413,33 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
 
   const rows = Math.max(1, Math.ceil(filtered.length / 3));
 
-  // Scroll-drawn dividers (same as FoundersStory grid).
+  /* ── THE GRID'S DIVIDERS, DRAWN ON ENTRANCE ──
+     They used to be bound to scroll position: `useScroll` on the grid, through
+     a transform and a spring, into `scaleX`. MEASURED ACROSS A FULL SCROLL
+     SWEEP, that value never left 1 — the rules were simply always drawn, and
+     nothing animated. Lenis owns scrolling on this site and moves the page
+     from its own loop, so the progress `useScroll` reports never advances.
+
+     `whileInView` is what every other divider here already uses, including the
+     one between the spotlight cards a few lines above, and it does not care
+     who is driving the scroll. Each line is staggered by its index so the grid
+     draws itself in rather than snapping on all at once. */
   const gridRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: gridRef,
-    offset: ["start end", "end start"],
+
+  /* ONE AXIS EACH. A horizontal rule is a 1px border on a zero-height box, so
+     animating its scaleY as well would squash the border itself — it would
+     thicken into place rather than extend. Each rule scales only along its own
+     length. */
+  const RULE_DRAW = (axis: "x" | "y", i: number) => ({
+    initial: axis === "x" ? { scaleX: 0 } : { scaleY: 0 },
+    whileInView: axis === "x" ? { scaleX: 1 } : { scaleY: 1 },
+    viewport: { once: true, amount: 0.2 } as const,
+    transition: {
+      duration: 1.1,
+      ease: [0.22, 1, 0.36, 1] as const,
+      delay: 0.12 + i * 0.09,
+    },
   });
-  const lineProgress = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
-  const ruleScale = useSpring(lineProgress, { stiffness: 40, damping: 25 });
 
   const hLineTops = Array.from({ length: rows - 1 }, (_, i) => i + 1).map(
     (k) =>
@@ -655,15 +695,19 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
               {/* Horizontal dividers between rows */}
               {hLineTops.map((top, idx) => (
                 <div key={`h-${idx}`}>
+                  {/* Each half draws OUTWARD from the centre line, so a row
+                      rule opens from the middle rather than sweeping across. */}
                   <motion.div
                     aria-hidden
                     className="pointer-events-none absolute max-md:!hidden z-20"
-                    style={{ top, left: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "left", scaleX: ruleScale }}
+                    style={{ top, left: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "right" }}
+                    {...RULE_DRAW("x", idx)}
                   />
                   <motion.div
                     aria-hidden
                     className="pointer-events-none absolute max-md:!hidden z-20"
-                    style={{ top, right: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "right", scaleX: ruleScale }}
+                    style={{ top, right: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "left" }}
+                    {...RULE_DRAW("x", idx)}
                   />
                 </div>
               ))}
@@ -674,7 +718,8 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
                   key={`v-${idx}`}
                   aria-hidden
                   className="pointer-events-none absolute max-md:!hidden z-20"
-                  style={{ top: "var(--bp)", left, width: 0, borderLeft: "1px solid #C9C2B4", height: "calc(100% - 2 * var(--bp))", transformOrigin: "top", scaleY: ruleScale }}
+                  style={{ top: "var(--bp)", left, width: 0, borderLeft: "1px solid #C9C2B4", height: "calc(100% - 2 * var(--bp))", transformOrigin: "top" }}
+                  {...RULE_DRAW("y", idx)}
                 />
               ))}
             </>
