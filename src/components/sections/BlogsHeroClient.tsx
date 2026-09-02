@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   motion,
   useMotionValue,
@@ -22,7 +23,7 @@ import {
 export interface BlogsHeroData {
   headingFirst?: string;
   headingSecond?: string;
-  subtitle?: string;
+  subtitle?: RichTextValue;
 }
 
 const FALLBACK_HEADING_FIRST = "Thinking From The";
@@ -390,15 +391,15 @@ export default function BlogsHeroClient({
             <RevealLine show={show} delay={0.5}>{headingSecond}</RevealLine>
           </h1>
 
-          <motion.p
+          <motion.div
             className={`font-normal mt-[clamp(16px,min(2.5vw,4vh),36px)] max-w-[800px] text-center text-white/90 ${HERO_BODY_CLASS}`}
             style={HERO_BODY_STYLE}
             initial={{ opacity: 0, y: 20 }}
             animate={show ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease: "easeOut", delay: 1.2 }}
           >
-            {subtitle}
-          </motion.p>
+            <RichText value={subtitle} />
+          </motion.div>
         </div>
       </div>
     </section>

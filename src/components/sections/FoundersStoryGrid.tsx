@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { storySlug, type FounderStoryCard } from "@/lib/founderStory";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import {
@@ -31,24 +32,14 @@ const CARD_COUNT = ROWS * 3; // 12
 const STORY_GAP = "calc(var(--section-px-wide) * 0.4)";
 const BORDER_PADDING = "calc(var(--section-px-wide) * 0.2)";
 
-/* Slug for each card's detail page — derived from the company name
-   (role after the comma, else the founder name). */
-function storySlug(story: FounderStory): string {
-  const role = story.role || "";
-  const company = role.includes(",") ? role.split(",").pop()!.trim() : story.name;
-  return company.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
 export interface FoundersStoryGridProps {
-  headingFirst: string;
-  headingSecond: string;
+  heading: string;
   ctaLabel: string;
-  slides: FounderStory[];
+  slides: FounderStoryCard[];
 }
 
 export default function FoundersStoryGrid({
-  headingFirst,
-  headingSecond,
+  heading,
   ctaLabel,
   slides,
 }: FoundersStoryGridProps) {
@@ -107,20 +98,21 @@ export default function FoundersStoryGrid({
             hidden: { opacity: 0, y: 40 },
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
           }}
-          className="flex flex-col items-center max-md:!mb-[clamp(32px,6dvh,48px)]"
+          /* LEFT-ALIGNED, matching the Featured Stories band above it. It was
+             centred, which read as a different section rather than the next
+             one down the same page. */
+          className="flex w-full flex-col items-start max-md:!mb-[clamp(32px,6dvh,48px)]"
           style={{ marginBottom: "min(3.47vw, 5.37vh)" }}
         >
+          {/* ONE HEADING, and the line breaks are the editor's. It used to be
+              two fields with the second welded onto its own line, so the
+              heading was always two lines whatever was typed. `whitespace-pre-line`
+              means one line stays one line and pressing Enter gives another. */}
           <h2
-   className={`m-0 text-center text-black ${SECTION_HEADING_CLASS}`}
-   style={{ ...SECTION_HEADING_STYLE, }}
-   >
-            {headingFirst}
-          </h2>
-          <h2
-            className={`m-0 text-center text-black ${SECTION_HEADING_CLASS}`}
-            style={{ ...SECTION_HEADING_STYLE, }}
+            className={`m-0 whitespace-pre-line text-left text-black ${SECTION_HEADING_CLASS}`}
+            style={SECTION_HEADING_STYLE}
           >
-            {headingSecond}
+            {heading}
           </h2>
         </motion.div>
 

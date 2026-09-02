@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLenis } from "lenis/react";
 import { RevealLine } from "./BackedEarlyClient";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   HERO_HEADING_DARK_CLASS,
   HERO_HEADING_DARK_STYLE,
@@ -22,7 +23,7 @@ export interface OurStoryHeroPhoto {
 export interface OurStoryHeroData {
   headingLineOne?: string;
   headingLineTwo?: string;
-  description?: string;
+  description?: RichTextValue;
   photos?: OurStoryHeroPhoto[];
 }
 
@@ -583,17 +584,24 @@ export default function OurStoryHeroClient({
           })}
         </h1>
 
-        <p
-          className={`font-normal m-0 max-w-[760px] text-[#1a1a1a] ${HERO_BODY_CLASS}`}
+        {/* The wrapper carries the entrance and the measure; RichText renders
+            the paragraph itself, so the same class and style land on it
+            whether the field is still a plain string or has been converted to
+            rich text. */}
+        <div
+          className="max-w-[760px]"
           style={{
-            ...HERO_BODY_STYLE,
             marginTop: "clamp(16px, min(2.5vw, 4vh), 36px)",
             opacity: 0,
             animation: "ourstory-rise 0.8s cubic-bezier(0.22,1,0.36,1) 0.46s forwards",
           }}
         >
-          {description}
-        </p>
+          <RichText
+            value={description}
+            className={`font-normal text-[#1a1a1a] ${HERO_BODY_CLASS}`}
+            style={HERO_BODY_STYLE}
+          />
+        </div>
       </div>
     </section>
   );

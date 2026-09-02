@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Link from "next/link";
 import Image from "next/image";
 import { createPortal } from "react-dom";
@@ -510,12 +511,12 @@ export default function TitanEcosystemPillarsClient({
                     }}
                   />
 
-                  <p
+                  <div
                     className={`m-0 font-normal text-white/70 ${HERO_BODY_CLASS}`}
                     style={HERO_BODY_STYLE}
                   >
-                    {part.description}
-                  </p>
+                    <RichText value={part.description} />
+                  </div>
 
                   {/* A QR on this part turns the button into a trigger; with
                       none it stays the link it has always been. Same styling

@@ -27,10 +27,11 @@ function companySlug(name: string): string {
 interface Company {
   brandName: string;
   year: string;
-  sector: string;
-  status: string;
-  tags: string;
-  investmentStage: string;
+  /* Multi-value: a company can be Exited AND IPO, Seed AND Series A. */
+  sector: string[];
+  status: string[];
+  tags: string[];
+  investmentStage: string[];
   logo: string;
   founderImage: string;
   isRecent: boolean;
@@ -214,7 +215,8 @@ function CompanyCard({ company }: { company: Company }) {
           className="absolute inset-0 flex items-center justify-center overflow-hidden bg-white [backface-visibility:hidden]"
           style={{ borderRadius: "2px" }}
         >
-          {company.tags && company.tags !== "Active" && (
+          {/* The badge shows the FIRST tag; the rest still drive filtering. */}
+          {company.tags[0] && company.tags[0] !== "Active" && (
             <div
               className="absolute left-0 z-20 flex items-center text-white"
               style={{
@@ -234,9 +236,9 @@ function CompanyCard({ company }: { company: Company }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {company.tags === "Recent Investment"
+              {company.tags[0] === "Recent Investment"
                 ? "Recent investment"
-                : company.tags}
+                : company.tags[0]}
             </div>
           )}
 
@@ -447,21 +449,19 @@ export default function PortfolioGrid() {
         const q = searchQuery.trim().toLowerCase();
         if (!c.brandName.toLowerCase().includes(q)) return false;
       }
-      if (
-        activeFilters.investmentStage.size > 0 &&
-        !activeFilters.investmentStage.has(c.investmentStage.replace(/^Pre\s+Seed$/i, "Pre-Seed"))
-      )
-        return false;
-      if (
-        activeFilters.sector.size > 0 &&
-        !activeFilters.sector.has(c.sector)
-      )
-        return false;
-      if (
-        activeFilters.status.size > 0 &&
-        !activeFilters.status.has(c.status)
-      )
-        return false;
+      /* A company MATCHES IF ANY OF ITS VALUES IS SELECTED. It used to hold
+         one value per filter and the test was a single `.has()`; now that a
+         company can carry several, "Exited" must still find a company that is
+         both Exited and IPO. `some` is what makes that true — an `every` here
+         would demand the company hold every ticked value at once, which is the
+         opposite of how a filter list reads. */
+      const matches = (key: FilterKey, values: string[]) =>
+        activeFilters[key].size === 0 ||
+        values.some((v) => activeFilters[key].has(v));
+
+      if (!matches("investmentStage", c.investmentStage.map((v) => v.replace(/^Pre\s+Seed$/i, "Pre-Seed")))) return false;
+      if (!matches("sector", c.sector)) return false;
+      if (!matches("status", c.status)) return false;
 
       return true;
     });

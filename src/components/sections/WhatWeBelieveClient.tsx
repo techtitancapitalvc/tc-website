@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   motion,
   useScroll,
@@ -638,12 +639,12 @@ function DesktopCardSlice({
           </div>
 
           <div className="flex justify-center">
-            <p
+            <div
               className={`font-normal text-center text-white/90 ${HERO_BODY_CLASS}`}
               style={HERO_BODY_STYLE}
             >
-              {belief.description}
-            </p>
+              <RichText value={belief.description} />
+            </div>
           </div>
         </div>
       </motion.div>
@@ -769,7 +770,7 @@ function MobileCardSlice({
           </div>
 
           <div className="flex justify-center w-full">
-            <p
+            <div
               className={`font-normal text-center text-white/90 ${HERO_BODY_CLASS}`}
               style={{
                 ...HERO_BODY_STYLE,
@@ -778,8 +779,8 @@ function MobileCardSlice({
                 lineHeight: "135%",
               }}
             >
-              {belief.description}
-            </p>
+              <RichText value={belief.description} />
+            </div>
           </div>
         </div>
       </motion.div>

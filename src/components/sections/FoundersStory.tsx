@@ -1,23 +1,25 @@
 /**
- * FoundersStory — server wrapper.
+ * FoundersStory — server wrapper for the grid on /foundersstory.
  *
- * Reuses the same "impactAtGlance" Sanity singleton as Impact At A Glance
- * (founder stories + stories heading + CTA label), then renders the 4-row
- * FoundersStoryGrid. Falls back to the shared FALLBACK_SLIDES if the fetch
- * returns nothing, so the grid is never empty.
+ * IT NO LONGER READS THE HOME PAGE'S SINGLETON. This used to fetch
+ * `impactAtGlanceQuery`, so /foundersstory and the home page shared one story
+ * list, one heading and one CTA label — editing either changed both. It now
+ * reads its own `foundersStoryGrid` document.
+ *
+ * The fallback is still the home page's FALLBACK_SLIDES: those are hard-coded
+ * demo cards, not content, so sharing them costs nothing and keeps the grid
+ * from rendering empty before the new document is filled in.
  */
 import { sanityFetch } from "@/sanity/lib/client";
-import { impactAtGlanceQuery } from "@/sanity/lib/queries";
-import {
-  FALLBACK_SLIDES,
-  type ImpactAtGlanceData,
-} from "./ImpactAtGlanceClient";
+import { foundersStoryGridQuery } from "@/sanity/lib/queries";
+import { FALLBACK_SLIDES } from "./ImpactAtGlanceClient";
 import FoundersStoryGrid from "./FoundersStoryGrid";
+import type { FoundersStoryGridData } from "@/lib/founderStory";
 
-async function getData(): Promise<ImpactAtGlanceData | null> {
+async function getData(): Promise<FoundersStoryGridData | null> {
   try {
-    return await sanityFetch<ImpactAtGlanceData | null>({
-      query: impactAtGlanceQuery,
+    return await sanityFetch<FoundersStoryGridData | null>({
+      query: foundersStoryGridQuery,
       revalidate: 60,
     });
   } catch (err) {
@@ -30,14 +32,11 @@ export default async function FoundersStory() {
   const data = await getData();
 
   const slides =
-    data?.founderStories && data.founderStories.length > 0
-      ? data.founderStories
-      : FALLBACK_SLIDES;
+    data?.stories && data.stories.length > 0 ? data.stories : FALLBACK_SLIDES;
 
   return (
     <FoundersStoryGrid
-      headingFirst={data?.storiesHeadingFirst || "Their Stories,"}
-      headingSecond={data?.storiesHeadingSecond || "Our Credentials"}
+      heading={data?.gridHeading || "Founder Stories"}
       ctaLabel={data?.ctaLabel || "See More"}
       slides={slides}
     />

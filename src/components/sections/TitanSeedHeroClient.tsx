@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   motion,
   useMotionValue,
@@ -16,7 +17,7 @@ import {
 export interface TitanSeedHeroData {
   headingFirst?: string;
   headingSecond?: string;
-  subtitle?: string;
+  subtitle?: RichTextValue;
 }
 
 const FALLBACK_HEADING_FIRST = "We Are Your";
@@ -387,15 +388,15 @@ export default function TitanSeedHeroClient({
             <RevealLine show={show} delay={0.5}>{headingSecond}</RevealLine>
           </h1>
 
-          <motion.p
+          <motion.div
             className="mt-[clamp(16px,min(2.5vw,4vh),36px)] max-w-[800px] font-['Poppins',_sans-serif] font-normal leading-[1.6] text-white/90 text-center"
             style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}
             initial={{ opacity: 0, y: 20 }}
             animate={show ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease: "easeOut", delay: 1.2 }}
           >
-            {subtitle}
-          </motion.p>
+            <RichText value={subtitle} />
+          </motion.div>
         </div>
       </div>
     </section>

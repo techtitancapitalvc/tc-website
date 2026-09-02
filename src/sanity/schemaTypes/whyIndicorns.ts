@@ -13,18 +13,18 @@ export const whyIndicorns = defineType({
   type: "document",
 
   fields: [
-    /* ─────────── Headings ─────────── */
+    /* ─────────── Heading ─────────── */
     defineField({
-      name: "headingTop",
-      title: "Heading — first line",
-      description: 'e.g. "Why We Created"',
-      type: "string",
-    }),
-    defineField({
-      name: "headingBottom",
-      title: "Heading — second line",
-      description: 'e.g. "The Indicorns?"',
-      type: "string",
+      name: "heading",
+      title: "Heading",
+      /* ONE FIELD, and the line breaks are yours. It used to be two fields
+         with a hard <br> welded between them, so the heading was always two
+         lines whatever was typed. Now what you write is what renders: one line
+         stays one line, and pressing Enter gives you a second. */
+      description:
+        'e.g. "Why We Created The Indicorns?". Press Enter for another line — line breaks are kept exactly as you type them.',
+      type: "text",
+      rows: 2,
     }),
 
     /* ─────────── Story block ─────────── */
@@ -88,8 +88,7 @@ export const whyIndicorns = defineType({
             defineField({
               name: "desc",
               title: "Description",
-              type: "text",
-              rows: 4,
+              type: "richText",
             }),
             defineField({
               name: "statNumber",

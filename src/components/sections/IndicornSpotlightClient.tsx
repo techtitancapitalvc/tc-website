@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -433,12 +434,12 @@ export default function IndicornSpotlightClient({
             className="relative z-10 flex flex-col justify-start max-md:!text-center max-md:!px-[16px]"
             style={{ paddingTop: "min(0.25vw, 0.4vh)" }} 
           >
-            <p
+            <div
               className={`font-normal m-0 ${HERO_BODY_CLASS}`}
               style={{ color: "#FFF", ...HERO_BODY_STYLE }}
             >
-              {quote}
-            </p>
+              <RichText value={quote} />
+            </div>
             <p
               className="m-0 mt-[min(1.62vw,2.51vh)] font-['Poppins',_sans-serif] max-md:!mt-[24px]"
               style={{ color: "rgba(255,255,255,0.85)", ...LABEL_STYLE, fontWeight: 400 }}

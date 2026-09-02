@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Image from "next/image";
 import {
   motion,
@@ -73,25 +74,6 @@ function cdnImageSrc(url: string, width: number): string {
   if (!url) return url;
   if (!url.startsWith("https://cdn.sanity.io/")) return url;
   return `${url}?w=${width}&auto=format&q=85`;
-}
-
-/* ─────────────────────────────────────────────────────────
-   Render bold spans inside a description string. Editors mark
-   bold with double asterisks: "We backed **Razorpay** early."
-   Output: a mix of text and <strong> spans.
-   ───────────────────────────────────────────────────────── */
-function renderDesc(desc: string): React.ReactNode[] {
-  const parts = desc.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className={BODY_BOLD_CLASS}>
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return <span key={i}>{part}</span>;
-  });
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -524,7 +506,7 @@ function BulletRow({
           >
             {bullet.title}
           </h3>
-          <p
+          <div
             className="m-0 font-['Poppins',_sans-serif] font-normal text-black/85"
             style={{
               fontSize: "clamp(14px, min(1.67vw, 2.44vh), 24px)",
@@ -532,8 +514,8 @@ function BulletRow({
               maxWidth: "669px",
             }}
           >
-            {renderDesc(bullet.desc)}
-          </p>
+            <RichText value={bullet.desc} />
+          </div>
         </div>
       </div>
 

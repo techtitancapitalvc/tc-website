@@ -436,6 +436,7 @@ export const impactAtGlanceQuery = groq`
       caption
     },
     founderStories[]{
+      storySlug,
       name,
       role,
       text,
@@ -905,8 +906,7 @@ export const indicornsHeroQuery = groq`
 /** Indicorns — "Why We Created" story + timeline carousel. Singleton. */
 export const whyIndicornsQuery = groq`
   *[_type == "whyIndicorns"][0]{
-    headingTop,
-    headingBottom,
+    heading,
     storyLabel,
     "storyImage": storyImage.asset->url,
     storyParagraphs,
@@ -956,6 +956,35 @@ export const indicornTestimonialsQuery = groq`
       name,
       role,
       "image": image.asset->url
+    }
+  }
+`;
+
+/**
+ * /foundersstory — the Featured Story band and the grid beneath it. Singleton.
+ *
+ * Its OWN document, deliberately: this page used to read `impactAtGlance`,
+ * the home page's singleton, so the two shared one story list and one set of
+ * headings. See foundersStoryGrid.ts.
+ */
+export const foundersStoryGridQuery = groq`
+  *[_type == "foundersStoryGrid"][0]{
+    heading,
+    browseLabel,
+    browseHref,
+    gridHeading,
+    ctaLabel,
+    stories[]{
+      featured,
+      name,
+      role,
+      storySlug,
+      "image": image.asset->url,
+      "logo": logo.asset->url,
+      logoScale,
+      logoOffsetY,
+      text,
+      tags
     }
   }
 `;

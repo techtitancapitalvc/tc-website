@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { richTextToPlain } from "./richText";
 
 /**
  * Titan Seed Fund page — "What We Look For" section.
@@ -47,12 +48,19 @@ export const whatWeLookFor = defineType({
             defineField({
               name: "desc",
               title: "Item description",
-              type: "text",
-              rows: 4,
+              type: "richText",
               validation: (r) => r.required(),
             }),
           ],
-          preview: { select: { title: "title", subtitle: "desc" } },
+          preview: {
+            select: { title: "title", _sub: "desc" },
+            /* The subtitle is rich text now, and a preview subtitle must be a
+               plain string — see richTextToPlain. */
+            prepare: ({ title, _sub }) => ({
+              title: (title as string) || "Untitled",
+              subtitle: richTextToPlain(_sub),
+            }),
+          },
         },
       ],
       validation: (r) =>

@@ -57,8 +57,7 @@ export const fifteenYears = defineType({
             defineField({
               name: "description",
               title: "Description (paragraph below)",
-              type: "text",
-              rows: 4,
+              type: "richText",
               validation: (r) => r.required(),
             }),
           ],

@@ -99,6 +99,14 @@ interface SanityCompany {
   founders?: { name: string; linkedin?: string }[];
 }
 
+/** `sector` and `investmentStage` are multi-value now; the detail page shows
+ *  them as one line, so several read as "FinTech, AI & SaaS". Still accepts a
+ *  bare string for rows saved before the change. */
+function joinList(v: unknown): string {
+  if (Array.isArray(v)) return v.filter(Boolean).join(", ");
+  return typeof v === "string" ? v : "";
+}
+
 function companySlug(name: string): string {
   return name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
@@ -126,11 +134,11 @@ async function getCompany(slug: string): Promise<CompanyDetail | null> {
     logo: match.logo || "",
     about: match.about || "",
     links,
-    areaOfFocus: match.sector || "",
+    areaOfFocus: joinList(match.sector),
     // Funding stage, not the calendar year — the year still shows in
     // Milestones as "Partnered <YYYY>". Falls back to year only if a company
     // has no stage set, so the row never renders blank under its label.
-    investedIn: match.investmentStage || match.year || "",
+    investedIn: joinList(match.investmentStage) || match.year || "",
     milestones: resolveMilestones(match),
     gallery: match.gallery || [],
     founders: (match.founders || []).map((f) => ({ name: f.name, linkedin: f.linkedin })),

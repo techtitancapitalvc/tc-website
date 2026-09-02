@@ -112,6 +112,13 @@ export const impactAtGlance = defineType({
               validation: (r) => r.required(),
             }),
             defineField({
+              name: "storySlug",
+              title: "Story slug (the internal page)",
+              description:
+                'Which founders story this card opens, e.g. "mamaearth" for /foundersstory/mamaearth. Leave empty to guess it from the company name in the role.',
+              type: "string",
+            }),
+            defineField({
               name: "image",
               title: "Card background photo",
               type: "image",

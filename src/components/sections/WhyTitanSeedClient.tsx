@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Image from "next/image";
 import { 
   motion, 
@@ -295,12 +296,12 @@ const FALLBACK_CARDS_DATA: WhyTitanSeedCard[] = [
                 </h3>
   
                 {/* Description */}
-                <p 
+                <div 
                   className="m-0 font-['Poppins',_sans-serif] font-normal text-[#323232]" 
                   style={{ fontSize: "clamp(16px, 1.5vw, 20px)", lineHeight: "150%" }}
                 >
-                  {card.desc}
-                </p>
+                  <RichText value={card.desc} />
+                </div>
               </motion.div>
             ))}
           </div>

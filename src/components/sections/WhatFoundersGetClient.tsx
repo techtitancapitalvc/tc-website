@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import { createPortal } from "react-dom";
 import {
   motion,
@@ -254,9 +255,9 @@ function MobileClosedRow({ row }: { row: HowWeShowUpRow }) {
         {row.shortHeading}
       </h4>
 
-      <p className={`font-normal m-0 mt-[8px] text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
-        {row.shortDesc}
-      </p>
+      <div className={`font-normal m-0 mt-[8px] text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
+        <RichText value={row.shortDesc} />
+      </div>
     </motion.div>
   );
 }
@@ -295,9 +296,9 @@ function ClosedRow({ row }: { row: HowWeShowUpRow }) {
         <h4 className={`m-0 text-black ${BODY_BOLD_CLASS}`} style={HERO_BODY_STYLE}>
           {row.shortHeading}
         </h4>
-        <p className={`font-normal m-0 text-[#0E0E0E] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
-          {row.shortDesc}
-        </p>
+        <div className={`font-normal m-0 text-[#0E0E0E] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
+          <RichText value={row.shortDesc} />
+        </div>
       </div>
 
       <div className="flex items-center justify-end self-center">
@@ -382,9 +383,9 @@ function OpenedRow({
               {row.longHeading}
             </h4>
 
-            <p className={`font-normal m-0 text-[#323232] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
-              {row.longDesc}
-            </p>
+            <div className={`font-normal m-0 text-[#323232] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
+              <RichText value={row.longDesc} />
+            </div>
 
             <motion.div
               initial={{ scaleX: 0 }}
@@ -467,9 +468,9 @@ function OpenedRow({
             {row.longHeading}
           </h4>
 
-          <p className={`font-normal m-0 mt-[12px] text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
-            {row.longDesc}
-          </p>
+          <div className={`font-normal m-0 mt-[12px] text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
+            <RichText value={row.longDesc} />
+          </div>
         </div>
 
         <motion.div

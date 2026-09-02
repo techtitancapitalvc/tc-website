@@ -25,25 +25,41 @@ export const portfolioGrid = defineType({
             /* ── Grid fields ── */
             defineField({ name: "brandName", title: "Brand Name", type: "string", validation: (r) => r.required() }),
             defineField({ name: "year", title: "Year (e.g. 2021-22)", type: "string" }),
+            /* ARRAYS, not single strings — a company can genuinely be more
+               than one thing at once (Exited AND IPO, say). With `options.list`
+               on an array field Sanity renders a checkbox list, so the editor
+               ticks every value that applies instead of being forced to pick
+               the single "most true" one. */
             defineField({
               name: "sector",
               title: "Sector",
-              type: "string",
+              description: "Tick every sector that applies.",
+              type: "array",
+              of: [{ type: "string" }],
               options: { list: asSanityList(SECTORS) },
             }),
             defineField({
               name: "status",
               title: "Status",
               description:
-                "Drives the Status filter on /portfolio. Only these two values exist — \"Active\" is no longer one of them.",
-              type: "string",
+                "Drives the Status filter on /portfolio. Tick every status that applies — a company can be both Exited and IPO.",
+              type: "array",
+              of: [{ type: "string" }],
               options: { list: asSanityList(STATUSES) },
             }),
-            defineField({ name: "tags", title: "Tags (e.g. Recent Investment, Unicorn)", type: "string" }),
+            defineField({
+              name: "tags",
+              title: "Tags (e.g. Recent Investment, Unicorn)",
+              description: "The badge on the card shows the first one.",
+              type: "array",
+              of: [{ type: "string" }],
+            }),
             defineField({
               name: "investmentStage",
               title: "Investment Stage",
-              type: "string",
+              description: "Tick every stage that applies.",
+              type: "array",
+              of: [{ type: "string" }],
               options: { list: asSanityList(STAGES) },
             }),
             defineField({ name: "fundType", title: "Fund Type", type: "string" }),
@@ -92,7 +108,20 @@ export const portfolioGrid = defineType({
             }),
           ],
           preview: {
-            select: { title: "brandName", subtitle: "sector", media: "logo" },
+            select: { title: "brandName", sector: "sector", media: "logo" },
+            /* `sector` IS AN ARRAY NOW, and a Studio preview subtitle has to be
+               a plain string — handed a list it throws "should be a string …
+               instead saw array". Selecting it under its own key and joining it
+               here keeps the list in the data and gives the preview the string
+               it needs. Still accepts a bare string for rows saved before the
+               field became multi-value. */
+            prepare: ({ title, sector, media }) => ({
+              title: (title as string) || "Untitled company",
+              subtitle: Array.isArray(sector)
+                ? sector.filter(Boolean).join(", ")
+                : ((sector as string) ?? ""),
+              media,
+            }),
           },
         },
       ],

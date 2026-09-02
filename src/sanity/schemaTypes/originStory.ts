@@ -57,8 +57,7 @@ export const originStory = defineType({
               title: "Description",
               description:
                 'Wrap any text in double asterisks to bold it. e.g. "We backed **Razorpay** early."',
-              type: "text",
-              rows: 4,
+              type: "richText",
               validation: (r) => r.required(),
             }),
             defineField({

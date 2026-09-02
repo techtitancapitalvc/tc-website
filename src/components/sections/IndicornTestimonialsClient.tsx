@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   animate,
   motion,
@@ -371,9 +372,9 @@ export default function IndicornTestimonialsClient({
             {headingTop} <br className="hidden md:block" />
             {headingBottom}
           </h2>
-          <p className={`font-normal m-0 text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
-            {description}
-          </p>
+          <div className={`font-normal m-0 text-[#1a1a1a] ${HERO_BODY_CLASS}`} style={HERO_BODY_STYLE}>
+            <RichText value={description} />
+          </div>
         </motion.div>
 
         {/* ── 3D CYLINDER CAROUSEL ── */}

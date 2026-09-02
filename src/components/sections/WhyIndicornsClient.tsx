@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BODY_BOLD_CLASS,
@@ -46,8 +47,7 @@ export interface WhyIndicornsTimelineEntry {
 }
 
 export interface WhyIndicornsData {
-  headingTop?: string;
-  headingBottom?: string;
+  heading?: string;
   storyLabel?: string;
   storyImage?: string;
   storyParagraphs?: string[];
@@ -55,8 +55,7 @@ export interface WhyIndicornsData {
   timeline?: WhyIndicornsTimelineEntry[];
 }
 
-const FALLBACK_HEADING_TOP = "Why We Created";
-const FALLBACK_HEADING_BOTTOM = "The Indicorns?";
+const FALLBACK_HEADING = "Why We Created The Indicorns?";
 const FALLBACK_STORY_LABEL = "September 2024";
 const FALLBACK_STORY_IMAGE = "/images/indicorns/techsparks-stage.jpeg";
 const FALLBACK_STORY_PARAGRAPHS = [
@@ -130,8 +129,7 @@ export default function WhyIndicorns({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const headingTop = data?.headingTop || FALLBACK_HEADING_TOP;
-  const headingBottom = data?.headingBottom || FALLBACK_HEADING_BOTTOM;
+  const heading = data?.heading || FALLBACK_HEADING;
   const storyLabel = data?.storyLabel || FALLBACK_STORY_LABEL;
   const storyImage = data?.storyImage || FALLBACK_STORY_IMAGE;
   const storyParagraphs =
@@ -268,16 +266,18 @@ export default function WhyIndicorns({
         {/* Heading */}
         <motion.h2
      variants={itemVariants}
-     className={`m-0 text-center font-semibold text-black max-md:!mb-[clamp(32px,6dvh,48px)] ${SECTION_HEADING_CLASS}`}
+     /* `whitespace-pre-line` is what makes the single field work: a newline
+        typed in Sanity renders as a line break, and one line stays one line.
+        Without it the text would reflow on width alone and the editor would
+        have no say at all. */
+     className={`m-0 whitespace-pre-line text-center font-semibold text-black max-md:!mb-[clamp(32px,6dvh,48px)] ${SECTION_HEADING_CLASS}`}
      style={{
       ...SECTION_HEADING_STYLE,
       // Heading → story block. Was min(5.79vw, 8.95vh) — 64px at 1280x720.
       marginBottom: "min(3.5vw, 5.4vh)",
      }}
     >
-          {headingTop}
-          <br />
-          {headingBottom}
+          {heading}
         </motion.h2>
 
         {/* ══════════ MOBILE (< md) ══════════
@@ -409,12 +409,12 @@ export default function WhyIndicorns({
                   {/* HERO_BODY_CLASS is deliberately not used: it carries a
                       `max-md:!text-[16.33px]`, and !important beats an inline
                       style, so the size below would be ignored on mobile. */}
-                  <p
+                  <div
                     className="m-0 font-normal leading-[1.6] text-[#4a4a4a]"
                     style={{ fontSize: CARD_META_FONT_SIZE_MOBILE }}
                   >
-                    {item.desc}
-                  </p>
+                    <RichText value={item.desc} />
+                  </div>
                 </div>
               );
             })}
@@ -728,7 +728,7 @@ export default function WhyIndicorns({
                     </div>
                   )}
 
-                  <p
+                  <div
                     className="font-normal m-0 relative z-20 leading-[1.6] text-[#4a4a4a]"
                     style={{
                       fontSize: CARD_META_FONT_SIZE,
@@ -743,8 +743,8 @@ export default function WhyIndicorns({
                       ...(item.statNumber ? null : { gridRow: "4 / -1" }),
                     }}
                   >
-                    {item.desc}
-                  </p>
+                    <RichText value={item.desc} />
+                  </div>
                 </motion.div>
               );
             })}

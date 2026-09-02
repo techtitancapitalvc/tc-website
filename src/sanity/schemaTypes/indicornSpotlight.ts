@@ -103,8 +103,7 @@ export const indicornSpotlight = defineType({
       name: "quote",
       title: "Pull quote",
       description: "The italic quote on the right side of the section.",
-      type: "text",
-      rows: 5,
+      type: "richText",
     }),
     defineField({
       name: "attribution",

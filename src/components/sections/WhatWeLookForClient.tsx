@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import { SECTION_HEADING_CLASS, SECTION_HEADING_STYLE } from "@/styles/heroTypography";
 
 /* ─────────────────────────────────────────────────────────
@@ -125,9 +126,9 @@ export default function WhatWeLookForClient({
         <h3 className="font-['Poppins',_sans-serif] text-left font-medium leading-[130%] text-[#0E0E0E] text-[clamp(20px,2vw,28px)]">
           {item.title}
         </h3>
-        <p className="font-['Poppins',_sans-serif] font-normal leading-[160%] text-[#323232] text-[clamp(15px,1.2vw,18px)]">
-          {item.desc}
-        </p>
+        <div className="font-['Poppins',_sans-serif] font-normal leading-[160%] text-[#323232] text-[clamp(15px,1.2vw,18px)]">
+          <RichText value={item.desc} />
+        </div>
       </div>
     </motion.div>
   );

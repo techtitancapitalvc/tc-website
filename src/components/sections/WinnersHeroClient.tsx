@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   motion,
   useMotionValue,
@@ -14,7 +15,7 @@ import {
 export interface WinnersHeroData {
   headingFirst?: string;
   headingSecond?: string;
-  subtitle?: string;
+  subtitle?: RichTextValue;
 }
 
 const FALLBACK_HEADING_FIRST = "Doubling Down On";
@@ -334,7 +335,7 @@ export default function WinnersHeroClient({
             <span>{headingSecond}</span>
           </motion.h1>
 
-          <motion.p
+          <motion.div
             className="mt-[clamp(16px,min(2.5vw,4vh),36px)] max-w-[800px] font-['Poppins',_sans-serif] font-normal leading-[1.6] text-white/90 text-center"
             style={{ fontSize: "clamp(14px, min(1.6vw, 2.35vh), 20px)" }}
             variants={{
@@ -346,8 +347,8 @@ export default function WinnersHeroClient({
               },
             }}
           >
-            {subtitle}
-          </motion.p>
+            <RichText value={subtitle} />
+          </motion.div>
         </motion.div>
       </div>
     </section>

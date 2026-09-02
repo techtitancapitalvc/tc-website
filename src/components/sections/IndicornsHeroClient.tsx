@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Image from "next/image";
 import { useLenis } from "lenis/react";
 import {
@@ -742,12 +743,12 @@ export default function IndicornsHeroClient({
               </FoldPanel>
 
               <FoldPanel openness={openness} order={2} bg={CARD_BG_LIGHT}>
-                <p
+                <div
                   className="m-0 font-['Poppins',_sans-serif] font-normal text-[#0E0E0E]"
                   style={BODY_TEXT_STYLE}
                 >
-                  {panelThreeIntro}
-                </p>
+                  <RichText value={panelThreeIntro} />
+                </div>
 
                 <ul
                   className="m-0 list-disc font-['Poppins',_sans-serif] font-normal text-[#0E0E0E]"

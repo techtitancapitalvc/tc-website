@@ -29,8 +29,7 @@ export const titanSeedHero = defineType({
     defineField({
       name: "subtitle",
       title: "Subtitle paragraph",
-      type: "text",
-      rows: 3,
+      type: "richText",
     }),
   ],
 

@@ -57,8 +57,7 @@ export const whatFoundersGet = defineType({
             defineField({
               name: "shortDesc",
               title: "Short description (closed state)",
-              type: "text",
-              rows: 3,
+              type: "richText",
               validation: (r) => r.required(),
             }),
             defineField({
@@ -71,8 +70,7 @@ export const whatFoundersGet = defineType({
             defineField({
               name: "longDesc",
               title: "Long description (opened state)",
-              type: "text",
-              rows: 5,
+              type: "richText",
               validation: (r) => r.required(),
             }),
             defineField({

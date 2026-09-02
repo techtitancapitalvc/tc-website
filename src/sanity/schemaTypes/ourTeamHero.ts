@@ -26,7 +26,7 @@ export const ourTeamHero = defineType({
     defineField({
       name: "description",
       title: "Description",
-      type: "text",
+      type: "richText",
     }),
     defineField({
       name: "members",

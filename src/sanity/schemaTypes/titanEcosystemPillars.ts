@@ -45,8 +45,7 @@ export const titanEcosystemPillars = defineType({
             defineField({
               name: "description",
               title: "Description",
-              type: "text",
-              rows: 5,
+              type: "richText",
             }),
             defineField({
               name: "visual",

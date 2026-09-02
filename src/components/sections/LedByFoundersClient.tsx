@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 
@@ -255,12 +256,12 @@ function SocialLink({
           />
   
           {/* Bio */}
-          <p
+          <div
             className={`m-0 whitespace-pre-line font-normal text-black/70 ${HERO_BODY_CLASS}`}
             style={{ ...HERO_BODY_STYLE, width: "100%", maxWidth: "100%" }}
           >
-            {founder.bio}
-          </p>
+            <RichText value={founder.bio} />
+          </div>
   
           {/* ── EDITORIAL LINK SIGNPOST ── */}
           <Link

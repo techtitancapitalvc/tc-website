@@ -27,8 +27,7 @@ export const blogsHero = defineType({
     defineField({
       name: "subtitle",
       title: "Subtitle",
-      type: "text",
-      rows: 4,
+      type: "richText",
     }),
   ],
 

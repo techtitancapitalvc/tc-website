@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import { motion, Variants } from "framer-motion";
 import {
   HERO_BODY_CLASS,
@@ -13,7 +14,7 @@ import {
 export interface BeyondTheChequeHeroData {
   headingFirst?: string;
   headingSecond?: string;
-  subtitle?: string;
+  subtitle?: RichTextValue;
 }
 
 const FALLBACK_HEADING_FIRST = "Capital Is The Stakes";
@@ -262,7 +263,7 @@ export default function BeyondTheChequeHeroClient({
         </motion.div>
 
         {/* ── SUBTITLE ── */}
-        <motion.p
+        <motion.div
           className={`font-normal mt-[clamp(16px,min(2.5vw,4vh),36px)] max-w-[600px] text-center text-[#323232] ${HERO_BODY_CLASS}`}
           style={HERO_BODY_STYLE}
           variants={{
@@ -270,8 +271,8 @@ export default function BeyondTheChequeHeroClient({
             visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.6 } }
           }}
         >
-          {subtitle}
-        </motion.p>
+          <RichText value={subtitle} />
+        </motion.div>
 
       </motion.div>
     </section>

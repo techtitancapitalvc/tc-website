@@ -10,10 +10,10 @@ import { SECTORS, STAGES, STATUSES } from "@/lib/portfolioFilters.mjs";
 interface SanityGridCompany {
   brandName: string;
   year: string | null;
-  sector: string | null;
-  status: string | null;
-  tags: string | null;
-  investmentStage: string | null;
+  sector: string | string[] | null;
+  status: string | string[] | null;
+  tags: string | string[] | null;
+  investmentStage: string | string[] | null;
   fundType: string | null;
   logo: string | null;
   founderImage: string | null;
@@ -27,10 +27,10 @@ interface SanityGridCompany {
 export interface PortfolioCompany {
   brandName: string;
   year: string;
-  sector: string;
-  status: string;
-  tags: string;
-  investmentStage: string;
+  sector: string[];
+  status: string[];
+  tags: string[];
+  investmentStage: string[];
   fundType: string;
   logo: string;
   founderImage: string;
@@ -56,6 +56,18 @@ function distinctValues(companies: SanityGridCompany[], key: keyof SanityGridCom
   return Array.from(set).sort();
 }
 
+/**
+ * These four fields are multi-value now — a company can be Exited AND IPO.
+ * Sanity still holds a bare string for any row saved before that change, so
+ * everything is normalised to an array HERE, once, and every consumer past
+ * this point can assume a list. Without it the grid would have to test the
+ * shape of every field at every use.
+ */
+function toList(v: string | string[] | null | undefined): string[] {
+  if (Array.isArray(v)) return v.filter(Boolean);
+  return v ? [v] : [];
+}
+
 export async function GET() {
   try {
     const result = await sanityFetch<{ companies: SanityGridCompany[] } | null>({
@@ -77,10 +89,10 @@ export async function GET() {
     const enriched: PortfolioCompany[] = companies.map((c) => ({
       brandName: c.brandName || "",
       year: c.year || "",
-      sector: c.sector || "",
-      status: c.status || "",
-      tags: c.tags || "",
-      investmentStage: c.investmentStage || "",
+      sector: toList(c.sector),
+      status: toList(c.status),
+      tags: toList(c.tags),
+      investmentStage: toList(c.investmentStage),
       fundType: c.fundType || "",
       logo: c.logo || "",
       founderImage: c.founderImage || "",

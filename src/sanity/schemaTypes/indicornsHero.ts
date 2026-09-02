@@ -51,8 +51,7 @@ export const indicornsHero = defineType({
       name: "panelThreeIntro",
       title: "Fold 3 — line above the criteria",
       description: 'e.g. "The answer became Indicorn — a company that is"',
-      type: "text",
-      rows: 2,
+      type: "richText",
     }),
     defineField({
       name: "criteria",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import FramedPhoto from "@/components/ui/FramedPhoto";
 import { motion } from "framer-motion";
 import {
@@ -367,13 +368,13 @@ export default function OurTeamHeroClient({
                 {line}
               </motion.h1>
             ))}
-            <motion.p
+            <motion.div
               className={`font-normal m-0 text-[#000] ${HERO_BODY_CLASS}`}
               style={{ ...HERO_BODY_STYLE, marginTop: "clamp(10px, 2.5vw, 16px)" }}
               variants={fadeUp(0.45)}
             >
-              {description}
-            </motion.p>
+              <RichText value={description} />
+            </motion.div>
           </motion.div>
 
           {/* Right cards — rows 2-4, cols 3-4 (cards 4-9) */}
@@ -457,7 +458,7 @@ export default function OurTeamHeroClient({
                 {line}
               </motion.h1>
             ))}
-            <motion.p
+            <motion.div
               className={`font-normal pointer-events-auto m-0 text-[#000] ${HERO_BODY_CLASS}`}
               style={{
                 ...HERO_BODY_STYLE,
@@ -466,8 +467,8 @@ export default function OurTeamHeroClient({
               }}
               variants={fadeUp(0.45)}
             >
-              {description}
-            </motion.p>
+              <RichText value={description} />
+            </motion.div>
           </motion.div>
 
           {/* Rows 2-3 cards (items 7-14) — 4 + 4 in cols 4-7 */}

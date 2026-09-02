@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { storySlug } from "@/lib/founderStory";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence, useScroll, useTransform, type MotionValue, useSpring } from "framer-motion";
 import GrainOverlay from "@/components/ui/GrainOverlay";
 import StoryArrow from "@/components/icons/StoryArrow";
@@ -644,8 +646,17 @@ function StoriesSection({
           style={{ padding: BORDER_PADDING, "--bp": BORDER_PADDING } as React.CSSProperties}
         >
           <div className="grid w-full grid-cols-3 max-md:!grid-cols-1 max-md:!gap-[24px]" style={{ gap: STORY_GAP }}>
+            {/* Each card opens that company's founders story. The slug rule is
+                the SAME one /foundersstory uses, so a card here and the card
+                there can never point at different pages. */}
             {padStories(slides, 6).map((story, i) => (
-              <StoryCard key={`${story.name}-${i}`} story={story} sizerTags={allTags} />
+              <Link
+                key={`${story.name}-${i}`}
+                href={`/foundersstory/${storySlug(story)}`}
+                className="block"
+              >
+                <StoryCard story={story} sizerTags={allTags} />
+              </Link>
             ))}
           </div>
 

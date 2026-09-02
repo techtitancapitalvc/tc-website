@@ -28,8 +28,7 @@ export const indicornTestimonials = defineType({
     defineField({
       name: "description",
       title: "Intro paragraph",
-      type: "text",
-      rows: 3,
+      type: "richText",
     }),
 
     defineField({

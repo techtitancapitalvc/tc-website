@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import Image from "next/image";
 import Link from "next/link";
 import { hasAppMounted } from "@/lib/appNavState";
@@ -476,7 +477,7 @@ export default function HeroClient({ data }: { data?: HeroData | null }) {
         </div>
 
         <div className="pointer-events-none absolute bottom-[8vh] left-1/2 z-10 -translate-x-1/2 max-md:!hidden">
-          <motion.p
+          <motion.div
             style={{ maxWidth: "min(60vw, 1000px)", ...HERO_BODY_STYLE }}
             className={`font-normal m-0 text-center text-white/90 ${HERO_BODY_CLASS}`}
             initial={false}
@@ -486,8 +487,8 @@ export default function HeroClient({ data }: { data?: HeroData | null }) {
             }}
             transition={TAIL_TRANSITION}
           >
-            {subtitle}
-          </motion.p>
+            <RichText value={subtitle} />
+          </motion.div>
         </div>
 
         <AnimatePresence>
@@ -635,15 +636,15 @@ export default function HeroClient({ data }: { data?: HeroData | null }) {
                 </Link>
                 <CursorFillButton href="/getinvestment" label="Get Investment" />
               </div>
-              <motion.p
+              <motion.div
                 className={`font-normal hidden max-md:!block mt-[clamp(24px,4dvh,40px)] w-[85vw] text-center text-white/90 ${HERO_BODY_CLASS}`}
                 style={HERO_BODY_STYLE}
                 initial={false}
                 animate={{ opacity: subtitleReady ? 1 : 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               >
-                {subtitle}
-              </motion.p>
+                <RichText value={subtitle} />
+              </motion.div>
             </motion.div>
             </div>
           </div>

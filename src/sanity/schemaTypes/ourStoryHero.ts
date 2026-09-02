@@ -35,9 +35,9 @@ export const ourStoryHero = defineType({
     defineField({
       name: "description",
       title: "Subtitle",
-      description: "The sentence under the heading.",
-      type: "text",
-      rows: 3,
+      description:
+        "The sentence under the heading. Select text to make it bold, italic or underlined, and use the style menu for a smaller size.",
+      type: "richText",
     }),
     defineField({
       name: "photos",

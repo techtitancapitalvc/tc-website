@@ -106,8 +106,7 @@ export const ledByFounders = defineType({
             defineField({
               name: "bio",
               title: "Bio",
-              type: "text",
-              rows: 6,
+              type: "richText",
               validation: (r) => r.required(),
             }),
             defineField({

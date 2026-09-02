@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import {
   AnimatePresence,
   motion,
@@ -490,7 +491,7 @@ export default function FifteenYearsClient({
                 >
                   {current.subtitle}
                 </h3>
-                <p
+                <div
                   className="m-0 font-['Poppins',_sans-serif] font-normal text-black/80"
                   style={{
                     fontSize: "clamp(12px, min(2.0vw, 3vh), 28px)",
@@ -498,8 +499,8 @@ export default function FifteenYearsClient({
                     maxWidth: "724px",
                   }}
                 >
-                  {current.description}
-                </p>
+                  <RichText value={current.description} />
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>

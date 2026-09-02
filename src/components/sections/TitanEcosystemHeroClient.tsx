@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import RichText, { type RichTextValue } from "@/components/ui/RichText";
 import { motion } from "framer-motion";
 import {
   HERO_HEADING_DARK_CLASS,
@@ -264,7 +265,7 @@ export default function TitanEcosystemHeroClient({
         </motion.div>
 
         {/* ── DESCRIPTION ── */}
-        <motion.p
+        <motion.div
           variants={rise}
           className={`m-0 font-normal text-[#0E0E0E] ${HERO_BODY_CLASS}`}
           style={{
@@ -275,8 +276,8 @@ export default function TitanEcosystemHeroClient({
             maxWidth: "min(1040px, 100%)",
           }}
         >
-          {description}
-        </motion.p>
+          <RichText value={description} />
+        </motion.div>
       </motion.div>
     </section>
   );
