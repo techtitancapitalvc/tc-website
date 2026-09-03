@@ -29,12 +29,11 @@ export interface FoundersStoryGridData {
 /**
  * Where a card links.
  *
- * AN EXPLICIT `storySlug` WINS. The slug used to be derived from the company
- * name in the role, which is a guess: right for "Mamaearth", wrong the moment
- * a role is worded differently or a story's slug does not match its company
- * name — and a wrong guess lands on the "not published yet" page rather than
- * failing visibly. The derived value stays as the fallback so nothing has to be
- * re-entered, but an editor can now say exactly which story a card opens.
+ * IT IS THE ENTRY'S OWN SLUG. Cards and articles are one document now, so a
+ * card cannot point anywhere but at its own story — the old guess (slugify the
+ * company out of the role) could land on a page that did not exist, and it is
+ * gone. The derivation survives only as a fallback for the hard-coded demo
+ * slides, which have no slug of their own.
  */
 export function storySlug(story: FounderStoryCard): string {
   if (story.storySlug?.trim()) {

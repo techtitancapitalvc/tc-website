@@ -1,17 +1,18 @@
 /**
  * FoundersStory — server wrapper for the grid on /foundersstory.
  *
- * IT NO LONGER READS THE HOME PAGE'S SINGLETON. This used to fetch
- * `impactAtGlanceQuery`, so /foundersstory and the home page shared one story
- * list, one heading and one CTA label — editing either changed both. It now
- * reads its own `foundersStoryGrid` document.
+ * ONE SOURCE. The cards come from `foundersStoryPage.stories[]` — the same
+ * entries that own the article pages — so a card links to its own story by its
+ * own slug and cannot point at a page that does not exist. This used to read
+ * the home page's `impactAtGlance` singleton, and then a separate
+ * `foundersStoryGrid` document; both are gone.
  *
  * The fallback is still the home page's FALLBACK_SLIDES: those are hard-coded
  * demo cards, not content, so sharing them costs nothing and keeps the grid
  * from rendering empty before the new document is filled in.
  */
 import { sanityFetch } from "@/sanity/lib/client";
-import { foundersStoryGridQuery } from "@/sanity/lib/queries";
+import { foundersStoryListingQuery } from "@/sanity/lib/queries";
 import { FALLBACK_SLIDES } from "./ImpactAtGlanceClient";
 import FoundersStoryGrid from "./FoundersStoryGrid";
 import type { FoundersStoryGridData } from "@/lib/founderStory";
@@ -19,7 +20,7 @@ import type { FoundersStoryGridData } from "@/lib/founderStory";
 async function getData(): Promise<FoundersStoryGridData | null> {
   try {
     return await sanityFetch<FoundersStoryGridData | null>({
-      query: foundersStoryGridQuery,
+      query: foundersStoryListingQuery,
       revalidate: 60,
     });
   } catch (err) {

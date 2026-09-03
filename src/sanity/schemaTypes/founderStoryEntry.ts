@@ -27,6 +27,7 @@ export const founderStoryEntry = defineType({
   groups: [
     { name: "header", title: "1 · Header" },
     { name: "story", title: "2 · Story" },
+    { name: "card", title: "3 · Listing card" },
   ],
 
   fields: [
@@ -99,6 +100,67 @@ export const founderStoryEntry = defineType({
       options: { hotspot: true },
       group: "header",
     }),
+    /* ─────────── 3. THE LISTING CARD ───────────
+       How this story appears on /foundersstory — in the grid, and in the
+       Featured band when it is the one ticked below. ONE ENTRY NOW OWNS BOTH:
+       the card and the article used to live in two different documents joined
+       only by a slug that was guessed from the company name, so a card could
+       quietly point at a story that did not exist. */
+    defineField({
+      name: "featured",
+      title: "Featured story",
+      description:
+        "Puts this story in the band at the top of /foundersstory. If several are ticked the first wins; if none is, the first story is used.",
+      type: "boolean",
+      initialValue: false,
+      group: "card",
+    }),
+    defineField({
+      name: "cardImage",
+      title: "Card photo",
+      description:
+        "The photo on the grid card AND in the Featured band — one image, so the two can never disagree. Leave empty to use the Hero image above.",
+      type: "image",
+      options: { hotspot: true },
+      group: "card",
+    }),
+    defineField({
+      name: "cardQuote",
+      title: "Card quote",
+      description: "The pull quote shown on the card and in the Featured band.",
+      type: "text",
+      rows: 3,
+      group: "card",
+    }),
+    defineField({
+      name: "founderRole",
+      title: "Founder role",
+      description: 'Shown under the name, e.g. "Co-Founders, Mamaearth".',
+      type: "string",
+      group: "card",
+    }),
+    defineField({
+      name: "logo",
+      title: "Company logo",
+      type: "image",
+      options: { hotspot: true },
+      group: "card",
+    }),
+    defineField({
+      name: "logoScale",
+      title: "Logo scale",
+      description: "1 is unscaled. The marks sit on a square canvas, so this sizes the wordmark inside it.",
+      type: "number",
+      group: "card",
+    }),
+    defineField({
+      name: "logoOffsetY",
+      title: "Logo nudge (vertical %)",
+      description: "Positive moves it down. Cancels out the differing transparent padding around each mark.",
+      type: "number",
+      group: "card",
+    }),
+
     /* ─────────── 2. THE STORY ─────────── */
     defineField({
       name: "blocks",

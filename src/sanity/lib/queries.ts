@@ -960,31 +960,42 @@ export const indicornTestimonialsQuery = groq`
   }
 `;
 
+
+
 /**
- * /foundersstory — the Featured Story band and the grid beneath it. Singleton.
+ * /foundersstory — the Featured band and the grid, from the SAME entries that
+ * own the article pages.
  *
- * Its OWN document, deliberately: this page used to read `impactAtGlance`,
- * the home page's singleton, so the two shared one story list and one set of
- * headings. See foundersStoryGrid.ts.
+ * ONE SOURCE, like blogsPage.posts and ourTeam's member arrays. The listing
+ * used to live in its own `foundersStoryGrid` document, joined to the articles
+ * only by a slug guessed from the company name — so a card could point at a
+ * story that did not exist, and the photo on the card and the photo in the
+ * Featured band were separate fields that could drift apart. Reading the cards
+ * off `foundersStoryPage.stories[]` makes both impossible: the link is the
+ * entry's own slug, and the photo is the entry's own image.
+ *
+ * `cardImage` falls back to `heroImage` so a story that has only ever had a
+ * hero still shows a card.
  */
-export const foundersStoryGridQuery = groq`
-  *[_type == "foundersStoryGrid"][0]{
+export const foundersStoryListingQuery = groq`
+  *[_type == "foundersStoryPage"][0]{
     heading,
     browseLabel,
     browseHref,
     gridHeading,
     ctaLabel,
-    stories[]{
+    "stories": stories[defined(slug.current)]{
       featured,
-      name,
-      role,
-      storySlug,
-      "image": image.asset->url,
+      company,
+      "slug": slug.current,
+      "name": coalesce(founders, company),
+      "role": coalesce(founderRole, headline),
+      "text": coalesce(cardQuote, headline),
+      tags,
+      "image": coalesce(cardImage.asset->url, heroImage.asset->url),
       "logo": logo.asset->url,
       logoScale,
-      logoOffsetY,
-      text,
-      tags
+      logoOffsetY
     }
   }
 `;

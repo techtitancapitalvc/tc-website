@@ -14,14 +14,14 @@
  * the card for one story can never point at different pages.
  */
 import { sanityFetch } from "@/sanity/lib/client";
-import { foundersStoryGridQuery } from "@/sanity/lib/queries";
+import { foundersStoryListingQuery } from "@/sanity/lib/queries";
 import FeaturedStories from "./FeaturedStories";
 import { storySlug, type FoundersStoryGridData } from "@/lib/founderStory";
 
 async function getData(): Promise<FoundersStoryGridData | null> {
   try {
     return await sanityFetch<FoundersStoryGridData | null>({
-      query: foundersStoryGridQuery,
+      query: foundersStoryListingQuery,
       revalidate: 60,
     });
   } catch (err) {

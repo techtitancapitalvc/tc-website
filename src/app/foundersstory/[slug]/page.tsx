@@ -17,7 +17,7 @@ import { sanityFetch } from "@/sanity/lib/client";
 import {
   founderStoryPageBySlugQuery,
   founderStoryPageSlugsQuery,
-  impactAtGlanceQuery,
+  foundersStoryListingQuery,
 } from "@/sanity/lib/queries";
 import { buildMetadata } from "@/sanity/lib/seo";
 
@@ -51,11 +51,13 @@ async function getStory(slug: string): Promise<FounderStoryPageData | null> {
 async function getExploreStories(exclude?: string): Promise<FounderStory[]> {
   let slides: FounderStory[] = FALLBACK_SLIDES;
   try {
-    const data = await sanityFetch<ImpactAtGlanceData | null>({
-      query: impactAtGlanceQuery,
+    /* The SAME entries the listing renders, not the home page's separate
+       story list — so "Explore" shows real stories that actually have pages. */
+    const data = await sanityFetch<{ stories?: FounderStory[] } | null>({
+      query: foundersStoryListingQuery,
       revalidate: 60,
     });
-    if (data?.founderStories?.length) slides = data.founderStories;
+    if (data?.stories?.length) slides = data.stories;
   } catch (err) {
     console.error("[founderStory] explore fetch failed, using fallback:", err);
   }

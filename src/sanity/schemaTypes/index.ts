@@ -27,7 +27,6 @@ import { fifteenYears } from "./fifteenYears";
 import { originStory } from "./originStory";
 import { ourStoryHero } from "./ourStoryHero";
 import { richText } from "./richText";
-import { foundersStoryGrid } from "./foundersStoryGrid";
 import { ourTeam } from "./ourTeam";
 import { ourTeamHero } from "./ourTeamHero";
 import { ledByFounders } from "./ledByFounders";
@@ -89,7 +88,6 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   /* Our Story page */
   ourStoryHero,
   richText,
-  foundersStoryGrid,
   originStory,
   fifteenYears,
   /* Titan Ecosystem page */

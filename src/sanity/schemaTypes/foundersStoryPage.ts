@@ -16,6 +16,40 @@ export const foundersStoryPage = defineType({
   type: "document",
 
   fields: [
+    /* ─────────── The /foundersstory listing ───────────
+       Headings for the Featured band and the grid beneath it. They sit here
+       rather than in a separate document so the whole page — its copy, its
+       cards and its articles — is one thing to edit. */
+    defineField({
+      name: "heading",
+      title: "Featured band — heading",
+      description: 'e.g. "Featured Stories"',
+      type: "string",
+    }),
+    defineField({
+      name: "browseLabel",
+      title: "Featured band — browse link label",
+      type: "string",
+    }),
+    defineField({
+      name: "browseHref",
+      title: "Featured band — browse link URL",
+      type: "string",
+    }),
+    defineField({
+      name: "gridHeading",
+      title: "Grid — heading",
+      description:
+        'e.g. "Founder Stories". Press Enter for another line — line breaks are kept as typed.',
+      type: "text",
+      rows: 2,
+    }),
+    defineField({
+      name: "ctaLabel",
+      title: "Grid — button label",
+      type: "string",
+    }),
+
     defineField({
       name: "stories",
       title: "Founder stories",
