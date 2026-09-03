@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 
 /* ─────────────────────────────────────────────────────────
    Blogs listing — featured note + category/search filter bar +
@@ -413,33 +413,29 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
 
   const rows = Math.max(1, Math.ceil(filtered.length / 3));
 
-  /* ── THE GRID'S DIVIDERS, DRAWN ON ENTRANCE ──
-     They used to be bound to scroll position: `useScroll` on the grid, through
-     a transform and a spring, into `scaleX`. MEASURED ACROSS A FULL SCROLL
-     SWEEP, that value never left 1 — the rules were simply always drawn, and
-     nothing animated. Lenis owns scrolling on this site and moves the page
-     from its own loop, so the progress `useScroll` reports never advances.
+  /* ── THE GRID'S DIVIDERS ──
+     SCROLL-LINKED, the same driver FoundersStoryGrid uses, so the two grids
+     behave identically: the rules grow as the grid comes into view, hold, and
+     shrink again as it leaves — and reverse when you scroll back up.
 
-     `whileInView` is what every other divider here already uses, including the
-     one between the spotlight cards a few lines above, and it does not care
-     who is driving the scroll. Each line is staggered by its index so the grid
-     draws itself in rather than snapping on all at once. */
-  const gridRef = useRef<HTMLDivElement>(null);
+     This replaced a one-shot `whileInView` draw. That did animate, but only
+     once and only forwards: it went 0 -> 1 the first time the grid appeared
+     and stayed at 1 forever, where the founders-story grid keeps tracking the
+     scroll. Measured across a sweep, founders-story ranged 0.05-0.81 and
+     reversed; blogs ended pinned at 1.
 
-  /* ONE AXIS EACH. A horizontal rule is a 1px border on a zero-height box, so
-     animating its scaleY as well would squash the border itself — it would
-     thicken into place rather than extend. Each rule scales only along its own
-     length. */
-  const RULE_DRAW = (axis: "x" | "y", i: number) => ({
-    initial: axis === "x" ? { scaleX: 0 } : { scaleY: 0 },
-    whileInView: axis === "x" ? { scaleX: 1 } : { scaleY: 1 },
-    viewport: { once: true, amount: 0.2 } as const,
-    transition: {
-      duration: 1.1,
-      ease: [0.22, 1, 0.36, 1] as const,
-      delay: 0.12 + i * 0.09,
-    },
+     The target is the SECTION, not the inner grid div. That matters: with the
+     inner div as the target the progress barely moved across the visible
+     range, which is what made the earlier scroll-driven version look frozen. */
+  const gridSectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: gridSectionRef,
+    offset: ["start end", "end start"],
   });
+  const lineProgress = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+  const ruleScale = useSpring(lineProgress, { stiffness: 40, damping: 25 });
+
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const hLineTops = Array.from({ length: rows - 1 }, (_, i) => i + 1).map(
     (k) =>
@@ -565,6 +561,7 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
         separate bands rather than one long field. The cards invert with it:
         beige on white here, white on beige there. */}
     <section
+      ref={gridSectionRef}
       className="relative w-full bg-white"
       style={{
         paddingTop: "var(--section-py)",
@@ -700,14 +697,12 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
                   <motion.div
                     aria-hidden
                     className="pointer-events-none absolute max-md:!hidden z-20"
-                    style={{ top, left: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "right" }}
-                    {...RULE_DRAW("x", idx)}
+                    style={{ top, left: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #000", transformOrigin: "right", scaleX: ruleScale }}
                   />
                   <motion.div
                     aria-hidden
                     className="pointer-events-none absolute max-md:!hidden z-20"
-                    style={{ top, right: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #C9C2B4", transformOrigin: "left" }}
-                    {...RULE_DRAW("x", idx)}
+                    style={{ top, right: "var(--bp)", width: "calc(50% - var(--bp))", height: 0, borderTop: "1px solid #000", transformOrigin: "left", scaleX: ruleScale }}
                   />
                 </div>
               ))}
@@ -718,8 +713,7 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
                   key={`v-${idx}`}
                   aria-hidden
                   className="pointer-events-none absolute max-md:!hidden z-20"
-                  style={{ top: "var(--bp)", left, width: 0, borderLeft: "1px solid #C9C2B4", height: "calc(100% - 2 * var(--bp))", transformOrigin: "top" }}
-                  {...RULE_DRAW("y", idx)}
+                  style={{ top: "var(--bp)", left, width: 0, borderLeft: "1px solid #000", height: "calc(100% - 2 * var(--bp))", transformOrigin: "top", scaleY: ruleScale }}
                 />
               ))}
             </>
