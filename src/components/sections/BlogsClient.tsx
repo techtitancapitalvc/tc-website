@@ -85,6 +85,23 @@ export function toBlog(p: BlogPostCard, i: number): Blog {
   };
 }
 
+/** ONE cover shape for every picture on this page — featured note, the cards
+ *  beside it and the grid below — so the page reads as a single set. The page
+ *  used to hold two: 16/10 up top and 16/11 in the grid. */
+const CARD_IMAGE_ASPECT = "16 / 11";
+
+/* ── Side-card geometry ──
+   The share of the card's width the picture takes. Antler's equivalent card
+   gives it 48%; ours needs more, because our copy carries a byline and a
+   button theirs does not, and a taller picture is what pays for them. */
+const SIDE_IMAGE_SHARE = 0.57;
+/* The CARD's own shape, derived from the two numbers above rather than typed
+   out — this is what removes the gap. Fix the card's ratio and its height no
+   longer depends on how long the copy runs: the picture fills its column
+   exactly, top to bottom, and the copy is centred in what is left. Changing
+   either constant above keeps this correct. */
+const SIDE_CARD_ASPECT = 16 / 11 / SIDE_IMAGE_SHARE;
+
 const STORY_GAP = "calc(var(--section-px-wide) * 0.4)";
 // No outer inset — the grid aligns to the same left/right gutter as the
 // featured card and the filter bar; only the internal dividers show.
@@ -185,14 +202,29 @@ function MetaLine({ blog, reserve }: { blog: Blog; reserve?: boolean }) {
 }
 
 /* ── Tag pills ── */
-function Tags({ tags, small }: { tags?: string[]; small?: boolean }) {
+function Tags({
+  tags,
+  small,
+  oneLine,
+}: {
+  tags?: string[];
+  small?: boolean;
+  /** One row, at most two pills — for the narrow side-card column. A third
+      pill does not fit there and was being sliced through the middle of its
+      own word, which reads as a bug rather than as a deliberate cut. */
+  oneLine?: boolean;
+}) {
   if (!tags?.length) return null;
+  const shown = oneLine ? tags.slice(0, 2) : tags;
   return (
-    <div className="flex flex-wrap" style={{ gap: small ? "6px" : "8px" }}>
-      {tags.map((t) => (
+    <div
+      className={oneLine ? "flex flex-nowrap overflow-hidden" : "flex flex-wrap"}
+      style={{ gap: small ? "6px" : "8px" }}
+    >
+      {shown.map((t) => (
         <span
           key={t}
-          className="inline-flex items-center whitespace-nowrap rounded-full font-['Poppins',_sans-serif] font-normal text-[#3d3d3d]"
+          className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full font-['Poppins',_sans-serif] font-normal text-[#3d3d3d]"
           style={{
             padding: small ? "5px 12px" : "7px 18px",
             fontSize: small
@@ -212,45 +244,77 @@ function Tags({ tags, small }: { tags?: string[]; small?: boolean }) {
 /* ── The two cards stacked beside the featured note.
       Image on the left, copy on the right — a landscape card, where the
       featured one is a portrait. Below md it drops to the same stacked shape
-      as the grid cards, because a 35% image column at phone width leaves the
+      as the grid cards, because a 44% image column at phone width leaves the
       copy in a gutter too narrow to read. ── */
 function SideCard({ blog }: { blog: Blog }) {
   return (
-    <div className="group flex w-full flex-col bg-white sm:flex-row">
+    <div
+      className="group flex w-full flex-col bg-white sm:min-h-0 sm:flex-row sm:[aspect-ratio:var(--side-card-ar)]"
+      style={{ "--side-card-ar": `${SIDE_CARD_ASPECT}` } as React.CSSProperties}
+    >
+      {/* THE PICTURE SETS THE CARD'S HEIGHT, and everything below follows from
+          that. It was the other way round — the image column was stretched to
+          whatever height the copy needed, so the picture had no shape of its
+          own; and once it was given a fixed ratio, the copy still ran taller
+          and left white space beneath it.
+
+          This is how the Antler cards are built: two near-equal columns, the
+          picture a plain rectangle, and the card's height taken from the
+          picture rather than the text. Here the ratio lives on the CARD, so
+          `h-full` + a 57% column IS 16/11 by construction — the picture fills
+          its column corner to corner and nothing can push the card taller. */}
       <div
-        className="relative w-full shrink-0 overflow-hidden max-sm:aspect-[16/10] sm:w-[38%] sm:self-stretch"
-        style={{ minHeight: "100%" }}
+        className="relative w-full shrink-0 self-start overflow-hidden sm:h-full sm:w-[57%] sm:self-auto"
+        style={{ aspectRatio: CARD_IMAGE_ASPECT }}
       >
         <Image
           src={blog.image}
           alt={blog.title}
           fill
-          sizes="(max-width: 640px) 100vw, 22vw"
+          sizes="(max-width: 640px) 100vw, 24vw"
           className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
         />
       </div>
+      {/* No VERTICAL padding from sm up: the copy is centred against the
+          picture's full height, and every pixel of it is needed. Horizontal
+          padding stays — text has to be held off the card's white edge. */}
       <div
-        className="flex flex-1 flex-col justify-center"
-        style={{
-          padding: "clamp(16px, 1.5vw, 26px)",
-          gap: "clamp(8px, 0.8vw, 12px)",
-        }}
+        className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden p-[clamp(16px,1.5vw,26px)] sm:h-full sm:px-[clamp(13px,1.15vw,20px)] sm:py-0"
+        style={{ gap: "clamp(4px, 0.4vw, 7px)" }}
       >
-        <Tags tags={blog.tags} small />
-        <MetaLine blog={blog} />
+        {/* Tags, headline, description — no byline. The read time and category
+            belong to the featured note and the grid cards; in a column this
+            narrow they wrapped to two lines and crowded out the copy.
+            One row of pills, and any that do not fit are cut rather than
+            stacking three-high. */}
+        <Tags tags={blog.tags} small oneLine />
+        {/* Clamped, because in a column this narrow a long headline would
+            otherwise run to five lines and burst the card. */}
         <h3
-          className="m-0 font-['Poppins',_sans-serif] font-semibold text-[#0E0E0E]"
-          style={{ fontSize: "clamp(17px, 1.45vw, 23px)", lineHeight: "132%" }}
+          className="m-0 overflow-hidden font-['Poppins',_sans-serif] font-semibold text-[#0E0E0E]"
+          style={{
+            fontSize: "clamp(17px, 1.45vw, 23px)",
+            lineHeight: "132%",
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 3,
+          }}
         >
           {blog.title}
         </h3>
         <p
-          className="m-0 font-['Poppins',_sans-serif] font-normal text-[#4a4a4a]"
-          style={{ fontSize: "clamp(12px, 1vw, 14px)", lineHeight: "158%" }}
+          className="m-0 overflow-hidden font-['Poppins',_sans-serif] font-normal text-[#4a4a4a]"
+          style={{
+            fontSize: "clamp(12px, 1vw, 14px)",
+            lineHeight: "158%",
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 2,
+          }}
         >
           {blog.excerpt}
         </p>
-        <div style={{ marginTop: "clamp(4px, 0.5vw, 8px)" }}>
+        <div>
           <NavyPill label="Read Note" href={blog.href} small />
         </div>
       </div>
@@ -272,7 +336,7 @@ export function BlogCard({
 }) {
   return (
     <div className="group flex h-full w-full flex-col" style={{ background: surface }}>
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 11" }}>
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: CARD_IMAGE_ASPECT }}>
         <Image
           src={blog.image}
           alt={blog.title}
@@ -483,7 +547,7 @@ export default function BlogsClient({ posts }: { posts?: BlogPostCard[] | null }
           <div className="flex w-full flex-col overflow-hidden bg-white lg:sticky lg:top-[calc(var(--nav-height,80px)+clamp(16px,2vw,32px))]">
             <div
               className="group relative w-full overflow-hidden"
-              style={{ aspectRatio: "16 / 10" }}
+              style={{ aspectRatio: CARD_IMAGE_ASPECT }}
             >
               <Image
                 src={FEATURED.image}
