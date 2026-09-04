@@ -48,13 +48,15 @@ const FALLBACK_FACES = [
 ];
 
 export interface SixFiftyFoundersData {
-  headingTop?: string;
-  headingBottom?: string;
+  heading?: string;
   faces?: string[];
 }
 
-const FALLBACK_HEADING_TOP = "650+ Founders.";
-const FALLBACK_HEADING_BOTTOM = "One Extended Team";
+/* ONE FIELD. It was two, joined by a hard <br> — and they rendered with no
+   space between them, so the page read "650+ Founders.One Extended Team".
+   `whitespace-pre-line` on the heading means the editor's own line breaks are
+   what show. */
+const FALLBACK_HEADING = "650+ Founders.\nOne Extended Team";
 
 /** Square tiles, sized so ~12 fill a desktop row — the density the original
  *  12-column wall had. */
@@ -152,8 +154,7 @@ export default function SixFiftyFounders({
 }: {
   data?: SixFiftyFoundersData | null;
 }) {
-  const headingTop = data?.headingTop || FALLBACK_HEADING_TOP;
-  const headingBottom = data?.headingBottom || FALLBACK_HEADING_BOTTOM;
+  const heading = data?.heading || FALLBACK_HEADING;
   const faces = data?.faces?.length ? data.faces : FALLBACK_FACES;
 
   /* Each row starts at a different point in the list, so the three do not
@@ -190,7 +191,7 @@ export default function SixFiftyFounders({
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col items-center">
         <motion.h2
-          className={`m-0 text-center font-semibold text-white ${SECTION_HEADING_CLASS}`}
+          className={`m-0 whitespace-pre-line text-center font-semibold text-white ${SECTION_HEADING_CLASS}`}
           style={{
             ...SECTION_HEADING_STYLE,
             marginBottom: "clamp(28px, min(3.4vw, 5vh), 60px)",
@@ -200,9 +201,7 @@ export default function SixFiftyFounders({
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          {headingTop}
-          <br />
-          {headingBottom}
+          {heading}
         </motion.h2>
       </div>
 

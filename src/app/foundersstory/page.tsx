@@ -2,7 +2,7 @@ import Footer from "@/components/sections/Footer";
 import FoundersStoryHero from "@/components/sections/FoundersStoryHero";
 import FoundersStory from "@/components/sections/FoundersStory";
 import FeaturedStory from "@/components/sections/FeaturedStory";
-import SixFiftyFounders from "@/components/sections/SixFiftyFounders";
+import SixFiftyFoundersSection from "@/components/sections/SixFiftyFoundersSection";
 import JoinPortfolio from "@/components/sections/JoinPortfolio";
 import { buildMetadata } from "@/sanity/lib/seo";
 
@@ -16,7 +16,7 @@ export default function FoundersStoryPage() {
       <FoundersStoryHero />
       <FeaturedStory />
       <FoundersStory />
-      <SixFiftyFounders />
+      <SixFiftyFoundersSection />
       <Footer />
     </main>
   );

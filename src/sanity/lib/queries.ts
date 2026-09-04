@@ -999,3 +999,11 @@ export const foundersStoryListingQuery = groq`
     }
   }
 `;
+
+/** /foundersstory — the closing "650+ Founders" band. Singleton. */
+export const sixFiftyFoundersQuery = groq`
+  *[_type == "sixFiftyFounders"][0]{
+    heading,
+    "faces": faces[].asset->url
+  }
+`;

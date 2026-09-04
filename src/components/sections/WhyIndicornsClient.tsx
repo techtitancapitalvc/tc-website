@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import RichText, { type RichTextValue } from "@/components/ui/RichText";
+import RichText, { hasRichText, type RichTextValue } from "@/components/ui/RichText";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BODY_BOLD_CLASS,
@@ -50,24 +50,20 @@ export interface WhyIndicornsData {
   heading?: string;
   storyLabel?: string;
   storyImage?: string;
-  storyParagraphs?: string[];
-  storyParagraphsMobile?: string[];
+  storyParagraphs?: RichTextValue;
+  storyParagraphsMobile?: RichTextValue;
   timeline?: WhyIndicornsTimelineEntry[];
 }
 
 const FALLBACK_HEADING = "Why We Created The Indicorns?";
 const FALLBACK_STORY_LABEL = "September 2024";
 const FALLBACK_STORY_IMAGE = "/images/indicorns/techsparks-stage.jpeg";
-const FALLBACK_STORY_PARAGRAPHS = [
-  "On the main stage of YourStory's TechSparks India's largest startup summit - Kunal Bahl introduced one word to the ecosystem: Indicorn.",
-  "It wasn't just a new word. It was a challenge to change how India defines, celebrates, and aspires toward success measured in revenue and profit, not a valuation set in someone else's currency.",
-];
+const FALLBACK_STORY_PARAGRAPHS =
+  "On the main stage of YourStory's TechSparks India's largest startup summit - Kunal Bahl introduced one word to the ecosystem: Indicorn.\n\nIt wasn't just a new word. It was a challenge to change how India defines, celebrates, and aspires toward success measured in revenue and profit, not a valuation set in someone else's currency.";
 /* Mobile copy is deliberately worded differently from desktop — kept as its
    own field rather than silently unified. */
-const FALLBACK_STORY_PARAGRAPHS_MOBILE = [
-  "On the main stage at TechSparks, India's largest startup summit, Kunal Bahl introduced a word the ecosystem didn't have: Indicorn.",
-  "The businesses it described had been building quietly for years: profitable, growing, and largely unfunded. They had every marker of success except one: recognition. A month later, Titan Capital published the first list.",
-];
+const FALLBACK_STORY_PARAGRAPHS_MOBILE =
+  "On the main stage at TechSparks, India's largest startup summit, Kunal Bahl introduced a word the ecosystem didn't have: Indicorn.\n\nThe businesses it described had been building quietly for years: profitable, growing, and largely unfunded. They had every marker of success except one: recognition. A month later, Titan Capital published the first list.";
 
 /* Mirrors the live CMS entries. Each card carries ONE description: the
    `statSub` field is deliberately unused here, because a caption under the
@@ -132,19 +128,17 @@ export default function WhyIndicorns({
   const heading = data?.heading || FALLBACK_HEADING;
   const storyLabel = data?.storyLabel || FALLBACK_STORY_LABEL;
   const storyImage = data?.storyImage || FALLBACK_STORY_IMAGE;
-  const storyParagraphs =
-    data?.storyParagraphs && data.storyParagraphs.length > 0
-      ? data.storyParagraphs
-      : FALLBACK_STORY_PARAGRAPHS;
+  const storyParagraphs = hasRichText(data?.storyParagraphs)
+    ? data!.storyParagraphs
+    : FALLBACK_STORY_PARAGRAPHS;
   /* Mobile falls back to its own copy first, then to the desktop copy — so an
      editor who fills in only the desktop paragraphs still gets something
      sensible on a phone. */
-  const storyParagraphsMobile =
-    data?.storyParagraphsMobile && data.storyParagraphsMobile.length > 0
-      ? data.storyParagraphsMobile
-      : data?.storyParagraphs && data.storyParagraphs.length > 0
-        ? data.storyParagraphs
-        : FALLBACK_STORY_PARAGRAPHS_MOBILE;
+  const storyParagraphsMobile = hasRichText(data?.storyParagraphsMobile)
+    ? data!.storyParagraphsMobile
+    : hasRichText(data?.storyParagraphs)
+      ? data!.storyParagraphs
+      : FALLBACK_STORY_PARAGRAPHS_MOBILE;
   const timelineData =
     data?.timeline && data.timeline.length > 0 ? data.timeline : FALLBACK_TIMELINE;
 
@@ -443,15 +437,15 @@ export default function WhyIndicorns({
             <h3 className={`font-medium m-0 mb-[clamp(16px,4vw,24px)] text-black ${SUBHEADING_CLASS}`}>
               {storyLabel}
             </h3>
-            {storyParagraphsMobile.map((para, i) => (
-              <p
-                key={`m-para-${i}`}
-                className={`font-normal m-0 text-[#1a1a1a] ${HERO_BODY_CLASS}`}
-                style={{ ...HERO_BODY_STYLE, marginTop: i === 0 ? 0 : "1.4em" }}
-              >
-                {para}
-              </p>
-            ))}
+            {/* One field, many paragraphs — the spacing between them lives in
+                the CSS below rather than in a per-item margin. */}
+            <div className="[&>p+p]:mt-[1.4em]">
+              <RichText
+                value={storyParagraphsMobile}
+                className={`font-normal text-[#1a1a1a] ${HERO_BODY_CLASS}`}
+                style={HERO_BODY_STYLE}
+              />
+            </div>
             <img
               src={storyImage}
               alt="Kunal Bahl introducing the term Indicorn at TechSparks"
@@ -503,18 +497,13 @@ export default function WhyIndicorns({
             {/* Separate paragraphs with a measured gap rather than <br /><br />,
                 which spent a whole blank line-height (~26px at 720) on the
                 break. */}
-            {storyParagraphs.map((para, i) => (
-              <p
-                key={`para-${i}`}
-                className={`font-normal m-0 text-[#1a1a1a] ${HERO_BODY_CLASS}`}
-                style={{
-                  ...HERO_BODY_STYLE,
-                  marginTop: i === 0 ? 0 : "clamp(14px, 2vh, 26px)",
-                }}
-              >
-                {para}
-              </p>
-            ))}
+            <div className="[&>p+p]:mt-[clamp(14px,2vh,26px)]">
+              <RichText
+                value={storyParagraphs}
+                className={`font-normal text-[#1a1a1a] ${HERO_BODY_CLASS}`}
+                style={HERO_BODY_STYLE}
+              />
+            </div>
           </div>
         </motion.div>
 

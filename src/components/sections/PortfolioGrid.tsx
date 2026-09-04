@@ -63,7 +63,7 @@ let cachedResponse: APIResponse | null = null;
 
 const FILTER_CONFIG = [
   { key: "sector" as const, label: "Sector" },
-  { key: "investmentStage" as const, label: "Stage" },
+  { key: "investmentStage" as const, label: "Investment Stage" },
   { key: "status" as const, label: "Status" },
 ];
 
@@ -409,6 +409,35 @@ export default function PortfolioGrid() {
     });
   }, [loading, lenis]);
 
+  /* FILTERING MUST NOT THROW YOU DOWN THE PAGE.
+     Narrowing to a few companies makes the document much shorter. The browser
+     keeps the scroll offset it can — it clamps to the new maximum — so a
+     reader part way down the grid was left at the bottom of the document,
+     looking at the Join Portfolio band, with the grid they had just filtered
+     somewhere above them.
+
+     After each filter change this checks whether the section has been left
+     behind and, if so, brings it back. It corrects only when the grid has
+     actually gone out of view, so an ordinary filter click from the top of the
+     list does not move the page at all. */
+  const correctScroll = useCallback(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect();
+        const stillVisible = rect.bottom > window.innerHeight * 0.5;
+        if (stillVisible) return;
+        const nav =
+          parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue("--nav-height")
+          ) || 80;
+        if (lenis) lenis.scrollTo(el, { offset: -nav - 20 });
+        else window.scrollTo({ top: el.offsetTop - nav - 20 });
+      });
+    });
+  }, [lenis]);
+
   const toggleFilter = useCallback((key: FilterKey, value: string) => {
     setActiveFilters((prev) => {
       const next = { ...prev };
@@ -418,7 +447,8 @@ export default function PortfolioGrid() {
       next[key] = set;
       return next;
     });
-  }, []);
+    correctScroll();
+  }, [correctScroll]);
 
   const clearAll = useCallback(() => {
     setSearchQuery("");
@@ -428,7 +458,8 @@ export default function PortfolioGrid() {
       year: new Set(),
       status: new Set(),
     });
-  }, []);
+    correctScroll();
+  }, [correctScroll]);
 
   /* Straight passthrough now. The API serves the canonical lists already in
      the right order, so the old normalise / inject-"Series B" / STAGE_ORDER
@@ -475,6 +506,18 @@ export default function PortfolioGrid() {
   }, [data, searchQuery, activeFilters]);
 
   const rowsCount = Math.ceil(filteredCompanies.length / 3);
+
+  /* HOW FAR EACH COLUMN DIVIDER REACHES.
+     The three vertical rules used to span `top-0 bottom-0` — the whole grid —
+     which is only right when the last row is full. With four companies the
+     last row holds one card, yet the rules ran the full height and drew a
+     border down two empty cells.
+     Column `c` holds a card on ceil((n - c) / 3) rows, so a divider is given
+     that share of the grid's height and stops with the content beside it. */
+  const rowsInColumn = (c: number) =>
+    Math.max(0, Math.ceil((filteredCompanies.length - c) / 3));
+  const columnHeight = (c: number) =>
+    rowsCount === 0 ? "0%" : `${(rowsInColumn(c) / rowsCount) * 100}%`;
 
   return (
     <section
@@ -596,8 +639,8 @@ export default function PortfolioGrid() {
                 
                 {/* ── MAIN SEPARATOR LINE (Starts at grid level, always shows for col 1) ── */}
                 <motion.div
-                  className="hidden lg:block absolute left-0 top-0 bottom-0 w-[1px] bg-[#000]/15"
-                  style={{ transformOrigin: "top" }}
+                  className="hidden lg:block absolute left-0 top-0 w-[1px] bg-[#000]/15"
+                  style={{ transformOrigin: "top", height: columnHeight(0) }}
                   initial={{ scaleY: 0 }}
                   whileInView={{ scaleY: 1 }}
                   viewport={{ once: true }}
@@ -607,8 +650,8 @@ export default function PortfolioGrid() {
                 {/* Vertical Grid Divider 1: Only show if there is an item in column 2 */}
                 {filteredCompanies.length > 1 && (
                   <motion.div
-                    className="absolute left-[33.333%] top-0 bottom-0 w-[1px] bg-[#000]/15"
-                    style={{ transformOrigin: "top" }}
+                    className="absolute left-[33.333%] top-0 w-[1px] bg-[#000]/15"
+                    style={{ transformOrigin: "top", height: columnHeight(1) }}
                     initial={{ scaleY: 0 }}
                     whileInView={{ scaleY: 1 }}
                     viewport={{ once: true }}
@@ -619,8 +662,8 @@ export default function PortfolioGrid() {
                 {/* Vertical Grid Divider 2: Only show if there is an item in column 3 */}
                 {filteredCompanies.length > 2 && (
                   <motion.div
-                    className="absolute left-[66.666%] top-0 bottom-0 w-[1px] bg-[#000]/15"
-                    style={{ transformOrigin: "top" }}
+                    className="absolute left-[66.666%] top-0 w-[1px] bg-[#000]/15"
+                    style={{ transformOrigin: "top", height: columnHeight(2) }}
                     initial={{ scaleY: 0 }}
                     whileInView={{ scaleY: 1 }}
                     viewport={{ once: true }}
@@ -631,7 +674,13 @@ export default function PortfolioGrid() {
                 {/* Grid Cells with Independent Animating Horizontal Dividers */}
                 {filteredCompanies.map((company, i) => {
                   const rowIndex = Math.floor(i / 3);
-                  const isLastRow = rowIndex === rowsCount - 1;
+                  /* A rule under a card is the border BETWEEN it and the card
+                     below it, so it is drawn only when that card exists. The
+                     old test was "not on the last row", which is a different
+                     thing: with four companies the last row holds one card, so
+                     the two cards beside it were not on the last row and each
+                     drew a rule under empty space. */
+                  const hasCardBelow = i + 3 < filteredCompanies.length;
 
                   return (
                     <div
@@ -641,7 +690,7 @@ export default function PortfolioGrid() {
                       <CompanyCard company={company} />
 
                       {/* Separate Horizontal Line for each column cell */}
-                      {!isLastRow && (
+                      {hasCardBelow && (
                         <motion.div
                           className="absolute bottom-0 left-[clamp(12px,1.5vw,20px)] right-[clamp(12px,1.5vw,20px)] h-[1px] bg-[#000]/15"
                           style={{ transformOrigin: "left" }}

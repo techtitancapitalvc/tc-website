@@ -40,21 +40,24 @@ export const whyIndicorns = defineType({
       type: "image",
       options: { hotspot: true },
     }),
+    /* RICH TEXT, and that also collapses a list into a field. These were an
+       ARRAY of plain paragraphs — one entry per paragraph, added with the
+       "Add item" button. Rich text carries paragraphs natively, so the array
+       is gone: press Enter for a new one, and select any words to make them
+       bold, italic or underlined. */
     defineField({
       name: "storyParagraphs",
-      title: "Story — paragraphs (DESKTOP)",
+      title: "Story — copy (DESKTOP)",
       description:
-        "One entry per paragraph. Shown from the md breakpoint upwards.",
-      type: "array",
-      of: [{ type: "text", rows: 4 }],
+        "Shown from the md breakpoint upwards. Press Enter for a new paragraph; select text to style it.",
+      type: "richText",
     }),
     defineField({
       name: "storyParagraphsMobile",
-      title: "Story — paragraphs (MOBILE)",
+      title: "Story — copy (MOBILE)",
       description:
-        "Deliberately separate from the desktop copy, which is currently worded differently. Leave empty to reuse the desktop paragraphs.",
-      type: "array",
-      of: [{ type: "text", rows: 4 }],
+        "Deliberately separate from the desktop copy, which is currently worded differently. Leave empty to reuse the desktop copy.",
+      type: "richText",
     }),
 
     /* ─────────── Timeline ─────────── */
